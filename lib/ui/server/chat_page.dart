@@ -33,6 +33,36 @@ import 'files_page.dart';
 import 'message_view.dart';
 import 'usage_page.dart';
 
+/// 模型胶囊上显示的**短名**。
+///
+/// 目标：不再出现 `DeepSe…`。它旁边还挤着会话名、状态点和三个按钮，
+/// 宽度**必须**给上限；能省的只有名字里那个与型号重复的厂商词 ——
+/// `DeepSeek V4.1 Flash` 真正的型号是 `V4.1 Flash`，而 `DeepSeek` 在
+/// id（`deepseek-v4.1-flash`）里已经写了一遍。省掉它之后型号能完整显示，
+/// 而不是切在既认不出、又像渲染坏了的位置。
+///
+/// 剥的条件卡得很紧，避免把真正的型号名弄丢：
+/// · 名字的第一段（空格之前）要和 id 的第一段一致（忽略大小写）——
+///   这条挡掉了 `opencode-go` 这种 provider 名与型号无关的情况，也挡掉了
+///   厂商名与型号粘连的写法（`MiniMax-M3` 根本没有空格，不动）；
+/// · 剥完剩下的部分必须**还含空格** —— 否则 `Qwen3.8 Flash` 会被剥成
+///   `Flash`，反而把型号丢了，那还不如让它截断。
+///
+/// 放在顶层（而不是 State 的私有方法）是为了能直接写单元测试：
+/// 这几条边界（剥 / 不剥）正是最容易写错的地方。
+String modelChipLabel(ModelInfo? model) {
+  if (model == null) return I18n.t('ui.aa50cded3a');
+  final name = model.name.trim();
+  final firstSpace = name.indexOf(' ');
+  if (firstSpace <= 0) return name;
+  final head = name.substring(0, firstSpace);
+  final tail = name.substring(firstSpace + 1).trim();
+  if (tail.isEmpty || !tail.contains(' ')) return name;
+  final idHead = model.id.split(RegExp(r'[-_]')).first;
+  if (head.toLowerCase() != idHead.toLowerCase()) return name;
+  return tail;
+}
+
 class ServerChatPage extends StatefulWidget {
   const ServerChatPage({super.key, required this.store, this.onOpenSessions});
 
@@ -1458,16 +1488,17 @@ class _ServerChatPageState extends State<ServerChatPage> {
   /// 顶部的模型胶囊：一眼看出现在用的是哪个模型、属于哪个 provider，
   /// 点一下就能换（不必打 /model，也不用离开会话）。
   Widget _buildModelChip(NeuTokens t, ChatReducer chat) {
-    final model = chat.model;
     // 只显示模型名：`模型 · provider` 太长，会把会话名挤到看不见
     //（provider 在点开的切换器里能看到）
-    final label = model == null ? I18n.t('ui.aa50cded3a') : model.name;
+    final label = modelChipLabel(chat.model);
     return ConstrainedBox(
       // 宽度：一行里还要放会话名 + 状态点 + 三个按钮，所以必须给上限。
-      // 76 是早前的值 —— 实测它把「DeepSeek V4.1 Flash」截成 Dee…，
-      // 用户的原话是「太杂乱了一点也不美观」：一个只剩三个字母的截断，
-      // 既认不出是哪个模型，看起来也像渲染坏了。
-      // 96 能让「DeepSeek V4.1…」这种前缀可辨识，仍然留得住其余元素。
+      // 76 是更早的值 —— 实测它把「DeepSeek V4.1 Flash」截成 Dee…，用户的原话是
+      // 「太杂乱了一点也不美观」：一个只剩三个字母的截断，既认不出是哪个模型，
+      // 看起来也像渲染坏了。
+      //
+      // 96 配上面剥掉厂商词之后的型号（`V4.1 Flash`，10 个字符）刚好装得下，
+      // 不用再抢会话名的空间。
       constraints: const BoxConstraints(maxWidth: 96),
       child: NeuPressable(
         onTap: _showModelSwitcher,
@@ -1478,11 +1509,22 @@ class _ServerChatPageState extends State<ServerChatPage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Flexible(
-              child: Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: NeuFonts.badge, color: t.accentInk),
+              // 缩放而不是截断。用户的原话是「在这里显示缩小的不就好了」——
+              // 截成 `DeepSe…` 只剩三个字母，既认不出是哪个模型、又像渲染坏了；
+              // 缩到小一号至少把名字完整给出来。
+              //
+              // 配合 modelChipLabel 剥掉冗余厂商词，缩的幅度通常很小
+              //（`V4.1 Flash` 在 96dp 里几乎不用缩）；即使遇到特别长的名字
+              //（`DeepSeek V4 Flash Vision Exp`），也只是变小，不会丢字。
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  softWrap: false,
+                  style: TextStyle(fontSize: NeuFonts.badge, color: t.accentInk),
+                ),
               ),
             ),
             const SizedBox(width: NeuSpace.n4),
