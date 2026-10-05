@@ -70,7 +70,7 @@ android/.cxx/
 # 服务端调试产物
 server/node_modules/
 server/probe-*.mjs
-server/test-step*.mjs
+server/smoke-step*.mjs
 server/*.log
 server/pi-session-*.html
 server/bin/cloudflared.exe

@@ -22,7 +22,14 @@
 > `node --test test/` 是 20 个用例全过；而**完整跑 `server/` 下所有 `*.mjs` 测试**
 > 会额外带上 `test-step1/2/4.mjs` 这类**需要一台活着的服务端**在
 > `127.0.0.1:30142` 的集成测试，在没有服务端的环境里会失败（环境问题，非代码回归）。
-> 正确说法是「`node --test test/*.test.mjs` 20 全过」。
+>
+> **本轮的正面处理**（不是改措辞，是把仓库修好）：这些手写脚本已改名
+> `smoke-step1/2/4/5.mjs` —— `node --test` 的默认通配含 `test-*.mjs`，
+> 而它们是「要连活服务端」的脚本，混在里面会让默认的 `node --test`
+> **永远挂着 3 个失败**。改名后 `node --test`（不带参数、跑全部）**20/20 全过**。
+> 同时把硬编码的 token 改成读 `PI_TOKEN`（默认仍是 `testtoken123`），
+> 于是也能对着正在跑的服务端直接复查：
+> `PI_TOKEN=$(cat server/.token) node smoke-step1.mjs`。
 
 ---
 
@@ -66,7 +73,8 @@ usage_page 干脆没有，默认状态还不一样 —— 这正是用户说的
 
 `p4-ai-config-collapsed.png`（**本轮重拍**）：6 个分组（模型 / 思考等级 /
 Provider 凭据 / 技能与命令 / pi 插件（10） / MCP 服务器），每张卡片带图标，
-全部默认收起。
+全部默认收起 —— **包括「模型」组**。审计上一轮看到的 `_expanded = {模型}`
+是那次修复前的状态（现在三处页面都是 `_expanded = {}`，见第 2 节）。
 
 > **上一版这张图是错的**：审计指出它其实是**设置页**的截图（顶部 120px 与
 > `p2-settings-conn-expanded.png` 逐像素相同），而 AI 配置页的标题是「AI 配置」。
@@ -161,14 +169,18 @@ GET /api/pool  ->  池里会话数: 1     （关闭前是 2）
 ## 8. 门禁（准确说法）
 
 ```
-flutter analyze                          No issues found
-flutter test                             132 全过
-cd server && node --test test/*.test.mjs 20 全过
+flutter analyze            No issues found
+flutter test               135 全过         （原 132 + 本轮新增的 3 条快捷键布局回归）
+cd server && node --test   20 全过 / 0 失败   （不带参数，跑全部）
 ```
 
-`server/` 下另有 `test-step1/2/4.mjs` 这类**集成测试**，需要一台活着、且与
-App 用同一个 token 的服务端跑在 `127.0.0.1:30142`；没有服务端时会失败。
-本轮没有把它们算进「全过」里。
+上一轮这里必须写成「`node --test test/*.test.mjs` 20 全过」，因为**完整跑**会把
+`test-step1/2/4.mjs` 收进去、稳定失败。**本轮把那 3 个失败消掉了**
+（它们改名为 `smoke-step*.mjs`，见上面 ③ 的说明）——
+所以现在可以直接写「`node --test` 20 全过」。
+
+`server/smoke-step1/2/4/5.mjs` 仍在，是需要**活服务端**的手动冒烟脚本，
+按设计不参与 `node --test`；用法写在各自文件头。
 
 ---
 
