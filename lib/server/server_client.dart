@@ -203,6 +203,15 @@ class ServerClient {
   ///
   /// 服务端会拒绝删正在跑的那条（409），除非显式 force ——
   /// 「不能误删在跑的」这条规则放在服务端，客户端绕不过去。
+  /// 关闭一条活跃会话：把它从服务端的会话池里移出。
+  ///
+  /// 与 [deleteSession] 的区别是**不删会话文件** —— 用户的原话是
+  /// 「下面那个活跃会话应该加一个关闭功能，不然我不跑了也一直显示」，
+  /// 他要的是「别再占着列表」，不是「把记录删掉」。
+  Future<void> closeLiveSession(String sessionId) async {
+    await _json('DELETE', '/api/pool/${Uri.encodeComponent(sessionId)}');
+  }
+
   Future<void> deleteSession(String sessionId, {bool force = false}) async {
     await _json('DELETE', '/api/sessions/$sessionId',
         query: force ? const {'force': '1'} : null);

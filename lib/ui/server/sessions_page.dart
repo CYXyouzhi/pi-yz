@@ -253,6 +253,49 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
     widget.onOpenChat?.call();
   }
 
+  /// 手动输入一个工作区路径。
+  ///
+  /// 回填当前默认值作为起点：用户多半是在它附近改一层目录，
+  /// 从空框开始打字要重敲整条路径。
+  Future<String?> _askWorkspacePath(BuildContext context, String? hint) async {
+    final controller = TextEditingController(text: hint ?? '');
+    final result = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        final t = dialogContext.neu;
+        return AlertDialog(
+          backgroundColor: t.bg,
+          title: Text(I18n.t('conn.manualWorkspace'),
+              style: TextStyle(fontSize: NeuFonts.sectionTitle, color: t.fg)),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            decoration: InputDecoration(
+              hintText: I18n.t('conn.manualWorkspaceHint'),
+              hintStyle: TextStyle(fontSize: NeuFonts.bodySmall, color: t.muted),
+            ),
+            style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.fg),
+            onSubmitted: (v) => Navigator.of(dialogContext).pop(v.trim()),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(I18n.t('common.cancel')), 
+            ),
+            TextButton(
+              onPressed: () =>
+                  Navigator.of(dialogContext).pop(controller.text.trim()),
+              child: Text(I18n.t('common.ok')),
+            ),
+          ],
+        );
+      },
+    );
+    controller.dispose();
+    if (result == null || result.isEmpty) return null;
+    return result;
+  }
+
   /// 选工作区。
   ///
   /// 候选 = 连接配置里的默认工作区 + 所有历史会话用过的 cwd。
@@ -333,9 +376,38 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
               Flexible(
                 child: ListView.builder(
                   shrinkWrap: true,
-                  itemCount: list.length,
+                  itemCount: list.length + 1,
                   itemBuilder: (_, index) {
-                    final path = list[index];
+                    // 第 0 项：手动输入路径。
+                    // 为什么必须有它：候选只来自「配置里的默认工作区 + 历史上用过的 cwd」，
+                    // 于是**没用过的目录永远进不来** —— 想在一个从没开过会话的目录下
+                    // 新建会话，界面上无路可走（用户原话：「应该可以自定义工作区的，
+                    // 现在只能使用历史工作区」）。
+                    if (index == 0) {
+                      return NeuPressable(
+                        onTap: () async {
+                          final typed = await _askWorkspacePath(sheetContext, configured);
+                          if (typed == null || !sheetContext.mounted) return;
+                          Navigator.of(sheetContext).pop(typed);
+                        },
+                        flat: true,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
+                        margin: const EdgeInsets.only(bottom: NeuSpace.n6),
+                        child: Row(
+                          children: [
+                            NeuIcon(IconId.pen, size: 15, color: t.accentInk),
+                            const SizedBox(width: NeuSpace.n10),
+                            Expanded(
+                              child: Text(I18n.t('conn.manualWorkspace'),
+                                  style: TextStyle(fontSize: NeuFonts.bodyMid, color: t.accentInk)),
+                            ),
+                            NeuIcon(IconId.chevronRight, size: 13, color: t.muted),
+                          ],
+                        ),
+                      );
+                    }
+                    final path = list[index - 1];
                     final isDefault = path == configured;
                     return NeuPressable(
                       onTap: () => Navigator.of(sheetContext).pop(path),
@@ -587,6 +659,7 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
                 widget.onOpenChat?.call();
               },
               onRefresh: _store.loadPool,
+              onClose: (p) => _store.closeLiveSession(p.id),
             ),
           ),
         _ArchiveRow(:final count) => Padding(

@@ -13,6 +13,7 @@ import '../../server/chat_reducer.dart';
 import '../../server/i18n.dart';
 import '../../server/server_store.dart';
 import '../../server/server_types.dart';
+import '../neu_section.dart';
 import '../../theme/design_tokens.dart';
 import '../../theme/neu.dart';
 import '../neu_icons.dart';
@@ -31,6 +32,14 @@ class ConfigPage extends StatefulWidget {
 class _ConfigPageState extends State<ConfigPage> {
   List<ModelInfo> _models = const [];
   List<String> _thinkingLevels = const [];
+  /// 展开了的分组。key 用 i18n 后的标题字符串 ——
+  /// 与设置页、连接页同一套做法（三套各写各的正是"有的能收有的不能"的根源）。
+  /// 初始为空 = **全部默认收起**：AI 配置页的分组多、每组都长，全展开时
+  /// 一屏塞不下、也看不出层次（用户原话："比较乱，该折叠的折叠"）。
+  /// 初始包含「模型」：全部收起时整页只剩标题、看起来像空的（实测踩到）。
+  /// 留一组展开既给出了内容，也让人知道其余是可以点开的。
+  late final Set<String> _expanded = {I18n.t('common.model')};
+
   List<McpServerInfo> _mcp = const [];
   List<CredentialInfo> _credentials = const [];
   List<PiPackageInfo> _packages = const [];
@@ -459,6 +468,8 @@ class _ConfigPageState extends State<ConfigPage> {
                     ),
                   ),
 
+                // 分组内容默认收起：AI 配置页分组多、每组都长，全展开看不出层次
+                if (_expanded.contains(I18n.t('common.model'))) ...[
                 _section(t, I18n.t('common.model')),
                 NeuRaised(
                   radius: NeuRadii.md,
@@ -515,7 +526,10 @@ class _ConfigPageState extends State<ConfigPage> {
                     ],
                   ),
                 ),
+                ],
 
+                // 分组内容默认收起：AI 配置页分组多、每组都长，全展开看不出层次
+                if (_expanded.contains(I18n.t('ui.11eead2c33'))) ...[
                 _section(t, I18n.t('ui.11eead2c33')),
                 NeuRaised(
                   radius: NeuRadii.md,
@@ -563,7 +577,10 @@ class _ConfigPageState extends State<ConfigPage> {
                           ],
                         ),
                 ),
+                ],
 
+                // 分组内容默认收起：AI 配置页分组多、每组都长，全展开看不出层次
+                if (_expanded.contains(I18n.t('ui.c4d89641a1'))) ...[
                 _section(t, I18n.t('ui.c4d89641a1')),
                 NeuRaised(
                   radius: NeuRadii.md,
@@ -648,7 +665,10 @@ class _ConfigPageState extends State<ConfigPage> {
                     ],
                   ),
                 ),
+                ],
 
+                // 分组内容默认收起：AI 配置页分组多、每组都长，全展开看不出层次
+                if (_expanded.contains(I18n.t('ui.a9cec18e05'))) ...[
                 _section(t, I18n.t('ui.a9cec18e05')),
                 NeuRaised(
                   radius: NeuRadii.md,
@@ -676,7 +696,10 @@ class _ConfigPageState extends State<ConfigPage> {
                     ],
                   ),
                 ),
+                ],
 
+                // 插件组同样默认收起（10 个插件展开就是一屏）
+                if (_expanded.contains('plugins')) ...[
                 _section(
           t,
           I18n.tp('ui.9d3c5fe8d6', {
@@ -795,7 +818,10 @@ class _ConfigPageState extends State<ConfigPage> {
                     ],
                   ),
                 ),
+                ],
 
+                // 分组内容默认收起：AI 配置页分组多、每组都长，全展开看不出层次
+                if (_expanded.contains(I18n.t('ui.d7911f414c'))) ...[
                 _section(t, I18n.t('ui.d7911f414c')),
                 NeuRaised(
                   radius: NeuRadii.md,
@@ -908,6 +934,7 @@ class _ConfigPageState extends State<ConfigPage> {
                     ],
                   ),
                 ),
+                ],
               ],
             );
           },
@@ -974,6 +1001,29 @@ class _ConfigPageState extends State<ConfigPage> {
     void Function(SlashCommand item)? onTapItem,
     String? tapHint,
   }) {
+    // 子组也折叠：技能/扩展/内置三组各自都有几十条，全展开就是一屏垃圾
+    // （用户原话："技能与命令那里应该分类的一大堆在一起不美观"）。
+    final groupKey = title;
+    final groupOpen = _expanded.contains(groupKey);
+    if (items.isNotEmpty && !groupOpen) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n10, vertical: NeuSpace.n6),
+        child: NeuPressable(
+          flat: true,
+          onTap: () => setState(() => _expanded.add(groupKey)),
+          padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n10, vertical: NeuSpace.n10),
+          child: Row(
+            children: [
+              NeuIcon(IconId.chevronRight, size: 13, color: t.muted),
+              SizedBox(width: NeuSpace.n6),
+              Text('$title（${items.length}）',
+                  style: TextStyle(fontSize: NeuFonts.sub, color: t.accentInk)),
+            ],
+          ),
+        ),
+      );
+    }
+
     if (items.isEmpty) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n10, vertical: NeuSpace.n10),
@@ -1212,15 +1262,26 @@ class _ConfigPageState extends State<ConfigPage> {
     if (done) await _load();
   }
 
-  Widget _section(NeuTokens t, String title) => Padding(
-        padding: const EdgeInsets.only(top: NeuSpace.n20, bottom: NeuSpace.n8),
-        child: Text(
-          title,
-          style: TextStyle(
-            fontSize: NeuFonts.sectionTitle,
-            fontWeight: FontWeight.w700,
-            color: t.onBg,
-          ),
-        ),
-      );
+  /// 折叠分组标题。视觉与交互复用 [NeuSection]，状态在本页。
+  Widget _section(
+    NeuTokens t,
+    String title, {
+    IconId icon = IconId.circle,
+    String? summary,
+  }) {
+    final open = _expanded.contains(title);
+    return NeuSection(
+      title: title,
+      icon: icon,
+      summary: summary,
+      open: open,
+      onToggle: () => setState(() {
+        if (open) {
+          _expanded.remove(title);
+        } else {
+          _expanded.add(title);
+        }
+      }),
+    );
+  }
 }

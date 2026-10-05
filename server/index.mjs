@@ -226,6 +226,21 @@ const server = createServer(async (req, res) => {
       return json(res, 200, { sessions: pool.listDetailed() });
     }
 
+    // ---- 关闭一条活跃会话（只移出池，**不删文件**）----
+    //
+    // 为什么要跟 DELETE /api/sessions/:id 分开：那个会把会话文件一起删掉，
+    // 是「我不要这条了」；而用户要的是「它已经跑完了，别再占着我的列表」——
+    // 会话记录本身还值得留着回头翻。两件事不该共用一个破坏性接口。
+    //
+    // 池里没有这条时也返回 ok —— 幂等，重复点关闭不该报错。
+    const poolMatch = path.match(/^\/api\/pool\/([^/]+)$/);
+    if (poolMatch && req.method === 'DELETE') {
+      const id = decodeURIComponent(poolMatch[1]);
+      await pool.dispose(id);
+      console.log(`[server] 已关闭活跃会话 ${id}（文件保留）`);
+      return json(res, 200, { closed: true, id });
+    }
+
     // ---- 会话磁盘占用（按工作区分组） ----
     // 必须放在下面 /api/sessions/:id 的正则之前：
     // 那个正则会先匹配到 "disk" 这个"会话 id"。

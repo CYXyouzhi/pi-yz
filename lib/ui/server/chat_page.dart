@@ -1463,8 +1463,12 @@ class _ServerChatPageState extends State<ServerChatPage> {
     //（provider 在点开的切换器里能看到）
     final label = model == null ? I18n.t('ui.aa50cded3a') : model.name;
     return ConstrainedBox(
-      // 上限收到 76：标题栏一行里还要放会话名 + 状态点 + 4 个按钮
-      constraints: const BoxConstraints(maxWidth: 76),
+      // 宽度：一行里还要放会话名 + 状态点 + 三个按钮，所以必须给上限。
+      // 76 是早前的值 —— 实测它把「DeepSeek V4.1 Flash」截成 Dee…，
+      // 用户的原话是「太杂乱了一点也不美观」：一个只剩三个字母的截断，
+      // 既认不出是哪个模型，看起来也像渲染坏了。
+      // 96 能让「DeepSeek V4.1…」这种前缀可辨识，仍然留得住其余元素。
+      constraints: const BoxConstraints(maxWidth: 96),
       child: NeuPressable(
         onTap: _showModelSwitcher,
         radius: 8,
