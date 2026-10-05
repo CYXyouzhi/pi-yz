@@ -362,9 +362,26 @@ class I18n {
     // 备用地址（双地址回落）：主地址连不上时自动试它。
     // 典型用法 —— 主地址填家里局域网 IP，备用填 VPN（Tailscale 之类）的 IP，
     // 这样在家走局域网、出门走 VPN，不用手动切 profile。
-    'conn.fallbackHost': ('备用地址（可选）', 'Fallback address (optional)'),
-    'conn.fallbackHint': ('出门时用，如 VPN 地址；留空则不启用',
-        'Used when away, e.g. a VPN address; blank disables it'),
+    // 表单分组标题：把「基本」与「远程访问」分开。备用地址是可选的高级项，
+    // 平铺在必填项中间会让人以为它也得填。
+    'conn.groupBasic': ('基本', 'Basics'),
+    'conn.groupRemote': ('远程访问（可选）', 'Remote access (optional)'),
+    'conn.remoteIntro': (
+        '在家走局域网、出门走 VPN —— 程序自动选能连上的那条，你不用手动切。',
+        'LAN at home, VPN when away — it picks whichever answers, so you never switch manually.'),
+    // HTTPS 显式开关。原来只能靠在地址栏粘 https:// 或把端口填 443 隐式触发，
+    // 用户根本不知道有这回事。
+    'conn.useHttps': ('用 HTTPS 连接', 'Connect over HTTPS'),
+    'conn.useHttpsHint': ('远程隧道 / 反向代理需要；局域网直连不用开',
+        'Needed for a remote tunnel or reverse proxy; not for a direct LAN connection'),
+    // 标签从「备用地址（可选）」改成场景化表述：原来主地址说「是什么」（IP 或域名）、
+    // 备用地址说「什么时候用」，两个标签不在一个抽象层级上。
+    'conn.fallbackHost': ('出门用的地址（如 Tailscale IP）',
+        'Address for when you are away (e.g. a Tailscale IP)'),
+    // hint 不再重复「出门用」（那是 label 的职责），改为说明**留空的后果** ——
+    // 原来 label 与 hint 都在说「什么时候用」，两句话打架，还会被输入框截断。
+    'conn.fallbackHint': ('留空则只用上面的地址，不启用自动切换',
+        'Leave blank to use only the address above, with no auto-fallback'),
     // 回落生效时的标记。必须说清「为什么显示的地址和填的不一样」，
     // 否则用户会以为填错了。
     'conn.viaFallback': ('走的是备用地址（主地址连不上）',
