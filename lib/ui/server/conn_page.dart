@@ -884,10 +884,14 @@ class _ServerConnPageState extends State<ServerConnPage> {
     );
   }
 
-  /// 把当前隧道地址存成一条配置并立刻连过去。
+  /// 把地址存成一条配置。
+  ///
+  /// [switchTo] = true 时存完立刻连过去（隧道那条路的语义 —— 用户开隧道
+  /// 就是为了马上用它）；false 只存不切（「自己的工具」那条路：用户可能只是
+  /// 想先记下来，或者手机和电脑还没都装好）。
   ///
   /// token 复用当前已连的那条（用户已经配对过了），不重复问。
-  Future<void> _useRemoteAddress(String url) async {
+  Future<void> _useRemoteAddress(String url, {bool switchTo = true}) async {
     // 裸 `host:port` 补 http:// —— 自备穿透工具（Tailscale / 焦月连 / frp）
     // 给的多半是「本机端口的转发」，没有 TLS 证书；带 scheme 的地址则原样尊重
     //（Cloudflare 隧道给的就是 https）。
@@ -915,15 +919,32 @@ class _ServerConnPageState extends State<ServerConnPage> {
       secure: parsed.scheme == 'https',
     );
 
-    final next = [..._profiles.where((p) => p.id != profile.id), profile];
+    // 以**存储里的**列表为基准，而不是内存里的 `_profiles`。
+    //
+    // `_profiles` 是页面状态：可能还没加载完、也可能落后于别处发起的改动。
+    // 拿它当基准去 saveAll，等于用一份可能不完整的快照覆盖存储 ——
+    // 实测踩到过：点一次「存成一条连接」，用户原有的局域网配置直接没了
+    //（存储里只剩刚存进去的那一条，App 于是只往那个连不上的地址连，
+    //  表现就是「局域网连接坏了」）。
+    final stored = await ServerProfileStore.loadAll();
+    final base = stored.isNotEmpty ? stored : _profiles;
+    final next = [...base.where((p) => p.id != profile.id), profile];
     await ServerProfileStore.saveAll(next);
-    await ServerProfileStore.saveActiveId(profile.id);
+    if (switchTo) {
+      await ServerProfileStore.saveActiveId(profile.id);
+    }
     if (!mounted) return;
     setState(() {
       _profiles = next;
       _editingId = profile.id;
       _fill(profile);
     });
+
+    // 只存不切：告诉用户存到哪去了，否则他会以为按钮没生效
+    if (!switchTo) {
+      NeuToast.show(context, message: I18n.t('remote.ownSaved'), icon: IconId.check);
+      return;
+    }
 
     await _store.connect(ServerTarget(
       host: profile.host,
@@ -1245,7 +1266,11 @@ class _ServerConnPageState extends State<ServerConnPage> {
   Future<void> _saveOwnAddress(String raw) async {
     final value = raw.trim();
     if (value.isEmpty) return;
-    await _useRemoteAddress(value);
+    // switchTo: false —— 只存成一条连接，不悄悄把当前连接切走。
+    // 「要不要改用它」是用户的决定：Tailscale / 皎月连 这类工具常见的情形是
+    // 电脑装好了、手机还没装，此时切过去等于把 App 弄成离线。要切的话
+    // 「已保存」里有入口，那里点一下就能连。
+    await _useRemoteAddress(value, switchTo: false);
     if (!mounted) return;
     setState(() => _ownRemote.clear());
   }
