@@ -175,3 +175,44 @@ objective 最后一句是「用 MuMu 对每一项逐个实际点击验证」。
 **这一句目前没有完全满足** —— 其余各项都有可查的点击证据，
 但上面两条只有「部分」或「无」。所以**这不是一个可以标完成的终点**，
 需要人接手（在 App 里造出状态，或者明确接受这两条以代码证据为准）。
+
+## 10. 附：修掉用户报的「快捷键面板空白」
+
+**现象**（用户提供截图 `屏幕截图 2026-10-05 190129.png`）：会话页点 `⌘` 调出按键条
+后再点 `▤` 展开，面板里**只有「快捷键」三个字**，12 个键位一个都不显示。
+我在 MuMu 上如实复现了同一个画面（`p10-...broken.png` 与用户截图一致）。
+
+**根因**：不是没画出来，是**布局中途断言失败**。
+`_KeyCap` 内部那个 `Row` 用了 `Flexible(label)`；而展开面板标题行里的 `/` 和
+「完成」是外层 `Row` 的**非 flex 子项**，Flutter 给非 flex 子项的主轴约束是
+**无界**的（`RenderFlex._constraintsForNonFlexChild` 水平方向只写 `maxHeight`，
+`maxWidth` 缺省即 infinity）——「有 flex 却无界」直接抛出：
+
+```
+RenderFlex children have non-zero flex but incoming width constraints are unbounded.
+  #4 RenderFlex._computeSizes        (flex.dart:1237)
+  #3 RenderAnimatedSize._layoutStable(animated_size.dart:329)
+```
+
+布局中断后整块面板只剩标题；设备日志里还能看到连锁的
+`RenderBox was not laid out ... Failed assertion: 'hasSize'`。
+
+**为什么原来 132 个测试没抓住**：`widget_test.dart` 的 `_KeyBarHarness` 用
+`Align(bottomCenter)` 包 `NeuKeyBar`，而聊天页里它是父 `Column` 的**直接子项**；
+两者宽度约束不同，而这个 bug 只在后者出现。
+
+**修法**：`_KeyCap` 按约束是否有界二选一 —— 有界用 `Flexible(flex: 1)`
+（标号必须能收缩，否则实测溢出 6.1 逻辑像素），无界用 `flex: 0`
+（退化成非 flex 子项，避开断言）。
+
+**证据**：
+
+| 文件 | 说明 |
+|---|---|
+| `p10-keybar-expanded-broken.png` | 修复前，MuMu 实测复现（与用户截图同画面）|
+| `p11-keybar-expanded-fixed.png` | 修复后，标题行 + 12 个键位都在 |
+
+**回归测试**：`test/key_bar_layout_test.dart`（折叠态 / 展开态 / 来回切换 3 条），
+按聊天页的真实层级搭，不再用 `Align` 包。
+
+**门禁**：`flutter analyze` 无问题；`flutter test` 135 全过（原 132 + 新 3）。

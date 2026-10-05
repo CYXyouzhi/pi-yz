@@ -38,9 +38,18 @@ from pathlib import Path
 
 MM = r'D:/ruanjian/MuMuPlayer/nx_main/MuMuManager.exe'
 SHARED = r'D:/Documents/MuMu共享文件夹/Download'
+APP_PKG = 'com.youzhi.pimobile.pi_mobile'
 
 _app_keys = None  # (logical_id, token)
 _cache = {}
+
+# 截图坐标 → 设备逻辑坐标的系数。
+#
+# `shot()` 默认把截图缩到一半（同步回 Windows 的文件小一半），而 `input` 用的是
+# 逻辑坐标。两者差 2 倍，写死 1:1 的后果是把点击送进了屏幕左上四分之一 ——
+# 点「关闭会话」没反应、点底部把手也唤不出导航栏，白查了很久。
+# 统一约定：调用方给的坐标**一律是截图上看到的坐标**，发命令前在这里乘回去。
+_shot_scale = 2.0
 
 
 def sh(cmd, timeout=40):
@@ -63,6 +72,21 @@ def display_map():
     return pairs
 
 
+def app_display_id():
+    """App 窗口所在的 display id（问窗口管理器，不问亮度）。
+
+    window manager 用 `imeInputTarget in display# N` 记下每个窗口在哪块屏上 ——
+    这是唯一可靠的来源。找不到返回 None。
+    """
+    out = sh("dumpsys window windows | grep 'imeInputTarget in display#'")
+    for line in out.splitlines():
+        if APP_PKG in line:
+            match = re.search(r'display# (\d+)', line)
+            if match:
+                return int(match.group(1))
+    return None
+
+
 def _luminance(path):
     from PIL import Image
     gray = Image.open(path).convert('L')
@@ -82,6 +106,17 @@ def resolve_keys(force=False):
     global _app_keys
     if _app_keys and not force:
         return _app_keys
+
+    # 先按包名问窗口管理器。多屏环境下 MuMu 会把商店、桌面等放在**另外**的
+    # 虚拟屏上，那些屏同样不是黑的 —— 靠亮度猜一定会选错，点击就落在别的
+    # App 上（实测：想点 × 关会话，结果点开的是商店广告）。
+    wanted = app_display_id()
+    if wanted is not None:
+        for logical, token in display_map():
+            if logical == wanted:
+                _app_keys = (logical, token)
+                print(f'[ctrl] App: 逻辑 display {logical} / token {token}')
+                return _app_keys
 
     from PIL import Image  # noqa: F401
 
@@ -116,14 +151,26 @@ def resolve_keys(force=False):
 
 def tap(x, y):
     logical, _ = resolve_keys()
-    sh(f'input -d {logical} tap {int(x)} {int(y)}')
+    dx, dy = _to_device(x, y)
+    sh(f'input -d {logical} tap {dx} {dy}')
     time.sleep(0.5)
 
 
 def swipe(x1, y1, x2, y2, ms=250):
     logical, _ = resolve_keys()
-    sh(f'input -d {logical} swipe {int(x1)} {int(y1)} {int(x2)} {int(y2)} {int(ms)}')
+    dx1, dy1 = _to_device(x1, y1)
+    dx2, dy2 = _to_device(x2, y2)
+    sh(f'input -d {logical} swipe {dx1} {dy1} {dx2} {dy2} {int(ms)}')
     time.sleep(0.6)
+
+
+def _to_device(x, y):
+    """截图坐标 → 设备逻辑坐标（见 `_shot_scale` 的说明）。
+
+    命令行传进来的是字符串（`tap(sys.argv[2], ...)`），这里统一转 float，
+    否则 `str * 2.0` 会抛 “can't multiply sequence by non-int”。
+    """
+    return int(round(float(x) * _shot_scale)), int(round(float(y) * _shot_scale))
 
 
 def key(name):
@@ -140,6 +187,7 @@ def text(content):
 
 
 def shot(out, half=True):
+    global _shot_scale
     from PIL import Image
 
     _, token = resolve_keys()
@@ -159,8 +207,10 @@ def shot(out, half=True):
     image_path.parent.mkdir(parents=True, exist_ok=True)
     im = Image.open(local)
     if half:
+        _shot_scale = 2.0
         im.resize((im.width // 2, im.height // 2), Image.LANCZOS).save(image_path)
     else:
+        _shot_scale = 1.0
         im.save(image_path)
     local.unlink(missing_ok=True)
     print(f'已保存 {out}')

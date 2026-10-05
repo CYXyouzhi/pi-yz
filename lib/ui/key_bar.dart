@@ -473,70 +473,91 @@ class _KeyCapState extends State<_KeyCap> {
             color: _hit ? t.accent.withValues(alpha: 0.10) : null,
             borderRadius: BorderRadius.circular(NeuRadii.chip),
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // 外面再包一层 FittedBox 兜底：键帽宽度由文字决定，若某台设备
-              // 的 monospace 度量比这里更宽，也只是把该键帽等比缩小（scaleDown），
-              // 不会再出现溢出警告。不超宽时它完全不改变尺寸。
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                child: // kbd：键帽本体（在凹槽里隆起）
-                AnimatedContainer(
-                  duration: NeuMotion.micro,
-                  curve: NeuMotion.out,
-                  constraints: const BoxConstraints(minWidth: 22),
-                  height: 22,
-                  padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n6),
-                  decoration: BoxDecoration(
-                    color: _hit ? t.accent : null,
-                    gradient: _hit ? null : NeuDecorations.raisedGradient(t),
-                    borderRadius: BorderRadius.circular(7),
-                    boxShadow: _hit
-                        ? null
-                        : [
-                            BoxShadow(
-                              color: t.nmLo,
-                              offset: const Offset(1.5, 1.5),
-                              blurRadius: 4,
-                            ),
-                            BoxShadow(
-                              color: t.nmHi,
-                              offset: const Offset(-1.5, -1.5),
-                              blurRadius: 4,
-                            ),
-                          ],
-                  ),
-                  child: Center(
-                    child: Text(
-                      widget.kbd,
-                      style: TextStyle(
-                        fontFamily: 'monospace',
-                        fontSize: NeuFonts.micro,
-                        height: 1,
-                        fontWeight: FontWeight.w600,
-                        color: _hit ? t.onAccent : t.fg,
+          child: LayoutBuilder(
+            builder: (context, box) {
+              // 这个 Row 可能在**宽度无界**的约束下被布局，也可能在紧约束里。
+              //
+              // · 展开面板的标题行：`/` 和「完成」是外层的**非 flex 子项**，
+              //   而 Flutter 给非 flex 子项的主轴约束就是无界的
+              //   （`RenderFlex._constraintsForNonFlexChild` 水平方向只写
+              //   maxHeight，maxWidth 缺省即 infinity）。此时带 flex 的子项会
+              //   直接断言失败（“children have non-zero flex but incoming width
+              //   constraints are unbounded”），布局中断，整块面板只剩标题
+              //   —— 用户看到的就是那张空白卡片。
+              // · `Expanded` 里（折叠态那一排、展开面板的键位网格）：宽度是紧的，
+              //   标号必须能收缩，否则溢出（实测溢出 6.1 逻辑像素）。
+              //
+              // 两种场景都要留住，所以按约束是否有界二选一。
+              final bounded = box.maxWidth.isFinite;
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // 外面再包一层 FittedBox 兜底：键帽宽度由文字决定，若某台设备
+                  // 的 monospace 度量比这里更宽，也只是把该键帽等比缩小（scaleDown），
+                  // 不会再出现溢出警告。不超宽时它完全不改变尺寸。
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: // kbd：键帽本体（在凹槽里隆起）
+                        AnimatedContainer(
+                      duration: NeuMotion.micro,
+                      curve: NeuMotion.out,
+                      constraints: const BoxConstraints(minWidth: 22),
+                      height: 22,
+                      padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n6),
+                      decoration: BoxDecoration(
+                        color: _hit ? t.accent : null,
+                        gradient: _hit ? null : NeuDecorations.raisedGradient(t),
+                        borderRadius: BorderRadius.circular(7),
+                        boxShadow: _hit
+                            ? null
+                            : [
+                                BoxShadow(
+                                  color: t.nmLo,
+                                  offset: const Offset(1.5, 1.5),
+                                  blurRadius: 4,
+                                ),
+                                BoxShadow(
+                                  color: t.nmHi,
+                                  offset: const Offset(-1.5, -1.5),
+                                  blurRadius: 4,
+                                ),
+                              ],
+                      ),
+                      child: Center(
+                        child: Text(
+                          widget.kbd,
+                          style: TextStyle(
+                            fontFamily: 'monospace',
+                            fontSize: NeuFonts.micro,
+                            height: 1,
+                            fontWeight: FontWeight.w600,
+                            color: _hit ? t.onAccent : t.fg,
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ),
-              if (widget.label.isNotEmpty) ...[
-                const SizedBox(width: NeuSpace.n5),
-                Flexible(
-                  child: Text(
-                    widget.label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: NeuFonts.badge,
-                      fontWeight: FontWeight.w600,
-                      color: _hit ? t.accentInk : t.muted,
+                  if (widget.label.isNotEmpty) ...[
+                    const SizedBox(width: NeuSpace.n5),
+                    Flexible(
+                      // flex 0 = 当非 flex 子项用，避开「无界 + flex」的断言。
+                      flex: bounded ? 1 : 0,
+                      child: Text(
+                        widget.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: NeuFonts.badge,
+                          fontWeight: FontWeight.w600,
+                          color: _hit ? t.accentInk : t.muted,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              ],
-            ],
+                  ],
+                ],
+              );
+            },
           ),
         ),
       ),
