@@ -773,6 +773,20 @@ class ServerStore extends ChangeNotifier {
     }
   }
 
+  /// 关闭一条活跃会话（移出池、保留文件），然后刷新池状态。
+  Future<bool> closeLiveSession(String sessionId) async {
+    final client = _client;
+    if (client == null) return false;
+    try {
+      await client.closeLiveSession(sessionId);
+      await loadPool();
+      return true;
+    } on ServerException catch (error) {
+      lastError = error.message;
+      return false;
+    }
+  }
+
   Future<bool> deleteSession(String sessionId) async {
     final client = _client;
     if (client == null) return false;

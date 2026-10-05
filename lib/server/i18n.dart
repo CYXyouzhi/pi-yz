@@ -232,6 +232,7 @@ class I18n {
     'common.clear': ('清空', 'Clear'),
     'common.copied': ('已复制', 'Copied'),
     'common.loading': ('读取中…', 'Loading…'),
+    'common.connected': ('已连接', 'Connected'),
     'common.connecting': ('连接中…', 'Connecting…'),
     'common.disconnected': ('未连接', 'Not connected'),
     'common.connFailed': ('连接失败', 'Connection failed'),
@@ -365,6 +366,12 @@ class I18n {
     // 表单分组标题：把「基本」与「远程访问」分开。备用地址是可选的高级项，
     // 平铺在必填项中间会让人以为它也得填。
     'conn.groupBasic': ('基本', 'Basics'),
+    // 连接页分区。原来扫描/诊断/已保存/手动表单全平铺，用户说「设置项太杂乱了」。
+    'conn.groupQuick': ('快速连接', 'Quick connect'),
+    'conn.groupManual': ('手动配置', 'Manual setup'),
+    // 新建会话时手动指定工作区（候选只来自历史 + 默认，没用过的目录进不来）
+    'conn.manualWorkspace': ('手动输入路径…', 'Enter a path…'),
+    'conn.manualWorkspaceHint': ('如 C:/Users/you/projects', 'e.g. C:/Users/you/projects'),
     'conn.groupRemote': ('远程访问（可选）', 'Remote access (optional)'),
     'conn.remoteIntro': (
         '在家走局域网、出门走 VPN —— 程序自动选能连上的那条，你不用手动切。',

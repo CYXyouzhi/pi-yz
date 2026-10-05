@@ -78,6 +78,16 @@ Future<void> tapTab(WidgetTester tester, String label) async {
   await tapVisible(tester, find.text(label));
 }
 
+/// 展开设置页里的某个分组。
+///
+/// 设置页现在**默认全部收起**（用户明确要求「默认收起来、点击再展开」），
+/// 所以凡是要断言分组内容的用例，都得先把它点开 —— 否则断言的是
+/// 「渲染失败」和「默认收起」这两种完全不同的事。
+Future<void> openSection(WidgetTester tester, String title) async {
+  await tapVisible(tester, find.text(title));
+  await settle(tester);
+}
+
 /// 收尾：把待触发的定时器推完，避免测试因「pending timer」失败。
 Future<void> flushTimers(WidgetTester tester) async {
   await tester.pump(const Duration(seconds: 6));
@@ -150,6 +160,7 @@ void main() {
 
       // 切设置
       await tapTab(tester, '设置');
+      await openSection(tester, '工作区');
       expect(find.text('AI 配置'), findsOneWidget);
       expect(find.text('文件浏览'), findsOneWidget);
 
@@ -169,6 +180,7 @@ void main() {
       await tapTab(tester, '设置');
       // 连接段：未连接状态 + 刷新/断开之外的可点入口
       expect(find.text('未连接'), findsOneWidget);
+      await openSection(tester, '工作区');
       expect(find.text('AI 配置'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
@@ -186,6 +198,7 @@ void main() {
       Brightness currentBrightness() =>
           Theme.of(tester.element(find.byType(Scaffold).first)).brightness;
 
+      await openSection(tester, '外观');
       await tapVisible(tester, find.text('深色'));
       expect(currentBrightness(), Brightness.dark);
 
@@ -318,6 +331,7 @@ void main() {
       expect(find.text('开始'), findsOneWidget);
       await tapTab(tester, '会话');
       await tapTab(tester, '设置');
+      await openSection(tester, '工作区');
       expect(find.text('AI 配置'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
@@ -331,6 +345,7 @@ void main() {
       await settle(tester);
 
       await tapTab(tester, '设置');
+      await openSection(tester, '外观');
       await tapVisible(tester, find.text('深色'));
       expect(
         Theme.of(tester.element(find.byType(Scaffold).first)).brightness,
@@ -368,6 +383,7 @@ void main() {
 
       // 选一个 Tab → 导航栏又收起（不是停在展开态）
       await tapVisible(tester, find.text('设置'));
+      await openSection(tester, '工作区');
       expect(find.text('AI 配置'), findsOneWidget);
 
       // 回会话页：又回到全屏

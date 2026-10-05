@@ -11,6 +11,7 @@ import '../../server/i18n.dart';
 import '../../server/server_client.dart';
 import '../../server/server_profile.dart';
 import '../../server/server_store.dart';
+import '../neu_section.dart';
 import '../../theme/design_tokens.dart';
 import '../../theme/neu.dart';
 import '../neu_icons.dart';
@@ -48,6 +49,13 @@ class _ServerConnPageState extends State<ServerConnPage> {
   bool _scanning = false;
   List<DiscoveredServer> _found = const [];
   String? _scanNote;
+
+  /// 展开了的分组。key 用 i18n 后的标题字符串（与设置页同一套做法）。
+  ///
+  /// **只有「快速连接」默认展开**：它是主路径（扫一台连上 / 查为什么连不上），
+  /// 收起来等于每次都要多点一下。其余（手动配置、远程访问）默认收起 ——
+  /// 它们篇幅大而用得少，收起后整页才看得出主次。
+  late final Set<String> _expanded = {I18n.t('conn.groupQuick')};
 
   /// 威胁模型是否展开（默认收起：它是「要点」不是「正文」）
   bool _showThreat = false;
@@ -419,6 +427,10 @@ class _ServerConnPageState extends State<ServerConnPage> {
             _remoteCard(t),
             const SizedBox(height: NeuSpace.n14),
 
+            // ---- 快速连接：把「扫一台连上」与「查为什么连不上」归成一组 ----
+            // 原来这两个大按钮和「已保存」「手动表单」平铺，看不出主次。
+            _section(t, I18n.t('conn.groupQuick'),
+                icon: IconId.sync, summary: I18n.t('ui.e33ff6aad6')),
             // ---- 局域网扫描（合同①）：不用手输 IP ----
             NeuPressable(
               onTap: _scanning ? null : _scan,
@@ -512,10 +524,10 @@ class _ServerConnPageState extends State<ServerConnPage> {
             if (_profiles.isNotEmpty) ...[
               Row(
                 children: [
-                  Text(I18n.t('ui.f8dfedcd8a'),
-                      style: TextStyle(
-                          fontSize: NeuFonts.bodySmall, fontWeight: FontWeight.w700, color: t.onBg)),
-                  const Spacer(),
+                        Expanded(child: _section(t, I18n.t('ui.f8dfedcd8a'),
+                            icon: IconId.server,
+                            summary: '${_profiles.length}')),
+                  // Spacer 交给 Expanded + NeuSection
                   // 没有这个入口就只能「改现有配置」，永远存不下第二台机器（合同②）
                   NeuPressable(
                     onTap: _newProfile,
@@ -588,6 +600,10 @@ class _ServerConnPageState extends State<ServerConnPage> {
               const SizedBox(height: NeuSpace.n16),
             ],
 
+            // ---- 手动配置：整块默认收起 ----
+            // 它是次要路径（常态是从「已保存」点进去），展开时占掉大半屏，
+            // 整页看起来又长又杂。
+            if (_expanded.contains(I18n.t('conn.groupManual'))) ...[
             NeuRaised(
               radius: NeuRadii.lg,
               padding: const EdgeInsets.all(NeuSpace.n16),
@@ -673,6 +689,7 @@ class _ServerConnPageState extends State<ServerConnPage> {
                 ],
               ),
             ),
+            ],
             const SizedBox(height: NeuSpace.n16),
 
             if (_testResult != null)
@@ -1160,6 +1177,30 @@ class _ServerConnPageState extends State<ServerConnPage> {
           ),
         ],
       ),
+    );
+  }
+
+  /// 折叠分组的薄包装，复用 [NeuSection]（三套折叠各写各的正是
+  /// 「有的地方点了能收、有的地方点了没反应」的根源）。
+  Widget _section(
+    NeuTokens t,
+    String title, {
+    IconId icon = IconId.circle,
+    String? summary,
+  }) {
+    final open = _expanded.contains(title);
+    return NeuSection(
+      title: title,
+      icon: icon,
+      summary: summary,
+      open: open,
+      onToggle: () => setState(() {
+        if (open) {
+          _expanded.remove(title);
+        } else {
+          _expanded.add(title);
+        }
+      }),
     );
   }
 

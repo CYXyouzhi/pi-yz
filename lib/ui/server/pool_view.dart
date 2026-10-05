@@ -25,6 +25,7 @@ class RunningSessionsCard extends StatelessWidget {
     required this.sessions,
     required this.onOpen,
     required this.onRefresh,
+    this.onClose,
   });
 
   final List<PoolSession> sessions;
@@ -32,6 +33,10 @@ class RunningSessionsCard extends StatelessWidget {
   /// 点某条会话 → 打开它（并切到会话页）
   final void Function(PoolSession) onOpen;
   final VoidCallback onRefresh;
+
+  /// 关掉一条活跃会话（移出服务端会话池，**不删记录**）。
+  /// 为空时不显示关闭按钮 —— 让这个卡片在别的场景下也能复用。
+  final Future<void> Function(PoolSession)? onClose;
 
   @override
   Widget build(BuildContext context) {
@@ -155,6 +160,18 @@ class RunningSessionsCard extends StatelessWidget {
               ],
             ),
           ),
+          // 关闭：把这条从服务端会话池移出（不删记录）。
+          // 用户的原话：「应该加一个关闭功能，不然我不跑了也一直显示」——
+          // 池里的实例要等空闲 30 分钟才自动回收，在那之前它一直挂在列表上。
+          if (onClose != null)
+            NeuPressable(
+              onTap: () => onClose!(s),
+              radius: 10,
+              child: const Padding(
+                padding: EdgeInsets.all(NeuSpace.n9),
+                child: NeuIcon(IconId.close, size: 13),
+              ),
+            ),
           NeuIcon(IconId.chevronRight, size: 14, color: t.muted),
         ],
       ),

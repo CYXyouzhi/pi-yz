@@ -13,6 +13,7 @@ import '../../server/notification_center.dart';
 import '../../server/session_cache.dart';
 import '../../server/server_store.dart';
 import '../../server/server_types.dart';
+import '../neu_section.dart';
 import '../../theme/design_tokens.dart';
 import '../../theme/neu.dart';
 import '../neu_icons.dart';
@@ -44,9 +45,13 @@ class ServerSettingsPage extends StatefulWidget {
 }
 
 class _ServerSettingsPageState extends State<ServerSettingsPage> {
-  /// 收起来的分组标题（task-21 合同③）。
-  /// 设置页太长，一屏一屏翻很累；收起来后能一屏看到"有哪几块"。
-  final Set<String> _collapsed = {};
+  /// **展开**了的分组标题。
+  ///
+  /// 注意这是反过来的语义：早前存的是"收起来的"，初始为空 = 全部展开 ——
+  /// 于是用户每次进来都要手动把七八块一个个收掉，页面自然显得乱。
+  /// 用户的原话是「类似设置里的通知也应该默认收起来点击再展开，这样比较美观」。
+  /// 现在存"展开的"，初始为空 = 全部收起，想看哪块点哪块。
+  final Set<String> _expanded = {};
 
   // 用 getter 代理，这样下面 build 里原有的 store/themeMode 引用一行都不用改
   ServerStore get store => widget.store;
@@ -73,8 +78,17 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
           ),
           SizedBox(height: NeuSpace.n16),
 
-          _section(t, I18n.t('settings.conn', context: context)),
-          if (!_collapsed.contains(
+          _section(t, I18n.t('settings.conn', context: context),
+              icon: IconId.server,
+              summary: switch (store.state) {
+                ServerConnectionState.connected =>
+                  '${I18n.t('common.connected')} · ${store.activeEndpoint?.label ?? store.target?.label ?? ''}',
+                ServerConnectionState.connecting => I18n.t('common.connecting'),
+                ServerConnectionState.error =>
+                  store.errorMessage ?? I18n.t('common.connFailed'),
+                ServerConnectionState.disconnected => I18n.t('common.disconnected'),
+              }),
+          if (_expanded.contains(
             I18n.t('settings.conn', context: context),
           )) ...[
             NeuRaised(
@@ -191,8 +205,10 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
             ),
           ],
           SizedBox(height: NeuSpace.n20),
-          _section(t, I18n.t('settings.workspace', context: context)),
-          if (!_collapsed.contains(
+          _section(t, I18n.t('settings.workspace', context: context),
+              icon: IconId.folder,
+              summary: store.target?.defaultCwd ?? I18n.t('ui.e963f6371c')),
+          if (_expanded.contains(
             I18n.t('settings.workspace', context: context),
           )) ...[
             NeuRaised(
@@ -329,8 +345,8 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
             ),
           ],
           SizedBox(height: NeuSpace.n20),
-          _section(t, I18n.t('settings.appearance', context: context)),
-          if (!_collapsed.contains(
+          _section(t, I18n.t('settings.appearance', context: context), icon: IconId.image),
+          if (_expanded.contains(
             I18n.t('settings.appearance', context: context),
           )) ...[
             NeuRaised(
@@ -375,8 +391,12 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
             SizedBox(height: NeuSpace.n20),
 
             // ==================== 后台保活（补 task-10 的已知不足） ====================
-            _section(t, I18n.t('ui.066ae8d7d6')),
-            if (!_collapsed.contains(I18n.t('ui.066ae8d7d6'))) ...[
+            _section(t, I18n.t('ui.066ae8d7d6'),
+                icon: IconId.power,
+                summary: AppPrefs.instance.keepAlive
+                    ? I18n.t('ui.97f76f1a29')
+                    : I18n.t('ui.d58a55bcee')),
+            if (_expanded.contains(I18n.t('ui.066ae8d7d6'))) ...[
               NeuRaised(
                 radius: NeuRadii.lg,
                 padding: const EdgeInsets.fromLTRB(NeuSpace.n14, NeuSpace.n12, NeuSpace.n14, NeuSpace.n12),
@@ -433,7 +453,8 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _section(t, I18n.t('ui.5660bcd256')),
+                    _section(t, I18n.t('ui.5660bcd256'), icon: IconId.bubble),
+                    if (_expanded.contains(I18n.t('ui.5660bcd256'))) ...[
                     NeuRaised(
                       radius: NeuRadii.lg,
                       padding: EdgeInsets.fromLTRB(NeuSpace.n14, NeuSpace.n12, NeuSpace.n14, NeuSpace.n12),
@@ -635,6 +656,7 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
                         ],
                       ),
                     ),
+                    ],
                   ],
                 );
               },
@@ -649,7 +671,12 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _section(t, I18n.t('settings.language', context: context)),
+                    _section(t, I18n.t('settings.language', context: context),
+                        icon: IconId.cmd,
+                        summary: lang == 'zh'
+                            ? '中文'
+                            : (lang == 'en' ? 'English' : I18n.t('theme.system'))),
+                    if (_expanded.contains(I18n.t('settings.language', context: context))) ...[
                     NeuRaised(
                       radius: NeuRadii.lg,
                       padding: const EdgeInsets.all(NeuSpace.n6),
@@ -689,14 +716,15 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
                         ],
                       ),
                     ),
+                    ],
                   ],
                 );
               },
             ),
           ],
           SizedBox(height: NeuSpace.n20),
-          _section(t, I18n.t('settings.app', context: context)),
-          if (!_collapsed.contains(
+          _section(t, I18n.t('settings.app', context: context), icon: IconId.gear),
+          if (_expanded.contains(
             I18n.t('settings.app', context: context),
           )) ...[
             ListenableBuilder(
@@ -938,8 +966,12 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
             ),
           ],
           SizedBox(height: NeuSpace.n20),
-          _section(t, I18n.t('settings.about', context: context)),
-          if (!_collapsed.contains(
+          _section(t, I18n.t('settings.about', context: context),
+              icon: IconId.info,
+              summary: store.health?.piVersion == null
+                  ? null
+                  : 'pi ${store.health!.piVersion}'),
+          if (_expanded.contains(
             I18n.t('settings.about', context: context),
           )) ...[
             NeuRaised(
@@ -1378,39 +1410,29 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
   }
 
   /// 分组标题：点一下收起/展开这一组（task-21 合同③）
-  Widget _section(NeuTokens t, String title) {
-    final open = !_collapsed.contains(title);
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () => setState(() {
+  /// 折叠分组的薄包装：状态在本页（`_expanded`），视觉与交互复用 [NeuSection]。
+  ///
+  /// 这里保留一层包装而不是让 8 处调用各自组装 NeuSection —— 那些调用点
+  /// 关心的只是「标题 + 图标 + 摘要」，不该每次都写一遍 open/onToggle。
+  Widget _section(
+    NeuTokens t,
+    String title, {
+    IconId icon = IconId.circle,
+    String? summary,
+  }) {
+    final open = _expanded.contains(title);
+    return NeuSection(
+      title: title,
+      icon: icon,
+      summary: summary,
+      open: open,
+      onToggle: () => setState(() {
         if (open) {
-          _collapsed.add(title);
+          _expanded.remove(title);
         } else {
-          _collapsed.remove(title);
+          _expanded.add(title);
         }
       }),
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: NeuSpace.n8),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                title,
-                style: TextStyle(
-                  fontSize: NeuFonts.sectionTitle,
-                  fontWeight: FontWeight.w700,
-                  color: t.onBg,
-                ),
-              ),
-            ),
-            NeuIcon(
-              open ? IconId.chevronDown : IconId.chevronRight,
-              size: 16,
-              color: t.muted,
-            ),
-          ],
-        ),
-      ),
     );
   }
 
