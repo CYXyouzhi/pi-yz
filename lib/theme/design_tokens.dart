@@ -328,15 +328,21 @@ abstract final class NeuMotion {
 /// 因此数值照抄设计稿即可。
 abstract final class NeuShadows {
   /// `--nm-raise-sm` 小隆起：图标底板、键帽
+  ///
+  /// 模糊半径从设计稿的 7 收到 5。理由是实测的性能账：连接页这类长表单页
+  /// 上同时存在二十多个这种图层，滚动时每个都要做一次高斯模糊 ——
+  /// 用户在真机上反馈「手指滑、画面跟不上」。偏移量没动，所以明暗方向
+  /// 和投影形状不变，只是边缘略紧一点，肉眼看不出差别。
+  /// 要回到设计稿原值：7 / 16 / 24。
   static List<BoxShadow> raiseSm(NeuTokens t) => [
-        BoxShadow(color: t.nmLo, offset: const Offset(3, 3), blurRadius: 7),
-        BoxShadow(color: t.nmHi, offset: const Offset(-3, -3), blurRadius: 7),
+        BoxShadow(color: t.nmLo, offset: const Offset(3, 3), blurRadius: 5),
+        BoxShadow(color: t.nmHi, offset: const Offset(-3, -3), blurRadius: 5),
       ];
 
-  /// `--nm-raise` 标准隆起：卡片、气泡
+  /// `--nm-raise` 标准隆起：卡片、气泡（模糊半径 16 → 11，见上）
   static List<BoxShadow> raise(NeuTokens t) => [
-        BoxShadow(color: t.nmLo, offset: const Offset(7, 7), blurRadius: 16),
-        BoxShadow(color: t.nmHi, offset: const Offset(-7, -7), blurRadius: 16),
+        BoxShadow(color: t.nmLo, offset: const Offset(7, 7), blurRadius: 11),
+        BoxShadow(color: t.nmHi, offset: const Offset(-7, -7), blurRadius: 11),
         BoxShadow(
           color: t.nmLoDeep,
           offset: const Offset(0, 1),
@@ -344,10 +350,10 @@ abstract final class NeuShadows {
         ),
       ];
 
-  /// `--nm-raise-lg` 大隆起：压在画布最外层的元素
+  /// `--nm-raise-lg` 大隆起：压在画布最外层的元素（模糊半径 24 → 16，见上）
   static List<BoxShadow> raiseLg(NeuTokens t) => [
-        BoxShadow(color: t.nmLo, offset: const Offset(10, 10), blurRadius: 24),
-        BoxShadow(color: t.nmHi, offset: const Offset(-10, -10), blurRadius: 24),
+        BoxShadow(color: t.nmLo, offset: const Offset(10, 10), blurRadius: 16),
+        BoxShadow(color: t.nmHi, offset: const Offset(-10, -10), blurRadius: 16),
         BoxShadow(
           color: t.nmLoDeep,
           offset: const Offset(0, 2),
