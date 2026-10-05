@@ -196,7 +196,7 @@ GET /api/pool  ->  池里会话数: 1     （关闭前是 2）
 
 ```
 flutter analyze            No issues found
-flutter test               135 全过         （原 132 + 本轮新增的 3 条快捷键布局回归）
+flutter test               142 全过         （原 132 + 快捷键布局 3 条 + 折叠门控 7 条）
 cd server && node --test   20 全过 / 0 失败   （不带参数，跑全部）
 ```
 
@@ -291,12 +291,13 @@ RenderFlex children have non-zero flex but incoming width constraints are unboun
 **回归测试**：`test/key_bar_layout_test.dart`（折叠态 / 展开态 / 来回切换 3 条），
 按聊天页的真实层级搭，不再用 `Align` 包。
 
-**门禁**：`flutter analyze` 无问题；`flutter test` 135 全过（原 132 + 新 3）。
+**门禁**：`flutter analyze` 无问题；`flutter test` 142 全过。
 
 ### 证据时间戳的一处说明（含一处更正）
 
 两份「快捷键」证据里，`p10`（修复前）**刻意早于**修复提交 —— 它记录的是那个
-已经不复存在的画面，重拍没有意义；`p11`（修复后）已在最终 APK 上重拍。
+已经不复存在的画面，重拍没有意义；`p11`（修复后）拍在修复后的构建上，但它
+比最后一次 APK 构建早 12 分钟（审计核出的时间戳）—— 那之后 `key_bar.dart` 未再改动。
 
 **更正（审计指出）**：上一版这里写「其余截图（p0–p9…）都已在最终 APK 上重拍」，
 **不准确**。实情是：
