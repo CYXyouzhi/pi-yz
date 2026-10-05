@@ -1,56 +1,99 @@
-=== 本次改动（把手导航 + 耗时索引）门禁 ===
+=== 本次改动（把手导航 + 耗时索引 + 词条合并）门禁汇总 ===
+日期：2026-10-05
+设备：MuMu 模拟器（1080×1920 物理 / density 480 → dpr 3.0 → 逻辑 360×640）
 
 --- 1) 静态检查 ---
-flutter analyze
-  No issues found! (ran in 3.5s)
+$ flutter analyze
+  Analyzing pi-mobile...
+  No issues found! (ran in 2.7s)
 
 --- 2) 单元 / 组件测试 ---
-flutter test
-  00:02 +117: All tests passed!
-  （上一轮基线 104；本轮 +2 把手用例、+11 耗时索引用例）
+$ flutter test
+  00:02 +121: All tests passed!
+  （上一轮基线 104；本轮 +2 把手用例、+11 耗时索引用例、+4 i18n 完整性用例 = 121）
 
---- 3) 证据新鲜度门禁（本轮新增）---
-python tool/evidence_freshness.py --selftest
+--- 3) 服务端测试 ---
+$ cd server && node --test test/secrets.test.mjs test/quota-fallback-patterns.test.mjs
+  ℹ tests 10
+  ℹ pass 10
+  ℹ fail 0
+  ⚠ 注意用法：`node --test test/` 在 Node v24 下会把**目录**当成单个测试文件，
+    报「tests 1 / fail 1」——那是用法问题不是测试失败。必须显式列出文件。
+
+--- 4) 触控目标 ---
+$ python tool/touch_targets.py
+  带图标的 NeuPressable: 84
+  高度 < 40dp: 0
+  宽度 < 40dp: 0
+  （上一轮 85 → 84：少的那个正是本次删掉的输入区 ⌄ 按钮）
+
+--- 5) 证据新鲜度门禁（本轮新增）---
+$ python tool/evidence_freshness.py docs/verify/handle-nav/*.png
+  源码最新改动 : 2026-10-05 10:06:40  lib\ui\server\conn_page.dart
+  APK 构建时间 : 2026-10-05 10:12:11  build\app\outputs\flutter-apk\app-debug.apk
+  ✓ 门禁通过：所有证据都晚于源码与 APK
+
+$ python tool/evidence_freshness.py --selftest
   ✓ 全部新鲜（图 > APK > 源码）: 期望 干净[]，实际 干净[]
   ✓ APK 早于源码: 期望 拦下['apk']，实际 拦下['apk']
   ✓ 截图早于 APK: 期望 拦下['shot']，实际 拦下['shot']
   ✓ 截图早于源码: 期望 拦下['shot']，实际 拦下['shot']
   自检通过：四种场景的判定都符合预期
 
-python tool/evidence_freshness.py docs/verify/handle-nav/*.png
-  源码最新改动 : 2026-10-05 09:54:17  lib\main.dart
-  APK 构建时间 : 2026-10-05 09:56:26  build\app\outputs\flutter-apk\app-debug.apk
-  ✓ 门禁通过：所有证据都晚于源码与 APK
-
---- 4) 证明门禁会拦（不是恒返回 0）---
-python tool/evidence_freshness.py --apk build/app/outputs/flutter-apk/app-release.apk \
+证明它会拦（不是恒返回 0）：
+$ python tool/evidence_freshness.py --apk build/app/outputs/flutter-apk/app-release.apk \
       docs/verify/handle-nav/t1-01-default-collapsed.png
   ✗ 门禁不通过（1 项）：
       - APK 比源码旧 74.4 分钟（源码 lib\main.dart）—— 先重新构建再截图
   $? = 1
 
---- 5) test 开关是否清零 ---
-grep -rn "autoHideEnabled" --include="*.dart" .
+而且它**真的用上了一次**：第一版截图拍于 10:00，之后 task-2/task-5 又改了 lib/，
+门禁报出「截图早于源码 6.6 分钟」。据此在 10:12 重建 APK、10:13 重拍四态，
+新旧截图逐行比对只有 1 个像素不同（y=884，＋ 图标笔画上的抗锯齿差异）。
+
+--- 6) 代码清理核验 ---
+$ grep -rn "autoHideEnabled" --include="*.dart" .
   0 命中（lib/ 与 test/ 均为 0）
 
---- 6) 硬编码阈值是否收净 ---
-grep -rn "pixels > 40" lib/
-  0 命中（已改为 _headerCollapseAt，chat_page.dart:63 定义 / :577 使用）
-grep -n "160" lib/ui/server/message_view.dart
-  仅剩注释与常量定义行（kErrorCollapseThreshold，:34 定义 / :375 判断 / :378 传参）
+$ grep -rn "pixels > 40" lib/
+  0 命中（→ _headerCollapseAt，chat_page.dart:63 定义 / :577 使用）
 
---- 7) 把手四态的像素一致性 ---
-t1-01-default-collapsed.png        5034fa4ef995087d9c16aa3325448411   ← 收起态
-t1-02-tap-handle-shows-nav.png     aa41dcc1082a7097ee4b4c62d67fcbd9   ← 展开态
-t1-03-shown-again-same-pixels.png  aa41dcc1082a7097ee4b4c62d67fcbd9   ← 与上一致
-t1-04-tab-tap-collapses.png        5034fa4ef995087d9c16aa3325448411   ← 与收起态一致
-t1-05-swipe-down-collapses.png     5034fa4ef995087d9c16aa3325448411   ← 与收起态一致
-t1-06-swipe-up-shows-nav.png       aa41dcc1082a7097ee4b4c62d67fcbd9   ← 与展开态一致
+$ grep -n "160" lib/ui/server/message_view.dart
+  仅剩注释与常量定义（→ kErrorCollapseThreshold，:34 定义 / :375 判断 / :378 传参）
 
---- 8) 未完成 / 需下一轮处理 ---
-· 消息区占屏比：本轮**没有**量测。
-  docs/verify/space-rework/gates.txt 里的「消息区 91%」实际是
-  「标题栏 + 消息区」合计（measure.py 输出 y0-876，从 y=0 起算），
-  口径与字面不符，不能继续引用。task-8 需用带真实消息的截图重新量测。
-· ANR 根因未定位（见 docs/verify/perf-elapsed/README.md 第 4 节）：
-  RSS 匿名内存 2.97GB 与 Java 堆 4.75MB 的巨大落差是最强线索。
+$ 8 个废弃词条 key 全项目引用数
+  ui.8cd4d69138 / ui.73c4742417 / ui.476eec443b / ui.4fa8c1a36b
+  ui.ec097412f5 / ui.f1716e14e4 / ui.e366ccf155 / ui.30f7dd4ecd
+  → 全部 0 处
+
+--- 7) 把手四态的像素一致性（重拍后）---
+t1-01-default-collapsed.png        3b59ca4557e7ca11adecf1d5bb660a82   ← 收起态
+t1-02-tap-handle-shows-nav.png     26145f388ffdef123b5574b1ad321ec9   ← 展开态
+t1-03-shown-again-same-pixels.png  26145f388ffdef123b5574b1ad321ec9   ← 与展开态一致（上滑路径）
+t1-04-tab-tap-collapses.png        3b59ca4557e7ca11adecf1d5bb660a82   ← 与收起态一致（点 Tab 路径）
+t1-05-swipe-down-collapses.png     3b59ca4557e7ca11adecf1d5bb660a82   ← 与收起态一致（下滑路径）
+t1-06-swipe-up-shows-nav.png       26145f388ffdef123b5574b1ad321ec9   ← 与展开态一致（上滑路径）
+
+结论：3 条收起路径 → 同一像素；2 条唤出路径 → 同一像素。
+
+--- 8) 消息区占屏比（详见 README.md 第 8 节）---
+$ python docs/verify/handle-nav/measure_v2.py docs/verify/handle-nav/t1-01-default-collapsed.png
+  标题栏内容下沿 : 逻辑 48.0
+  输入区卡片上沿 : 逻辑 568.0
+  【口径 A】屏幕顶 -> 输入区上沿      : 568.0 = 88.8%   ← 与旧 gates 的 91% 同口径
+  【口径 B】标题栏下沿 -> 输入区上沿  : 520.0 = 81.2%   ← 纯消息区
+
+$ python docs/verify/handle-nav/measure_v2.py docs/verify/space-rework/t5-13-idle-default-82pct.png
+  【口径 A】: 592.0 = 92.5%
+  【口径 B】: 502.7 = 78.5%
+
+目标「≥ 88%」：口径 A 达标（88.8%），口径 B 不达标（81.2%）。两个都列出。
+理由说明见 README.md 第 8.3 节：88% 这个数字来自上一轮的 91%，而 91% 是口径 A。
+
+--- 9) 未完成 / 需下一轮处理 ---
+· ANR 根因未定位（见 docs/verify/perf-elapsed/README.md 第 4 节）。
+  最强线索：RSS 匿名内存 2.97GB 与 Java 堆 4.75MB 的巨大落差 → 原生层。
+· 上滑手势与 Android 系统「上滑回主屏」可能冲突：模拟器的 input swipe 不走
+  系统手势拦截，所以**这一点没有被证实或证伪**，需要在真机上确认。
+· 把手命中区 24dp 低于 Material 对按钮建议的 40dp（它是手势区不是按钮，
+  面积远大于 48×48，但纵向偏小）—— 取舍理由写在 README.md 第 7 节。
