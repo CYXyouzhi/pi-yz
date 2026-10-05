@@ -3,7 +3,9 @@
 // 输出的 sessionId 就是靶子；测完用 DELETE /api/sessions/:id 删掉。
 
 const base = process.env.PI_SERVER ?? 'http://127.0.0.1:30142';
-const token = process.env.PI_TOKEN ?? 'pimobile2026';
+// 开发用夹具脚本。默认值是个明显无效的占位符 —— 真实 token 走环境变量，
+// 免得「调试脚本的默认值」在开源后变成一条可用凭据。
+const token = process.env.PI_TOKEN ?? 'dev-fixture-token';
 const cwd = process.argv[2] ?? 'D:/powershell';
 
 const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
