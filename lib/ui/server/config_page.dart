@@ -708,6 +708,8 @@ class _ConfigPageState extends State<ConfigPage> {
             'count': _packages.isEmpty ? '' : '（${_packages.length}）',
           }),
           icon: IconId.serverPlus,
+          // 标题带计数，展开状态必须挂在不随计数变的键上（见 _section 的说明）
+          stateKey: 'plugins',
         ),
                 if (_expanded.contains('plugins')) ...[
                 NeuRaised(
@@ -1267,13 +1269,21 @@ class _ConfigPageState extends State<ConfigPage> {
   }
 
   /// 折叠分组标题。视觉与交互复用 [NeuSection]，状态在本页。
+  /// 折叠分组。
+  ///
+  /// [stateKey] 是**展开状态的键**，默认取标题。标题里带可变内容时必须显式给：
+  ///「pi 插件（10）」的计数一变标题就变，用标题当键会让展开状态凭空丢失；
+  ///更糟的是内容判定若还按固定串写（原来是 `'plugins'`），两边永远对不上 ——
+  ///点了箭头会翻转，但内容一个都不显示。
   Widget _section(
     NeuTokens t,
     String title, {
     IconId icon = IconId.circle,
     String? summary,
+    String? stateKey,
   }) {
-    final open = _expanded.contains(title);
+    final key = stateKey ?? title;
+    final open = _expanded.contains(key);
     return NeuSection(
       title: title,
       icon: icon,
@@ -1281,9 +1291,9 @@ class _ConfigPageState extends State<ConfigPage> {
       open: open,
       onToggle: () => setState(() {
         if (open) {
-          _expanded.remove(title);
+          _expanded.remove(key);
         } else {
-          _expanded.add(title);
+          _expanded.add(key);
         }
       }),
     );
