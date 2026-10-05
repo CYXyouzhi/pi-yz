@@ -36,6 +36,10 @@ class _ServerConnPageState extends State<ServerConnPage> {
   /// 备用地址（可选）。留空 = 不启用回落，行为与改动前一致。
   final _fallback = TextEditingController();
 
+  /// 是否走 HTTPS。**显式开关**（原来只能靠在地址栏粘 https:// 或把端口填 443
+  /// 隐式触发，用户根本不知道有这回事）。粘贴完整 URL 时仍会自动打开它。
+  bool _secure = false;
+
   List<ServerProfile> _profiles = const [];
   String? _editingId;
   bool _testing = false;
@@ -95,12 +99,14 @@ class _ServerConnPageState extends State<ServerConnPage> {
     _token.text = profile.token;
     _cwd.text = profile.defaultCwd ?? '';
     _fallback.text = profile.fallbackHost ?? '';
+    _secure = profile.secure;
   }
 
   ServerProfile _collect() {
     var host = _host.text.trim();
     var portText = _port.text.trim();
-    var secure = false;
+    // 以开关为准；粘贴完整 URL 时下面会把它改成 true（那是用户明确表达的意图）
+    var secure = _secure;
 
     // 允许直接粘贴一整条 URL：远程隧道给用户的就是
     // `https://xxx.trycloudflare.com`，逼他自己拆域名和端口既费事又容易错。
@@ -596,6 +602,7 @@ class _ServerConnPageState extends State<ServerConnPage> {
                     ],
                   ),
                   SizedBox(height: NeuSpace.n12),
+                  _groupTitle(t, I18n.t('conn.groupBasic')),
                   _field(t, label: I18n.t('ui.4fcad1c9ba'), controller: _name, hint: I18n.t('ui.ae50303667')),
                   _field(t, label: I18n.t('ui.aeb5271ede'), controller: _host, hint: I18n.t('ui.358bf4b90b'), keyboard: TextInputType.url),
                   _field(t, label: I18n.t('ui.c76cfefe72'), controller: _port, hint: '30142', keyboard: TextInputType.number),
@@ -612,6 +619,18 @@ class _ServerConnPageState extends State<ServerConnPage> {
                     controller: _cwd,
                     hint: I18n.t('ui.487a7ad4fa'),
                   ),
+                  // HTTPS 显式开关：远程访问（隧道）必须用它，但原来只能靠
+                  // 「在地址栏粘 https://」或「端口填 443」隐式触发。
+                  _switchRow(
+                    t,
+                    label: I18n.t('conn.useHttps'),
+                    hint: I18n.t('conn.useHttpsHint'),
+                    value: _secure,
+                    onChanged: (v) => setState(() => _secure = v),
+                  ),
+
+                  _groupTitle(t, I18n.t('conn.groupRemote')),
+                  _note(t, I18n.t('conn.remoteIntro')),
                   _field(
                     t,
                     label: I18n.t('conn.fallbackHost'),
@@ -1052,6 +1071,95 @@ class _ServerConnPageState extends State<ServerConnPage> {
           ),
         );
       },
+    );
+  }
+
+  /// 分组标题：把表单分成「基本」与「远程访问」两段。
+  ///
+  /// 为什么要分组：原来几个字段平铺在一起，而「备用地址」是**可选的高级项** ——
+  /// 混在必填项中间，第一次配置的人会以为它也得填。
+  Widget _groupTitle(NeuTokens t, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(top: NeuSpace.n6, bottom: NeuSpace.n10),
+      child: Row(
+        children: [
+          Container(
+            width: 3,
+            height: 13,
+            decoration: BoxDecoration(
+              color: t.accentInk.withValues(alpha: 0.55),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          SizedBox(width: NeuSpace.n7),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: NeuFonts.bodySmall,
+              fontWeight: FontWeight.w700,
+              color: t.fg,
+              letterSpacing: 0.3,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 分组内的一句话说明（比字段的 hint 更靠上层，讲「这一组是干什么的」）
+  Widget _note(NeuTokens t, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: NeuSpace.n10),
+      child: Text(
+        text,
+        style: TextStyle(fontSize: NeuFonts.badge, height: 1.6, color: t.muted),
+      ),
+    );
+  }
+
+  /// 开关行。形态照抄设置页的布尔项（NeuPressable 显示「开 / 关」），
+  /// 而不是塞一个 Material `Switch` 进来 —— 项目里所有布尔项都是这个样式，
+  /// 混一个进来会显得是两个设计系统拼的。
+  Widget _switchRow(
+    NeuTokens t, {
+    required String label,
+    required String hint,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: NeuSpace.n12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: TextStyle(fontSize: NeuFonts.bodyTight, color: t.fg)),
+                SizedBox(height: NeuSpace.n2),
+                Text(hint, style: TextStyle(fontSize: NeuFonts.badge, height: 1.5, color: t.muted)),
+              ],
+            ),
+          ),
+          SizedBox(width: NeuSpace.n10),
+          NeuPressable(
+            onTap: () => onChanged(!value),
+            radius: NeuRadii.sm,
+            flat: !value,
+            alwaysInset: value,
+            padding: EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n7),
+            child: Text(
+              value ? I18n.t('ui.8493205602') : I18n.t('ui.d58a55bcee'),
+              style: TextStyle(
+                fontSize: NeuFonts.sub,
+                color: value ? t.accentInk : t.muted,
+                fontWeight: value ? FontWeight.w600 : FontWeight.w400,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
