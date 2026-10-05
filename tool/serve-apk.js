@@ -33,7 +33,7 @@ function human(bytes) {
 
 const server = http.createServer((req, res) => {
   let rel = decodeURIComponent((req.url ?? '/').split('?')[0]);
-  if (rel === '/' || rel === '') rel = '/app-debug.apk';
+  if (rel === '/' || rel === '') rel = '/pi-yz-v0.1.0.apk';
   const target = path.join(ROOT, rel.replace(/^\//, ''));
 
   // 目录穿越防护
