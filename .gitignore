@@ -87,3 +87,15 @@ tool/__pycache__/
 # 里面是访问服务端的凭据。虽然本机明文存储（能读它的人本来也能读会话记录），
 # 但**绝不能跟着仓库跑到 GitHub 上** —— 那等于把钥匙公开。
 server/.token
+
+# 发布签名 —— 绝不能进仓库
+#
+# 和 server/.token 同理但更要紧：key.properties 里是 keystore 口令，
+# *.jks 是密钥本体。一旦公开，任何人都能签出包来冒充你更新 App。
+#
+# 另外一个与代码无关、但必须知道的事：**密钥丢了找不回**。
+# 已经发布过的包就再也无法升级（Android 只认同一个密钥签的更新），
+# 只能让用户卸载重装。所以请单独备份（密码管理器 / 私密网盘）。
+android/key.properties
+android/app/*.jks
+android/app/*.keystore
