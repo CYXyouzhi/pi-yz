@@ -159,12 +159,13 @@ void main() {
     });
   });
 
-  test('连接页的三个分组确实被门控（审计点名的那两个 + 手动配置）', () {
+  test('连接页的两个分组确实被门控（审计点名的那两个）', () {
     final src = File('lib/ui/server/conn_page.dart').readAsStringSync();
+    // conn.groupManual（「手动配置」那块表单）已经不在连接页内联了 ——
+    // 它搬进了独立的 ConnEditPage 子页面，所以不再是折叠分组、也不需要门控。
     for (final key in [
       "I18n.t('conn.groupQuick')",
       "I18n.t('ui.f8dfedcd8a')",
-      "I18n.t('conn.groupManual')",
     ]) {
       expect(hasGate(src, key), isTrue,
           reason: '$key 的内容没有包在 if (_expanded.contains(...)) 里');

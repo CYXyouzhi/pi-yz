@@ -17,6 +17,7 @@ import '../../theme/neu.dart';
 import '../neu_icons.dart';
 import '../neu_toast.dart';
 import 'diagnose_page.dart';
+import 'conn_edit_page.dart';
 
 class ServerConnPage extends StatefulWidget {
   const ServerConnPage({super.key, required this.store, this.onConnected});
@@ -278,38 +279,99 @@ class _ServerConnPageState extends State<ServerConnPage> {
   }
 
   /// 选中一台被发现的机器：能连就连，需要 token 就走配对码
+  /// 扫描结果里点「选中」：能配对就先配对拿 token，然后开子页面把剩下的字段补齐。
+  ///
+  /// 为什么不再往内联表单里填：那块默认收起，填了用户也看不见；
+  /// 而且它没有 token 的任何引导 —— 实测用户在「未开配对窗口」时就是
+  /// 「不知道怎么添加 token」。改成子页面后，地址/token 能直接带过去，
+  /// 剩下要补的东西旁边就有说明。
   Future<void> _useDiscovered(DiscoveredServer server) async {
-    setState(() {
-      _host.text = server.host;
-      _port.text = server.port.toString();
-      if (_name.text.trim().isEmpty) _name.text = server.name;
-    });
-
-    if (!server.pairingOpen) {
-      NeuToast.show(
-        context,
-        message: I18n.t('ui.4fa10ed005'),
-        icon: IconId.info,
+    String? pairedToken;
+    if (server.pairingOpen) {
+      final code = await _askPairCode(server);
+      if (code == null || !mounted) return;
+      final outcome = await LanDiscovery.pair(
+        host: server.host,
+        port: server.port,
+        code: code,
       );
-      return;
+      if (!mounted) return;
+      if (outcome.ok) {
+        pairedToken = outcome.token;
+        NeuToast.show(context, message: I18n.t('ui.4a3d8c1f0b'), icon: IconId.check);
+      } else {
+        NeuToast.show(context, message: outcome.message, icon: IconId.warn);
+      }
+    } else {
+      // 配对窗口没开：不再只弹一句「重启服务端」，而是把子页面打开、
+      // 并在里面直接给出 token 的三个来源（那就写在那儿）。
+      NeuToast.show(context, message: I18n.t('ui.4fa10ed005'), icon: IconId.info);
+      await Future<void>.delayed(const Duration(milliseconds: 600));
+      if (!mounted) return;
     }
 
-    final code = await _askPairCode(server);
-    if (code == null || !mounted) return;
-
-    final outcome = await LanDiscovery.pair(
-      host: server.host,
-      port: server.port,
-      code: code,
+    final saved = await _openEditor(
+      ServerProfile(
+        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        name: server.name,
+        host: server.host,
+        port: server.port,
+        token: pairedToken ?? _store.target?.token ?? '',
+        secure: false,
+      ),
+      isNew: true,
     );
-    if (!mounted) return;
-    if (!outcome.ok) {
-      NeuToast.show(context, message: outcome.message, icon: IconId.warn);
-      return;
+    if (saved) widget.onConnected?.call();
+  }
+
+  /// 打开配置子页面。返回 true = 已经保存并连上了。
+  ///
+  /// 页面自己管字段与测试连接；这里只负责把结果写进 store。
+  Future<bool> _openEditor(ServerProfile draft, {required bool isNew}) async {
+    final result = await Navigator.of(context).push<ServerProfile>(
+      MaterialPageRoute(
+        builder: (_) => ConnEditPage(
+          initial: isNew ? null : draft,
+          defaultToken: draft.token,
+          draft: isNew ? draft : null,
+        ),
+      ),
+    );
+    if (result == null || !mounted) return false;
+
+    // 已存列表以**存储**为准（不能用内存里的 _profiles，它可能还没加载完；
+    // 之前拿它当基准就把用户原有的配置覆盖丢过）。
+    final stored = await ServerProfileStore.loadAll();
+    final base = stored.isNotEmpty ? stored : _profiles;
+    final next = [...base.where((p) => p.id != result.id), result];
+    await ServerProfileStore.saveAll(next);
+    await ServerProfileStore.saveActiveId(result.id);
+    if (!mounted) return false;
+    setState(() {
+      _profiles = next;
+      _editingId = result.id;
+    });
+    await _store.connect(ServerTarget(
+      host: result.host,
+      port: result.port,
+      token: result.token,
+      defaultCwd: result.defaultCwd,
+      secure: result.secure,
+      fallbackHost: result.fallbackHost,
+      fallbackPort: result.fallbackPort,
+      fallbackSecure: result.fallbackSecure,
+    ));
+    if (!mounted) return false;
+    if (_store.isConnected) {
+      NeuToast.show(context,
+          message: I18n.tp('ui.e02ef1e216', {'endpoint': result.endpoint}),
+          icon: IconId.check);
+      return true;
     }
-    _token.text = outcome.token!;
-    NeuToast.show(context, message: I18n.tp('ui.3210a50038', {'version': server.piVersion}), icon: IconId.check);
-    await _saveAndConnect();
+    NeuToast.show(context,
+        message: I18n.tp('ui.3550a72e44', {'e': _store.errorMessage ?? I18n.t('ui.31bbcc36d8')}),
+        icon: IconId.warn);
+    return false;
   }
 
   /// 配对码输入框：码只在电脑端终端上，所以要用户手输
@@ -629,94 +691,6 @@ class _ServerConnPageState extends State<ServerConnPage> {
             // ---- 手动配置：整块默认收起 ----
             // 它是次要路径（常态是从「已保存」点进去），展开时占掉大半屏，
             // 整页看起来又长又杂。
-            if (_expanded.contains(I18n.t('conn.groupManual'))) ...[
-            NeuRaised(
-              key: _formKey,
-              radius: NeuRadii.lg,
-              padding: const EdgeInsets.all(NeuSpace.n16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      NeuIcon(IconId.server, size: 16, color: t.accentInk),
-                      SizedBox(width: NeuSpace.n8),
-                      Text(I18n.t('ui.73e82552c8'), style: TextStyle(fontSize: NeuFonts.bodyTight, fontWeight: FontWeight.w700, color: t.fg)),
-                    ],
-                  ),
-                  SizedBox(height: NeuSpace.n12),
-                  _groupTitle(t, I18n.t('conn.groupBasic')),
-                  _field(t, label: I18n.t('ui.4fcad1c9ba'), controller: _name, hint: I18n.t('ui.ae50303667')),
-                  _field(t, label: I18n.t('ui.aeb5271ede'), controller: _host, hint: I18n.t('ui.358bf4b90b'), keyboard: TextInputType.url),
-                  _field(t, label: I18n.t('ui.c76cfefe72'), controller: _port, hint: '30142', keyboard: TextInputType.number),
-                  _field(
-                    t,
-                    label: 'token',
-                    controller: _token,
-                    hint: I18n.t('ui.7ab030fd16'),
-                    obscure: true,
-                  ),
-                  _field(
-                    t,
-                    label: I18n.t('ui.e963f6371c'),
-                    controller: _cwd,
-                    hint: I18n.t('ui.487a7ad4fa'),
-                  ),
-                  // HTTPS 显式开关：远程访问（隧道）必须用它，但原来只能靠
-                  // 「在地址栏粘 https://」或「端口填 443」隐式触发。
-                  _switchRow(
-                    t,
-                    label: I18n.t('conn.useHttps'),
-                    hint: I18n.t('conn.useHttpsHint'),
-                    value: _secure,
-                    onChanged: (v) => setState(() => _secure = v),
-                  ),
-
-                  _groupTitle(t, I18n.t('conn.groupRemote')),
-                  _note(t, I18n.t('conn.remoteIntro')),
-                  _field(
-                    t,
-                    label: I18n.t('conn.fallbackHost'),
-                    controller: _fallback,
-                    hint: I18n.t('conn.fallbackHint'),
-                    keyboard: TextInputType.url,
-                  ),
-                  // 安全提示：放在表单下面，因为用户配连接时正是该看到它的时机。
-                  // 这三条都是实际存在的机制，不是泛泛的「注意安全」。
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(NeuSpace.n12),
-                    decoration: BoxDecoration(
-                      color: t.muted.withValues(alpha: 0.06),
-                      borderRadius: BorderRadius.circular(NeuRadii.sm),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          I18n.t('conn.securityTitle'),
-                          style: TextStyle(
-                            fontSize: NeuFonts.bodySmall,
-                            fontWeight: FontWeight.w600,
-                            color: t.muted,
-                          ),
-                        ),
-                        SizedBox(height: NeuSpace.n6),
-                        Text(
-                          I18n.t('conn.securityBody'),
-                          style: TextStyle(
-                            fontSize: NeuFonts.badge,
-                            height: 1.6,
-                            color: t.muted,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            ],
             const SizedBox(height: NeuSpace.n16),
 
             if (_testResult != null)
@@ -853,53 +827,34 @@ class _ServerConnPageState extends State<ServerConnPage> {
       open ? I18n.t('ui.b4912bca07') : I18n.t('ui.3b07ed0da7');
 
   /// 表单区（「手动配置」那块折叠区）的锚点，用于新增/编辑后滚过去。
-  final GlobalKey _formKey = GlobalKey();
 
-  /// 新增一台机器：把「正在编辑的 id」清掉，保存时就会落成新条目。
+  /// 新增一台机器：直接开子页面。
   ///
-  /// 为什么还要展开 + 滚动：表单在「手动配置」这块**默认收起的**折叠区里，
-  /// 而这些入口（「＋新增」、行尾的铅笔）都在页面下方的「已保存」里。
-  /// 早前它们只清/填表单，不展开也不滚动 —— 于是界面零变化（表单本来就
-  /// 没显示），用户只能认为按钮坏了。实测就是用户报的「这两个功能无法使用」。
+  /// 以前是「清空内联表单」——但表单在默认收起的折叠区里，点了等于没反应
+  /// （用户报的「这两个功能无法使用」就是它）。
   void _newProfile() {
-    setState(() {
-      _editingId = null;
-      _name.clear();
-      _host.clear();
-      _token.clear();
-      _cwd.clear();
-      _port.text = '30142';
-      _expanded.add(I18n.t('conn.groupManual'));
-    });
-    _scrollToForm();
+    _openEditor(
+      ServerProfile(
+        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        name: '',
+        host: '',
+        port: 30142,
+        token: _store.target?.token ?? '',
+        secure: false,
+      ),
+      isNew: true,
+    );
   }
 
-  /// 把该条配置读进表单（编辑），同样要把它展开、滚出来 —— 理由同 `_newProfile`。
+  /// 编辑已有那条：同样开子页面，把它当前的值带过去。
   void _editProfile(ServerProfile profile) {
-    setState(() {
-      _fill(profile);
-      _expanded.add(I18n.t('conn.groupManual'));
-    });
-    _scrollToForm();
+    _openEditor(profile, isNew: false);
   }
 
   /// 滚到表单区。
   ///
   /// 下一帧再滚：`setState` 刚把折叠区展开，它的 `RenderObject` 要到下一帧
   /// 才布局完成，此时 `ensureVisible` 才能算出正确位置（立即调用会滚不到位）。
-  void _scrollToForm() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final ctx = _formKey.currentContext;
-      if (ctx == null) return;
-      Scrollable.ensureVisible(
-        ctx,
-        duration: const Duration(milliseconds: 280),
-        curve: Curves.easeOutCubic,
-        alignment: 0.05,
-      );
-    });
-  }
-
   /// 一行可复制的命令：整行都能点，免得手指戳不准那个小图标
   Widget _cmdRow(NeuTokens t, String command, String label) {
     return NeuPressable(
@@ -1317,94 +1272,6 @@ class _ServerConnPageState extends State<ServerConnPage> {
     setState(() => _ownRemote.clear());
   }
 
-  /// 分组标题：把表单分成「基本」与「远程访问」两段。
-  ///
-  /// 为什么要分组：原来几个字段平铺在一起，而「备用地址」是**可选的高级项** ——
-  /// 混在必填项中间，第一次配置的人会以为它也得填。
-  Widget _groupTitle(NeuTokens t, String text) {
-    return Padding(
-      padding: const EdgeInsets.only(top: NeuSpace.n6, bottom: NeuSpace.n10),
-      child: Row(
-        children: [
-          Container(
-            width: 3,
-            height: 13,
-            decoration: BoxDecoration(
-              color: t.accentInk.withValues(alpha: 0.55),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          SizedBox(width: NeuSpace.n7),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: NeuFonts.bodySmall,
-              fontWeight: FontWeight.w700,
-              color: t.fg,
-              letterSpacing: 0.3,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// 分组内的一句话说明（比字段的 hint 更靠上层，讲「这一组是干什么的」）
-  Widget _note(NeuTokens t, String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: NeuSpace.n10),
-      child: Text(
-        text,
-        style: TextStyle(fontSize: NeuFonts.badge, height: 1.6, color: t.muted),
-      ),
-    );
-  }
-
-  /// 开关行。形态照抄设置页的布尔项（NeuPressable 显示「开 / 关」），
-  /// 而不是塞一个 Material `Switch` 进来 —— 项目里所有布尔项都是这个样式，
-  /// 混一个进来会显得是两个设计系统拼的。
-  Widget _switchRow(
-    NeuTokens t, {
-    required String label,
-    required String hint,
-    required bool value,
-    required ValueChanged<bool> onChanged,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: NeuSpace.n12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label, style: TextStyle(fontSize: NeuFonts.bodyTight, color: t.fg)),
-                SizedBox(height: NeuSpace.n2),
-                Text(hint, style: TextStyle(fontSize: NeuFonts.badge, height: 1.5, color: t.muted)),
-              ],
-            ),
-          ),
-          SizedBox(width: NeuSpace.n10),
-          NeuPressable(
-            onTap: () => onChanged(!value),
-            radius: NeuRadii.sm,
-            flat: !value,
-            alwaysInset: value,
-            padding: EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n7),
-            child: Text(
-              value ? I18n.t('ui.8493205602') : I18n.t('ui.d58a55bcee'),
-              style: TextStyle(
-                fontSize: NeuFonts.sub,
-                color: value ? t.accentInk : t.muted,
-                fontWeight: value ? FontWeight.w600 : FontWeight.w400,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   /// 折叠分组的薄包装，复用 [NeuSection]（三套折叠各写各的正是
   /// 「有的地方点了能收、有的地方点了没反应」的根源）。
@@ -1430,40 +1297,4 @@ class _ServerConnPageState extends State<ServerConnPage> {
     );
   }
 
-  Widget _field(
-    NeuTokens t, {
-    required String label,
-    required TextEditingController controller,
-    String? hint,
-    TextInputType? keyboard,
-    bool obscure = false,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: NeuSpace.n12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label, style: TextStyle(fontSize: NeuFonts.small, color: t.muted)),
-          const SizedBox(height: NeuSpace.n6),
-          NeuInset(
-            radius: NeuRadii.sm,
-            padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n12),
-            child: TextField(
-              controller: controller,
-              keyboardType: keyboard,
-              obscureText: obscure,
-              style: TextStyle(fontSize: NeuFonts.bodyTight, color: t.fg),
-              decoration: InputDecoration(
-                isDense: true,
-                border: InputBorder.none,
-                hintText: hint,
-                hintStyle: TextStyle(fontSize: NeuFonts.bodySmall, color: t.muted),
-                contentPadding: const EdgeInsets.symmetric(vertical: NeuSpace.n12),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
