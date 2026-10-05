@@ -1,0 +1,177 @@
+[
+ [
+  "ui\\server\\activity_view.dart",
+  148,
+  "本轮 ${snap.toolCount} 次工具调用${snap.fileCount > 0 ?"
+ ],
+ [
+  "ui\\server\\chat_page.dart",
+  1344,
+  "${chat.cwd} · 已载入 ${chat.messages.length}"
+ ],
+ [
+  "ui\\server\\chat_page.dart",
+  1706,
+  "${model.provider} · 上下文 ${model.contextWindow ??"
+ ],
+ [
+  "ui\\server\\chat_page.dart",
+  1707,
+  "· 支持思考"
+ ],
+ [
+  "ui\\server\\chat_page.dart",
+  2466,
+  "会新建一条会话，从「${preview.isEmpty ? entryId.substring(0, 8) : preview}」往后继续。\\n"
+ ],
+ [
+  "ui\\server\\chat_page.dart",
+  2511,
+  "后续对话将接在「${preview.isEmpty ? targetId.substring(0, 8) : preview}」之后。\\n"
+ ],
+ [
+  "ui\\server\\chat_page.dart",
+  2659,
+  "⇢ $childCount 条分支"
+ ],
+ [
+  "ui\\server\\chat_page.dart",
+  3149,
+  "· 整文件写入 ${file.writes}"
+ ],
+ [
+  "ui\\server\\chat_page.dart",
+  3150,
+  "· 编辑 ${file.edits} 处"
+ ],
+ [
+  "ui\\server\\config_page.dart",
+  678,
+  "插件（pi 包）${_packages.isEmpty ?"
+ ],
+ [
+  "ui\\server\\config_page.dart",
+  785,
+  "\\n检查更新失败：$_packageUpdateError"
+ ],
+ [
+  "ui\\server\\config_page.dart",
+  945,
+  "${model.provider} · 上下文 ${model.contextWindow ??"
+ ],
+ [
+  "ui\\server\\config_page.dart",
+  946,
+  "· 支持思考"
+ ],
+ [
+  "ui\\server\\config_page.dart",
+  963,
+  "空"
+ ],
+ [
+  "ui\\server\\config_page.dart",
+  1172,
+  "会执行 pi 的 removeAndPersist：${item.source}\\n"
+ ],
+ [
+  "ui\\server\\conn_page.dart",
+  716,
+  "· 可配对"
+ ],
+ [
+  "ui\\server\\conn_page.dart",
+  716,
+  "· 未开配对窗口"
+ ],
+ [
+  "ui\\server\\conn_page.dart",
+  768,
+  "远程 · ${parsed.host.split("
+ ],
+ [
+  "ui\\server\\conn_page.dart",
+  799,
+  "公网连接失败：${_store.errorMessage ??"
+ ],
+ [
+  "ui\\server\\export_page.dart",
+  196,
+  "${entry.key.toUpperCase()} 路径"
+ ],
+ [
+  "ui\\server\\files_page.dart",
+  218,
+  "手机端不内嵌预览 ${ext.replaceFirst("
+ ],
+ [
+  "ui\\server\\files_page.dart",
+  218,
+  ").toUpperCase()} 文件。\\n"
+ ],
+ [
+  "ui\\server\\files_page.dart",
+  376,
+  "· 已截断"
+ ],
+ [
+  "ui\\server\\pool_view.dart",
+  227,
+  "「${s.title}」\\n${humanBytes(s.bytes)} · ${s.messages} 条消息\\n\\n"
+ ],
+ [
+  "ui\\server\\pool_view.dart",
+  228,
+  "文件会从电脑上删掉，无法恢复。${g.workspaceName} 会腾出 ${humanBytes(s.bytes)}。"
+ ],
+ [
+  "ui\\server\\pool_view.dart",
+  254,
+  "删除失败：${_store.lastError ??"
+ ],
+ [
+  "ui\\server\\provider_login_sheet.dart",
+  320,
+  "失败原因：${status?.error ??"
+ ],
+ [
+  "ui\\server\\sessions_page.dart",
+  904,
+  "· 已连接"
+ ],
+ [
+  "ui\\server\\settings_page.dart",
+  104,
+  "已连接 · pi ${store.health?.piVersion ??"
+ ],
+ [
+  "ui\\server\\settings_page.dart",
+  526,
+  "通知已开启${notif.inDndWindow ? I18n.t("
+ ],
+ [
+  "ui\\server\\settings_page.dart",
+  800,
+  "· ${entry.messageCount} 条 · ${entry.sizeLabel}"
+ ],
+ [
+  "ui\\server\\settings_page.dart",
+  1249,
+  "当前默认：${store.defaultModelId ??"
+ ],
+ [
+  "ui\\server\\settings_page.dart",
+  1283,
+  "${model.provider} · 上下文 ${model.contextWindow ??"
+ ],
+ [
+  "ui\\server\\usage_page.dart",
+  313,
+  "⚠ 这是**按本机落盘用量**做的估算，不是服务商官方额度。\\n"
+ ],
+ [
+  "ui\\server\\usage_page.dart",
+  314,
+  "阈值：今天 \\$5 变黄、\\$10 变红。真正要紧的是「别在半夜卡住」——"
+ ]
+]

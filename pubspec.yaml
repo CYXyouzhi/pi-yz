@@ -1,0 +1,29 @@
+name: pi_mobile
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.13.4
+
+dependencies:
+  dartssh2: ^4.1.0
+  file_picker: ^13.1.0
+  flutter:
+    sdk: flutter
+  flutter_markdown_plus: ^1.0.12
+  path_provider: ^2.1.6
+  shared_preferences: ^2.5.5
+  xterm: ^4.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  # App 内启动遮罩用的图（由 tool/make-android-assets.ps1 从原图缩出来）
+  assets:
+    - assets/splash.png

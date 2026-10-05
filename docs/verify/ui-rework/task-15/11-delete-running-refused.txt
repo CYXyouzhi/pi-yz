@@ -1,0 +1,5 @@
+合同④「不能误删在跑的」——服务端硬拦（UI 侧也拦，见 pool_view.dart 的 _delete）
+
+$ curl -X DELETE .../api/sessions/01a0cabd-... （此刻该会话正在跑 sleep 240）
+{"error":"这条会话正在运行，先停下再删","running":true}
+HTTP 409

@@ -1,0 +1,16 @@
+{
+  "name": "pi-mobile-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "pi-mobile（手机端）的电脑端服务，做成 pi 插件：/mobile start|stop|status|doctor|token",
+  "pi": {
+    "extensions": [
+      "extensions/mobile-server.ts",
+      "extensions/quota-fallback.ts"
+    ]
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "pi-mobile-server",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "pi-mobile 的远端服务端：把 pi 的 SDK 包成 HTTP + SSE",
+  "//deps": "依赖通过 node_modules junction 指向 E:/pi-agent/node_modules 复用本机已装的 pi，不重复下载 427MB"
+}

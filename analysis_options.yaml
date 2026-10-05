@@ -1,0 +1,30 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  # 说明：strict-raw-types 对「JSON 形状检查」误报率高 —— 本项目的裸 Map 都是
+  # 「is Map / as Map? 后接 .cast<String, dynamic>()」这种刻意写法，强行改成
+  # Map<String, dynamic> 会改变 is 检查的运行时语义（server_types.dart:705 的注释记录了
+  # 教训：一律 as Map 曾让一个 double 被强转抛异常，导致「会话信息」面板点了没反应）。故不启用。
+  exclude:
+    - build/**
+    # tool/ 是开发脚本（ADB 交互、探针），里面 print 是刻意用法；
+    # 但 lib/ 与 test/ 必须保持 0 issue
+    - tool/**
+    - android/**
+    - windows/**
+
+linter:
+  rules:
+    # ---- 可能的 bug 类（本轮重点，非风格）----
+    - unawaited_futures
+    - cancel_subscriptions
+    - close_sinks
+    - use_build_context_synchronously
+    - avoid_dynamic_calls
+    # discarded_futures 不启用：它在「非 async 上下文里启动异步任务」时报警，而 Flutter 的
+    # onPressed / initState / 生命周期回调里这么写是常规做法（刷新列表、乐观写入偏好等），
+    # 强行加 54 处 unawaited() 只是包装、不改变行为，反而制造噪声。真正的风险场景
+    # —— async 函数里漏 await 导致异常被吞或顺序错乱 —— 由 unawaited_futures 覆盖。
+    - unrelated_type_equality_checks
+    - test_types_in_equals
+    - collection_methods_unrelated_type

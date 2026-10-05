@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 与 drawable/launch_background.xml 保持一致（v21 起 layer-list 行为相同，
+     这里保留独立文件是因为 Flutter 模板本来就这么分） -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/splash_background" />
+    <item>
+        <bitmap
+            android:gravity="fill"
+            android:src="@drawable/splash" />
+    </item>
+</layer-list>

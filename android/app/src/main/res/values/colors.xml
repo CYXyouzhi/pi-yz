@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 自适应图标的底色：取 App 浅色画布色 oklch(93.5% 0.038 172)，
+         让桌面图标与 App 内部是同一块薄荷画布 -->
+    <color name="ic_launcher_background">#D1F2E7</color>
+
+    <!-- 启动遮罩图（1080×1862）的整体均色，用作窗口兜底底色，
+         任何拉伸留白都不会露出杂色 -->
+    <color name="splash_background">#E1FBF4</color>
+</resources>

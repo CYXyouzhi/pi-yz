@@ -1,0 +1,27 @@
+后台保活实证（dumpsys 原始输出片段）
+
+== 通知 ==
+android.title=String (pi-mobile 正在保持连接)
+android.text=String (退到后台也能收到进度与提醒 · 在设置里可关闭)
+effectiveNotificationChannel=NotificationChannel{mId='pi_keepalive', mName=后台保持连接, mImportance=2 ...}
+
+== 前台服务（启动后）==
+ServiceRecord{477fb79 u0 com.youzhi.pimobile.pi_mobile/.KeepAliveService ...}
+isForeground=true foregroundId=9901 types=0x00000001 foregroundNoti=Notification(channel=pi_keepalive ... flags=ONGOING_EVENT|NO_CLEAR|FOREGROUND_SERVICE)
+
+== 按 HOME 退到后台之后 ==
+ServiceRecord{...KeepAliveService}  仍在
+app=ProcessRecord{c2a847a 27312:com.youzhi.pimobile.pi_mobile/u0a54}  进程仍在
+u0_a54 27312 ... S com.youzhi.pimobile.pi_mobile  （状态 S = 正常休眠等待，不是被杀）
+
+== 死代码清理 ==
+lib/ 行数 25690 → 22496（少 3194 行）
+删除：lib/services/ssh_service.dart / lib/services/rpc/(4 文件) / lib/models/ssh_profile.dart / lib/ui/rpc/(2 文件)
+main.dart：删掉 _SessionTab + _SessionRow + 3 个 ssh/rpc import
+复扫：未被引用的顶层类 0 个；// ignore: unused_element 0 处
+
+== 文件页重做（合同⑤）==
+· 面包屑：路径从「一整行不可点的灰字」变成可点的一段段（点任意一级直接跳）
+· 图标按类型：目录 folder / 文档 pen / 图片 image / 代码 cmd / 其他 bubble
+  （原来文件一律用 terminal 图标 —— 那是「命令行」的意思，放在 README 或截图上没有信息量）
+· 行内边距 10 → 13（手指目标高过 44dp 才不容易点错）
