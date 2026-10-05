@@ -698,11 +698,35 @@ class ServerStore extends ChangeNotifier {
     final client = _client;
     if (client == null) return;
     try {
-      pool = await client.pool();
+      final next = await client.pool();
+      // **pool 变了必须 bump sessionsRevision。**
+      //
+      // 列表页（ServerSessionsPage）用 ValueListenableBuilder **只**监听
+      // sessionsRevision —— 它自己的注释写了理由：流式时 store 每秒 notify
+      // 几十次，244 条列表跟着重建纯属浪费。而 pool 的变化不在那个信号里，
+      // 所以不 bump 就等于「活跃会话区块永远不刷新」。
+      //
+      // 实测（本轮）：点「×」关闭后服务端 /api/pool 已经归零，界面却仍显示
+      // 「共 1 个会话活着」；切到别的 Tab 再切回来就正常了 —— 那个「切 Tab 好了」
+      // 正是这个根因的特征（切 Tab 会强制 build）。
+      // 只在真的变了时 bump：3 秒轮询一次，否则长列表每 3 秒白重建一次。
+      if (!_samePool(next)) {
+        pool = next;
+        _bumpSessions();
+      }
       _notify();
     } on ServerException {
       // 静默：总览失败不影响任何操作
     }
+  }
+
+  /// 池里的会话是否与当前一致（比 id 序列就够 —— 界面只按 id 判断增删）
+  bool _samePool(List<PoolSession> next) {
+    if (next.length != pool.length) return false;
+    for (var i = 0; i < next.length; i += 1) {
+      if (next[i].id != pool[i].id) return false;
+    }
+    return true;
   }
 
   /// 拉一次远程访问状态（连接页进入时拉，不轮询 —— 隧道不会自己变来变去）
@@ -788,6 +812,7 @@ class ServerStore extends ChangeNotifier {
     try {
       await client.closeLiveSession(sessionId);
       pool = pool.where((p) => p.id != sessionId).toList();
+      _bumpSessions();      // 同上：列表页只听这个信号
       _notify();
       // 再和服务器对齐一次；这一步失败也不影响上面的即时反馈
       await loadPool();
