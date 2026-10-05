@@ -18,9 +18,9 @@ void main() {
     });
 
     test('长 token 只留头尾，中间用星号填满', () {
-      final masked = maskToken('pimobile2026');
-      expect(masked, 'pi********26');
-      expect(masked.length, 'pimobile2026'.length);
+      final masked = maskToken('abcdefghijklmn');
+      expect(masked, 'ab**********mn');
+      expect(masked.length, 'abcdefghijklmn'.length);
     });
 
     test('原串本身不出现在脱敏结果里', () {
