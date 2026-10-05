@@ -370,6 +370,27 @@ class I18n {
     'conn.groupQuick': ('快速连接', 'Quick connect'),
     'conn.groupManual': ('手动配置', 'Manual setup'),
     // 新建会话时手动指定工作区（候选只来自历史 + 默认，没用过的目录进不来）
+    // ---- 「目标」配置子页面（conn_edit_page.dart）----
+    'ui.4a3d8c1f0b': ('配对成功', 'Paired'),
+    'connEdit.newTitle': ('新增连接', 'New connection'),
+    'connEdit.editTitle': ('编辑连接', 'Edit connection'),
+    'connEdit.test': ('测试连接', 'Test'),
+    'connEdit.testing': ('正在测试…', 'Testing…'),
+    'connEdit.save': ('保存', 'Save'),
+    'connEdit.testOk': ('连上了 · pi {pi}', 'Connected · pi {pi}'),
+    'connEdit.hostRequired': ('主机地址不能为空', 'Host is required'),
+    'connEdit.portInvalid': ('端口要填 1-65535 之间的数', 'Port must be 1-65535'),
+    'connEdit.tokenRequired': ('token 不能为空', 'Token is required'),
+    'connEdit.tokenHelpTitle': ('不知道 token 填什么？', 'Where do I get the token?'),
+    'connEdit.tokenHelp1': (
+        '在电脑上启动服务端时，终端里会打印一行 token（完整值）',
+        'The server prints the full token in the terminal when it starts'),
+    'connEdit.tokenHelp2': (
+        '服务端刚启动的 5 分钟内有配对码：扫描局域网后点「选中」直接填它',
+        'For 5 minutes after startup there is a pairing code — use that instead'),
+    'connEdit.tokenHelp3': (
+        '在 pi 里敲 /mobile 也能看到当前地址与 token',
+        'Run /mobile inside pi to see the current address and token'),
     'conn.manualWorkspace': ('手动输入路径…', 'Enter a path…'),
     'conn.manualWorkspaceHint': ('如 C:/Users/you/projects', 'e.g. C:/Users/you/projects'),
     'conn.groupRemote': ('远程访问（可选）', 'Remote access (optional)'),
