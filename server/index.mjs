@@ -214,7 +214,13 @@ const server = createServer(async (req, res) => {
       return json(res, 200, tunnelState());
     }
     if (path === '/api/remote/start' && req.method === 'POST') {
-      return json(res, 200, startTunnel({ localPort: args.port }));
+      // 走哪条道由用户在面板里选：'cloudflare' | 'ssh'。
+      // 不传（或传别的）保持原来的 auto：有 cloudflared 就用 Cloudflare，
+      // 否则退回 SSH 反向隧道。
+      const body = await readJson(req).catch(() => ({}));
+      const prefer =
+        body?.prefer === 'cloudflare' || body?.prefer === 'ssh' ? body.prefer : 'auto';
+      return json(res, 200, startTunnel({ localPort: args.port, prefer }));
     }
     // 一键断开（合同④）：关掉隧道就再也不通公网，服务本身照常跑
     if (path === '/api/remote/stop' && req.method === 'POST') {

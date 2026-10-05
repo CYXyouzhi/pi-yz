@@ -237,8 +237,14 @@ class ServerClient {
   Future<RemoteState> remoteState() async =>
       RemoteState.fromJson(await _json('GET', '/api/remote'));
 
-  Future<RemoteState> startRemote() async =>
-      RemoteState.fromJson(await _json('POST', '/api/remote/start'));
+  /// [prefer] 选走哪条道：`'cloudflare'` / `'ssh'`。
+  /// 不传则由服务端自己挑（有 cloudflared 用 Cloudflare，否则退回 SSH）。
+  Future<RemoteState> startRemote({String? prefer}) async =>
+      RemoteState.fromJson(await _json(
+        'POST',
+        '/api/remote/start',
+        body: prefer == null ? null : {'prefer': prefer},
+      ));
 
   /// 一键断开远程入口：关掉隧道后公网再也不通，局域网照常
   Future<RemoteState> stopRemote() async =>

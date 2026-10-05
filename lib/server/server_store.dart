@@ -741,13 +741,15 @@ class ServerStore extends ChangeNotifier {
     }
   }
 
-  Future<bool> startRemote() async {
+  /// [prefer] 用户在面板里选的隧道类型（`'cloudflare'` / `'ssh'`）。
+  /// 不传则让服务端自己挑（有 cloudflared 用 Cloudflare，否则退回 SSH）。
+  Future<bool> startRemote({String? prefer}) async {
     final client = _client;
     if (client == null) return false;
     remoteBusy = true;
     _notify();
     try {
-      remote = await client.startRemote();
+      remote = await client.startRemote(prefer: prefer);
       // 隧道要几秒才拿到地址：隔几秒再问一次，别让界面停在「正在建立」
       for (var i = 0; i < 8 && remote.status == 'starting'; i++) {
         await Future<void>.delayed(const Duration(seconds: 2));
