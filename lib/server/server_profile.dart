@@ -16,6 +16,9 @@ class ServerProfile {
     required this.token,
     this.defaultCwd,
     this.secure = false,
+    this.fallbackHost,
+    this.fallbackPort,
+    this.fallbackSecure = false,
   });
 
   final String id;
@@ -29,6 +32,20 @@ class ServerProfile {
 
   /// 走 HTTPS（远程隧道用）。局域网直连是 http。
   final bool secure;
+
+  /// 备用地址（可选）。
+  ///
+  /// 用途：在家走局域网、出门走 VPN（Tailscale 之类）——主地址连不上时
+  /// **自动**试这个，不用手动切 profile。为空 = 不启用回落，行为与以前完全一致。
+  ///
+  /// 为什么是「同一个 profile 里的两个地址」而不是「两个 profile 手动切」：
+  /// 用户分不清「现在该用哪个」，而程序分得清（哪个连得上用哪个）。
+  final String? fallbackHost;
+  final int? fallbackPort;
+  final bool fallbackSecure;
+
+  /// 是否配了可用的备用地址
+  bool get hasFallback => (fallbackHost ?? '').trim().isNotEmpty;
 
   String get displayName =>
       name.trim().isNotEmpty ? name.trim() : (secure ? host : '$host:$port');
@@ -47,6 +64,9 @@ class ServerProfile {
     String? token,
     String? defaultCwd,
     bool? secure,
+    String? fallbackHost,
+    int? fallbackPort,
+    bool? fallbackSecure,
   }) =>
       ServerProfile(
         id: id ?? this.id,
@@ -56,6 +76,9 @@ class ServerProfile {
         token: token ?? this.token,
         defaultCwd: defaultCwd ?? this.defaultCwd,
         secure: secure ?? this.secure,
+        fallbackHost: fallbackHost ?? this.fallbackHost,
+        fallbackPort: fallbackPort ?? this.fallbackPort,
+        fallbackSecure: fallbackSecure ?? this.fallbackSecure,
       );
 
   Map<String, dynamic> toJson() => {
@@ -66,6 +89,10 @@ class ServerProfile {
         'token': token,
         if (defaultCwd != null) 'defaultCwd': defaultCwd,
         if (secure) 'secure': true,
+        // 备用地址：只在真配了才写，保持旧 profile 的 JSON 面貌不变
+        if (hasFallback) 'fallbackHost': fallbackHost,
+        if (fallbackPort != null) 'fallbackPort': fallbackPort,
+        if (fallbackSecure) 'fallbackSecure': true,
       };
 
   factory ServerProfile.fromJson(Map<String, dynamic> json) => ServerProfile(
@@ -76,6 +103,9 @@ class ServerProfile {
         token: json['token'] as String? ?? '',
         defaultCwd: json['defaultCwd'] as String?,
         secure: json['secure'] == true,
+        fallbackHost: json['fallbackHost'] as String?,
+        fallbackPort: (json['fallbackPort'] as num?)?.toInt(),
+        fallbackSecure: json['fallbackSecure'] == true,
       );
 }
 

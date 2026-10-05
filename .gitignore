@@ -81,3 +81,9 @@ tool/__pycache__/
 
 # agent 工作目录（goal / 会话状态）
 .pi/
+
+# token 持久化文件（server/lib/token-store.mjs 生成）
+#
+# 里面是访问服务端的凭据。虽然本机明文存储（能读它的人本来也能读会话记录），
+# 但**绝不能跟着仓库跑到 GitHub 上** —— 那等于把钥匙公开。
+server/.token

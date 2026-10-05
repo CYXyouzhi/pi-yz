@@ -33,6 +33,8 @@ class _ServerConnPageState extends State<ServerConnPage> {
   final _port = TextEditingController(text: '30142');
   final _token = TextEditingController();
   final _cwd = TextEditingController();
+  /// 备用地址（可选）。留空 = 不启用回落，行为与改动前一致。
+  final _fallback = TextEditingController();
 
   List<ServerProfile> _profiles = const [];
   String? _editingId;
@@ -69,6 +71,7 @@ class _ServerConnPageState extends State<ServerConnPage> {
     _port.dispose();
     _token.dispose();
     _cwd.dispose();
+    _fallback.dispose();
     super.dispose();
   }
 
@@ -91,6 +94,7 @@ class _ServerConnPageState extends State<ServerConnPage> {
     _port.text = profile.port.toString();
     _token.text = profile.token;
     _cwd.text = profile.defaultCwd ?? '';
+    _fallback.text = profile.fallbackHost ?? '';
   }
 
   ServerProfile _collect() {
@@ -126,6 +130,7 @@ class _ServerConnPageState extends State<ServerConnPage> {
       token: _token.text.trim(),
       defaultCwd: _cwd.text.trim().isEmpty ? null : _cwd.text.trim(),
       secure: secure,
+      fallbackHost: _fallback.text.trim().isEmpty ? null : _fallback.text.trim(),
     );
   }
 
@@ -195,6 +200,9 @@ class _ServerConnPageState extends State<ServerConnPage> {
       token: profile.token,
       defaultCwd: profile.defaultCwd,
       secure: profile.secure,
+      fallbackHost: profile.fallbackHost,
+      fallbackPort: profile.fallbackPort,
+      fallbackSecure: profile.fallbackSecure,
     ));
 
     if (!mounted) return;
@@ -326,6 +334,9 @@ class _ServerConnPageState extends State<ServerConnPage> {
       token: profile.token,
       defaultCwd: profile.defaultCwd,
       secure: profile.secure,
+      fallbackHost: profile.fallbackHost,
+      fallbackPort: profile.fallbackPort,
+      fallbackSecure: profile.fallbackSecure,
     ));
     if (!mounted) return;
     if (_store.isConnected) {
@@ -601,6 +612,45 @@ class _ServerConnPageState extends State<ServerConnPage> {
                     controller: _cwd,
                     hint: I18n.t('ui.487a7ad4fa'),
                   ),
+                  _field(
+                    t,
+                    label: I18n.t('conn.fallbackHost'),
+                    controller: _fallback,
+                    hint: I18n.t('conn.fallbackHint'),
+                    keyboard: TextInputType.url,
+                  ),
+                  // 安全提示：放在表单下面，因为用户配连接时正是该看到它的时机。
+                  // 这三条都是实际存在的机制，不是泛泛的「注意安全」。
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(NeuSpace.n12),
+                    decoration: BoxDecoration(
+                      color: t.muted.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(NeuRadii.sm),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          I18n.t('conn.securityTitle'),
+                          style: TextStyle(
+                            fontSize: NeuFonts.bodySmall,
+                            fontWeight: FontWeight.w600,
+                            color: t.muted,
+                          ),
+                        ),
+                        SizedBox(height: NeuSpace.n6),
+                        Text(
+                          I18n.t('conn.securityBody'),
+                          style: TextStyle(
+                            fontSize: NeuFonts.badge,
+                            height: 1.6,
+                            color: t.muted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -812,6 +862,9 @@ class _ServerConnPageState extends State<ServerConnPage> {
       token: profile.token,
       defaultCwd: profile.defaultCwd,
       secure: profile.secure,
+      fallbackHost: profile.fallbackHost,
+      fallbackPort: profile.fallbackPort,
+      fallbackSecure: profile.fallbackSecure,
     ));
     if (!mounted) return;
     if (_store.isConnected) {

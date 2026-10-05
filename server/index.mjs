@@ -17,7 +17,7 @@
 //   GET  /api/pool                      当前活跃会话（调试）
 
 import { createServer } from 'node:http';
-import { randomBytes } from 'node:crypto';
+import { resolveToken, describeSource } from './lib/token-store.mjs';
 import { parseArgs } from './lib/args.mjs';
 import { startDiscovery, lanAddresses } from './lib/discovery.mjs';
 import {
@@ -80,8 +80,11 @@ import { VERSION } from '@earendil-works/pi-coding-agent';
 
 const args = parseArgs(process.argv.slice(2));
 
-// token：未指定则每次启动随机生成。客户端需带 Authorization: Bearer <token>
-const TOKEN = args.token ?? randomBytes(24).toString('hex');
+// token 的来源与持久化见 lib/token-store.mjs：
+//   优先级 --token 参数 > .token 文件 > 首次生成并写入。
+// 于是「够强」和「重启不变」可以同时成立 —— 手机端填一次就行。
+const tokenInfo = resolveToken(args.token);
+const TOKEN = tokenInfo.token;
 
 const pool = new SessionPool();
 pool.startIdleReaper();
@@ -112,8 +115,22 @@ async function readJson(req, limitBytes = 8 * 1024 * 1024) {
   return JSON.parse(Buffer.concat(chunks).toString('utf8'));
 }
 
-/** Bearer token 校验（常量时间比较） */
-function authorized(req) {
+/**
+ * 取请求来源 IP（配对限速用）。
+ *
+ * 两个必须处理的坑：
+ *   1. Node 在 IPv6 监听时给的是 `::ffff:192.168.1.5` 这种映射地址 —— 不归一化
+ *      的话，同一个客户端会被算成两个不同 IP，限速直接失效；
+ *   2. **不看 X-Forwarded-For**：这个服务端按设计不放在反向代理后面，
+ *      而那个头是客户端可以随便写的 —— 信它等于给爆破者一把
+ *      「每个请求换一个 IP」的钥匙，限速就白做了。
+ */
+function clientIpOf(req) {
+  const raw = req.socket?.remoteAddress ?? 'unknown';
+  return raw.startsWith('::ffff:') ? raw.slice(7) : raw;
+}
+
+/** Bearer token 校验（常量时间比较） */function authorized(req) {
   const header = req.headers.authorization ?? '';
   const prefix = 'Bearer ';
   if (!header.startsWith(prefix)) return false;
@@ -142,6 +159,8 @@ const server = createServer(async (req, res) => {
   // ---- 配对：用配对码换 token ----
   // 这一条也必须免认证，否则「拿 token」要先有 token（鸡生蛋）。
   // 安全性靠配对码本身：窗口由用户在电脑端显式开，默认只活 5 分钟，用过即废。
+  // 另外在 pairing.mjs 里按来源 IP 做了失败限速（6 位码只有 100 万种，
+  // 没有限速时局域网内几分钟就能覆盖相当比例）。
   if (path === '/api/pair' && req.method === 'POST') {
     let body;
     try {
@@ -149,8 +168,15 @@ const server = createServer(async (req, res) => {
     } catch (error) {
       return json(res, 400, { error: String(error?.message ?? error) });
     }
-    const check = verifyPairingCode(body?.code);
-    if (!check.ok) return json(res, 403, { error: check.reason });
+    const check = verifyPairingCode(body?.code, clientIpOf(req));
+    if (!check.ok) {
+      // 冷却中回 429 + Retry-After，让客户端知道「等一会儿再试」而不是「码错了」
+      if (check.retryAfterMs) {
+        res.setHeader('Retry-After', String(Math.ceil(check.retryAfterMs / 1000)));
+        return json(res, 429, { error: check.reason, retryAfterMs: check.retryAfterMs });
+      }
+      return json(res, 403, { error: check.reason });
+    }
     console.log('[server] 配对成功，已下发 token');
     return json(res, 200, {
       token: TOKEN,
@@ -578,6 +604,11 @@ server.listen(args.port, args.host, () => {
   // 合同③：token 不进日志。启动日志经常被截图/贴到聊天里，
   // 明文打出来等于把钥匙一起贴出去。
   console.log(`  token     : ${maskSecret(TOKEN)}（手机端填完整值，这里只显示脱敏版）`);
+  console.log(`  token 来源: ${describeSource(tokenInfo.source)}`);
+  if (tokenInfo.source === 'generated') {
+    // 只在这时候提示文件位置：以后每次启动都一样，没必要每次刷屏
+    console.log(`              完整值在 ${tokenInfo.path}（已加入 .gitignore）`);
+  }
 
   // 局域网里能被手机看到的地址（有线/无线可能不止一个，全列出来）
   const addresses = lanAddresses();

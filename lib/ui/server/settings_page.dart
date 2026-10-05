@@ -95,9 +95,21 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                store.target?.label ?? I18n.t('ui.95af3b54e0'),
+                                // 显示**实际连上的**那个地址：配了备用地址且回落成功时，
+                                // 这里会和主地址不同 —— 不显示的话，用户根本不知道
+                                // 现在走的是局域网还是 VPN，排查问题只能靠猜。
+                                store.activeEndpoint?.label ??
+                                    store.target?.label ??
+                                    I18n.t('ui.95af3b54e0'),
                                 style: TextStyle(fontSize: NeuFonts.bodyTight, color: t.fg),
                               ),
+                              if (store.activeEndpoint?.isFallback == true) ...[
+                                SizedBox(height: NeuSpace.n2),
+                                Text(
+                                  I18n.t('conn.viaFallback'),
+                                  style: TextStyle(fontSize: NeuFonts.badge, color: t.muted),
+                                ),
+                              ],
                               SizedBox(height: NeuSpace.n2),
                               Text(
                                 switch (store.state) {

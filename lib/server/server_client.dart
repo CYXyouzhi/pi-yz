@@ -168,8 +168,13 @@ class ServerClient {
   // ==================== 接口 ====================
 
   /// 健康检查（无需认证，也用来验证地址是否可达）
-  Future<HealthInfo> health() async =>
-      HealthInfo.fromJson(await _json('GET', '/api/health'));
+  /// 健康检查。
+  ///
+  /// 之所以开放 `timeout`：回落（[ServerStore.connect]）需要在主地址不可达时
+  /// **快速**切到备用地址。用默认的 30 秒的话，用户出门要盯着「连接中…」半分钟
+  /// 才等到回落 —— 那等于回落没做。
+  Future<HealthInfo> health({Duration? timeout}) async =>
+      HealthInfo.fromJson(await _json('GET', '/api/health', timeout: timeout));
 
   /// 会话列表
   Future<List<ServerSession>> listSessions({bool refresh = false}) async {
