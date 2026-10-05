@@ -773,12 +773,23 @@ class ServerStore extends ChangeNotifier {
     }
   }
 
-  /// 关闭一条活跃会话（移出池、保留文件），然后刷新池状态。
+  /// 关闭一条活跃会话（移出池、保留文件）。
+  ///
+  /// **先本地移除、再和服务器对齐**，而不是只靠 loadPool 刷新：
+  ///   · 实测「关闭后等 loadPool 刷新」这一步在真机上不生效 ——
+  ///     服务端已经关了（日志与 /api/pool 都证实），界面却仍显示那一条，
+  ///     根因未查明（loadPool 有 _notify、页面也有 3 秒轮询）。
+  ///   · 而从交互上讲，用户主动关掉的东西**本来就该立刻消失**，
+  ///     不该依赖一次网络往返的结果 —— 那属于"乐观更新"，
+  ///     哪怕后面发现服务端没关成功，下一轮轮询也会把它拉回来，不至于骗人。
   Future<bool> closeLiveSession(String sessionId) async {
     final client = _client;
     if (client == null) return false;
     try {
       await client.closeLiveSession(sessionId);
+      pool = pool.where((p) => p.id != sessionId).toList();
+      _notify();
+      // 再和服务器对齐一次；这一步失败也不影响上面的即时反馈
       await loadPool();
       return true;
     } on ServerException catch (error) {
