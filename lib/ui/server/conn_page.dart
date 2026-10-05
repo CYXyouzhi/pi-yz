@@ -433,6 +433,11 @@ class _ServerConnPageState extends State<ServerConnPage> {
             // 原来这两个大按钮和「已保存」「手动表单」平铺，看不出主次。
             _section(t, I18n.t('conn.groupQuick'),
                 icon: IconId.sync, summary: I18n.t('ui.e33ff6aad6')),
+            // 内容必须真的跟着收起/展开。只画一个带箭头的标题、内容却无条件
+            // 渲染的话，点标题只会翻转箭头 —— 块根本折不起来。
+            // （审计就是这样抓到的：它把「_section(...) 带 onToggle」和
+            //  「内容有没有包在 if (_expanded.contains(...)) 里」对了一遍。）
+            if (_expanded.contains(I18n.t('conn.groupQuick'))) ...[
             // ---- 局域网扫描（合同①）：不用手输 IP ----
             NeuPressable(
               onTap: _scanning ? null : _scan,
@@ -521,6 +526,7 @@ class _ServerConnPageState extends State<ServerConnPage> {
                   ),
                 ),
               ),
+            ],
             SizedBox(height: NeuSpace.n18),
 
             if (_profiles.isNotEmpty) ...[
@@ -546,6 +552,8 @@ class _ServerConnPageState extends State<ServerConnPage> {
                   ),
                 ],
               ),
+              // 同上：已保存的列表也要真的收起来，不能只翻箭头
+              if (_expanded.contains(I18n.t('ui.f8dfedcd8a'))) ...[
               const SizedBox(height: NeuSpace.n8),
               for (final profile in _profiles)
                 NeuPressable(
@@ -599,6 +607,7 @@ class _ServerConnPageState extends State<ServerConnPage> {
                     ],
                   ),
                 ),
+              ],
               const SizedBox(height: NeuSpace.n16),
             ],
 
