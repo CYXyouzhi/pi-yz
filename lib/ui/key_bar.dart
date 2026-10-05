@@ -137,9 +137,13 @@ class _MiniRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 宽度**按内容分配**，不是等分：Esc / Tab 是 3 个字符，其余是 1 个
+    // 字符或图标。等分时 Esc/Tab 的键帽会超出格子 —— 实测各溢出 4.8
+    // 逻辑像素（Flutter 的 OVERFLOWED 警告，debug 下以黄黑条纹显示在界面上）。
+    // 4/4/3/3/3/3 让这两格从 55.7 变 66.8 逻辑宽，键帽需要约 42.5，留 6 逻辑余量。
     return Row(
       children: [
-        Expanded(
+        Expanded(flex: 4,
           child: _KeyCap(
             kbd: 'Esc',
             label: I18n.t('ui.def9e98b60'),
@@ -149,28 +153,28 @@ class _MiniRow extends StatelessWidget {
             },
           ),
         ),
-        Expanded(
+        Expanded(flex: 4,
           child: _KeyCap(
             kbd: 'Tab',
             label: I18n.t('ui.4cb4f622a9'),
             onTap: () => bar._emit(KeyEncoder.tab),
           ),
         ),
-        Expanded(
+        Expanded(flex: 3,
           child: _KeyCap(
             kbd: '↑',
             label: I18n.t('ui.1facbf7790'),
             onTap: () => bar._emitWithModifiers(KeyEncoder.up),
           ),
         ),
-        Expanded(
+        Expanded(flex: 3,
           child: _KeyCap(
             kbd: '↓',
             label: I18n.t('ui.3c81db078c'),
             onTap: () => bar._emitWithModifiers(KeyEncoder.down),
           ),
         ),
-        Expanded(
+        Expanded(flex: 3,
           child: _KeyCap(
             kbd: '▤',
             label: I18n.t('ui.a8b0c20416'),
@@ -178,7 +182,7 @@ class _MiniRow extends StatelessWidget {
           ),
         ),
         if (bar.onCommands != null)
-          Expanded(
+          Expanded(flex: 3,
             child: _KeyCap(
               kbd: '/',
               label: I18n.t('common.command'),
@@ -472,41 +476,47 @@ class _KeyCapState extends State<_KeyCap> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // kbd：键帽本体（在凹槽里隆起）
-              AnimatedContainer(
-                duration: NeuMotion.micro,
-                curve: NeuMotion.out,
-                constraints: const BoxConstraints(minWidth: 22),
-                height: 22,
-                padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n6),
-                decoration: BoxDecoration(
-                  color: _hit ? t.accent : null,
-                  gradient: _hit ? null : NeuDecorations.raisedGradient(t),
-                  borderRadius: BorderRadius.circular(7),
-                  boxShadow: _hit
-                      ? null
-                      : [
-                          BoxShadow(
-                            color: t.nmLo,
-                            offset: const Offset(1.5, 1.5),
-                            blurRadius: 4,
-                          ),
-                          BoxShadow(
-                            color: t.nmHi,
-                            offset: const Offset(-1.5, -1.5),
-                            blurRadius: 4,
-                          ),
-                        ],
-                ),
-                child: Center(
-                  child: Text(
-                    widget.kbd,
-                    style: TextStyle(
-                      fontFamily: 'monospace',
-                      fontSize: NeuFonts.micro,
-                      height: 1,
-                      fontWeight: FontWeight.w600,
-                      color: _hit ? t.onAccent : t.fg,
+              // 外面再包一层 FittedBox 兜底：键帽宽度由文字决定，若某台设备
+              // 的 monospace 度量比这里更宽，也只是把该键帽等比缩小（scaleDown），
+              // 不会再出现溢出警告。不超宽时它完全不改变尺寸。
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: // kbd：键帽本体（在凹槽里隆起）
+                AnimatedContainer(
+                  duration: NeuMotion.micro,
+                  curve: NeuMotion.out,
+                  constraints: const BoxConstraints(minWidth: 22),
+                  height: 22,
+                  padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n6),
+                  decoration: BoxDecoration(
+                    color: _hit ? t.accent : null,
+                    gradient: _hit ? null : NeuDecorations.raisedGradient(t),
+                    borderRadius: BorderRadius.circular(7),
+                    boxShadow: _hit
+                        ? null
+                        : [
+                            BoxShadow(
+                              color: t.nmLo,
+                              offset: const Offset(1.5, 1.5),
+                              blurRadius: 4,
+                            ),
+                            BoxShadow(
+                              color: t.nmHi,
+                              offset: const Offset(-1.5, -1.5),
+                              blurRadius: 4,
+                            ),
+                          ],
+                  ),
+                  child: Center(
+                    child: Text(
+                      widget.kbd,
+                      style: TextStyle(
+                        fontFamily: 'monospace',
+                        fontSize: NeuFonts.micro,
+                        height: 1,
+                        fontWeight: FontWeight.w600,
+                        color: _hit ? t.onAccent : t.fg,
+                      ),
                     ),
                   ),
                 ),

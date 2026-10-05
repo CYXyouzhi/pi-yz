@@ -29,8 +29,8 @@ $ python tool/touch_targets.py
 
 --- 5) 证据新鲜度门禁（本轮新增）---
 $ python tool/evidence_freshness.py docs/verify/handle-nav/*.png
-  源码最新改动 : 2026-10-05 10:06:40  lib\ui\server\conn_page.dart
-  APK 构建时间 : 2026-10-05 10:12:11  build\app\outputs\flutter-apk\app-debug.apk
+  源码最新改动 : 2026-10-05 12:29:52  lib\ui\key_bar.dart
+  APK 构建时间 : 2026-10-05 12:30:00  build\app\outputs\flutter-apk\app-debug.apk
   ✓ 门禁通过：所有证据都晚于源码与 APK
 
 $ python tool/evidence_freshness.py --selftest
@@ -47,9 +47,15 @@ $ python tool/evidence_freshness.py --apk build/app/outputs/flutter-apk/app-rele
       - APK 比源码旧 74.4 分钟（源码 lib\main.dart）—— 先重新构建再截图
   $? = 1
 
-而且它**真的用上了一次**：第一版截图拍于 10:00，之后 task-2/task-5 又改了 lib/，
+而且它**真的用上了两次**：
+
+第一次：第一版截图拍于 10:00，之后 task-2/task-5 又改了 lib/，
 门禁报出「截图早于源码 6.6 分钟」。据此在 10:12 重建 APK、10:13 重拍四态，
+
 新旧截图逐行比对只有 1 个像素不同（y=884，＋ 图标笔画上的抗锯齿差异）。
+
+第二次：用户发现快捷键栏 Esc/Tab 溢出（见第 9 节），改了 lib/ui/key_bar.dart 之后，
+门禁再度报出「截图早于源码」，于是在 12:30 重建 APK、12:36 重拍。
 
 --- 6) 代码清理核验 ---
 $ grep -rn "autoHideEnabled" --include="*.dart" .
@@ -66,15 +72,20 @@ $ 8 个废弃词条 key 全项目引用数
   ui.ec097412f5 / ui.f1716e14e4 / ui.e366ccf155 / ui.30f7dd4ecd
   → 全部 0 处
 
---- 7) 把手四态的像素一致性（重拍后）---
-t1-01-default-collapsed.png        3b59ca4557e7ca11adecf1d5bb660a82   ← 收起态
-t1-02-tap-handle-shows-nav.png     26145f388ffdef123b5574b1ad321ec9   ← 展开态
-t1-03-shown-again-same-pixels.png  26145f388ffdef123b5574b1ad321ec9   ← 与展开态一致（上滑路径）
-t1-04-tab-tap-collapses.png        3b59ca4557e7ca11adecf1d5bb660a82   ← 与收起态一致（点 Tab 路径）
-t1-05-swipe-down-collapses.png     3b59ca4557e7ca11adecf1d5bb660a82   ← 与收起态一致（下滑路径）
-t1-06-swipe-up-shows-nav.png       26145f388ffdef123b5574b1ad321ec9   ← 与展开态一致（上滑路径）
+--- 7) 把手四态的像素一致性（现行批次，key_bar 修复后重拍）---
+t1-01-default-collapsed.png        5034fa4ef995087d9c16aa3325448411   ← 收起态
+t1-02-tap-handle-shows-nav.png     aa41dcc1082a7097ee4b4c62d67fcbd9   ← 展开态
+t1-03-shown-again-same-pixels.png  aa41dcc1082a7097ee4b4c62d67fcbd9   ← 与展开态一致（上滑路径）
+t1-04-tab-tap-collapses.png        5034fa4ef995087d9c16aa3325448411   ← 与收起态一致（点 Tab 路径）
+t1-05-swipe-down-collapses.png     5034fa4ef995087d9c16aa3325448411   ← 与收起态一致（下滑路径）
+t1-06-swipe-up-shows-nav.png       aa41dcc1082a7097ee4b4c62d67fcbd9   ← 与展开态一致（上滑路径）
 
-结论：3 条收起路径 → 同一像素；2 条唤出路径 → 同一像素。
+结论：3 条收起路径 -> 同一像素；2 条唤出路径 -> 同一像素。
+
+差异像素数（比 md5 更抗渲染噪声）：
+  收起路径两两之间 = 0；唤出路径两两之间 = 0；收起 vs 展开 = 177613。
+  注意：跨 APK 构建批次的同一状态可能出现 1 个像素的差别（y=884，＋ 图标上的
+  抗锯齿舍入）—— 详见 README.md 第 2 节。
 
 --- 8) 消息区占屏比（详见 README.md 第 8 节）---
 $ python docs/verify/handle-nav/measure_v2.py docs/verify/handle-nav/t1-01-default-collapsed.png
@@ -90,7 +101,24 @@ $ python docs/verify/handle-nav/measure_v2.py docs/verify/space-rework/t5-13-idl
 目标「≥ 88%」：口径 A 达标（88.8%），口径 B 不达标（81.2%）。两个都列出。
 理由说明见 README.md 第 8.3 节：88% 这个数字来自上一轮的 91%，而 91% 是口径 A。
 
---- 9) 未完成 / 需下一轮处理 ---
+--- 9) 契约外修复：快捷键栏 Esc/Tab 溢出（用户发现）---
+现象：点输入区 ⌘ 弹出快捷键栏后，debug 下出现
+  Esc OVERFLOWED BY 4.8 PIXELS
+  Tab OVERFLOWED BY 4.8 PIXELS
+（且 Esc/Tab 文字确实被裁切，release 只是不显示警告而已）
+
+判定不是本轮引入：装改前的 release APK（08:39 构建，输入区还带着本轮删掉的 ⌄、
+底部无把手）测同一位置 —— 按键栏宽度 341.3 vs 342.0 逻辑，差 0.7（噪声级）；
+且 NeuKeyBar 是输入框上方的独立容器，宽度不由输入框决定。
+
+修法（lib/ui/key_bar.dart）：_MiniRow 的 6 个 Expanded 由等分改为 flex 4/4/3/3/3/3
+（Esc/Tab 是 3 字符），Esc/Tab 格 55.7 -> 66.8 逻辑、Row 可用 48.8 > 需求 42.5；
+另给键帽包 FittedBox(scaleDown) 兜底，任何字体度量下都不会再溢出。
+
+验证：debug 构建点 ⌘，警告与黄黑条纹消失，六键完整显示；analyze 0 issue；test 121 全过。
+证据：docs/verify/keybar-overflow/（含修复前后并排对比 f4）
+
+--- 10) 未完成 / 需下一轮处理 ---
 · ANR 根因未定位（见 docs/verify/perf-elapsed/README.md 第 4 节）。
   最强线索：RSS 匿名内存 2.97GB 与 Java 堆 4.75MB 的巨大落差 → 原生层。
 · 上滑手势与 Android 系统「上滑回主屏」可能冲突：模拟器的 input swipe 不走
