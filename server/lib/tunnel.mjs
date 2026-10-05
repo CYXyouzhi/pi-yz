@@ -62,22 +62,34 @@ export function tunnelState() {
 }
 
 export function threatModelFor(which) {
+  // 注意：这段话是 App 端逐行用 Text('· ' + line) 渲染的纯文本 ——
+  // 所以（1）不能用 Markdown 的 ** 加粗；（2）不能有空行（会渲染成一个孤零零的「·」）。
+  // 缩进用全角空格，否则在窄屏上换行后看不出层级。
+  const common = [
+    '鉴权仍然靠服务端 token：带错 token 一律 401，隧道不等于放行。',
+    '地址是随机子域名，每次重启都变；但 URL 泄露就等于服务暴露。',
+    '建议：隧道只在临时场景开，用完立刻关；开隧道时加 --no-pair，别让配对窗口暴露在公网。',
+  ];
+
   if (which === 'cloudflare') {
     return [
-      '链路：手机 →(HTTPS/TLS) Cloudflare 边缘 →(QUIC 隧道) 本机服务。',
-      '传输加密由 TLS 与 Cloudflare 隧道两层承担，中间人拿不到明文。',
-      '第三方（Cloudflare）能看到「有流量」，但看不到明文内容。',
-      '鉴权仍然靠服务端 token：带错 token 一律 401，隧道不等于放行。',
-      '地址是随机子域名、每次重启都变；扫到也不等于能连上（还差 token）。',
+      '链路：手机 →(HTTPS) Cloudflare 边缘 →(QUIC 隧道) 本机服务。',
+      '⚠️ Cloudflare 能看到明文内容。手机连的是 https://xxx.trycloudflare.com，',
+      '　　而那张证书是 Cloudflare 的 —— TLS 在它的边缘终止，之后以明文 HTTP',
+      '　　经隧道送到你机器上的 cloudflared。所以对话内容、pi 执行的命令、',
+      '　　读写的文件，Cloudflare 都能读到。',
+      '　　（早前这里写的是「第三方看不到明文内容」，那句话是错的，已更正。）',
+      '　　→ 要连内容也不被看到，请用 VPN（Tailscale 之类）而不是公共隧道。',
+      ...common,
       '代价：流量绕 Cloudflare 海外边缘（实测洛杉矶），延迟比局域网高 0.5~1.5 秒；免费隧道不承诺 SLA，断了要重开。',
     ];
   }
   return [
-    '链路：手机 →(HTTPS/TLS) localhost.run →(SSH 反向隧道) 本机服务。',
-    '传输加密由 HTTPS 与 SSH 两层承担，中间人拿不到明文。',
-    '第三方（localhost.run）能看到「有流量」但看不到明文内容。',
-    '鉴权仍然靠服务端 token：带错 token 一律 401，隧道不等于放行。',
-    '地址是随机子域名，扫到也不等于能连上（还差 token）。',
+    '链路：手机 →(HTTPS) localhost.run →(SSH 反向隧道) 本机服务。',
+    '⚠️ 同样地，localhost.run 能看到明文内容 —— TLS 在它的服务端终止，',
+    '　　之后才经 SSH 隧道送到你机器，明文在它那里是暴露的。',
+    '　　→ 要连内容也不被看到，请用 VPN（Tailscale 之类）。',
+    ...common,
     '注意：实测 *.lhr.life 在国内不可达（curl 21 秒超时），这条只适合网络能到的环境。',
   ];
 }
