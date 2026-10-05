@@ -8,14 +8,14 @@ import '../lib/server/server_client.dart';
 import '../lib/server/server_types.dart';
 
 Future<void> main() async {
-  final client = ServerClient(host: '127.0.0.1', port: 30142, token: 'pimobile2026');
+  final client = ServerClient(host: '127.0.0.1', port: 30142, token: 'test-token-abc123');
 
   final sessions = await client.listSessions();
   print('历史会话 ${sessions.length} 条');
 
   // 场景 1：新建会话
   print('\n--- 场景 1：新建会话 ---');
-  final newId = await client.createSession('C:/Users/YOUZHI/Desktop/1/pi-mobile');
+  final newId = await client.createSession(Directory.current.path);
   print('新会话: ${newId.substring(0, 8)}');
   await _probe(client, newId, '新建的会话');
 

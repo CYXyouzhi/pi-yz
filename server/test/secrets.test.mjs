@@ -14,10 +14,10 @@ test('短串一律全遮（露头露尾等于全给）', () => {
 });
 
 test('长串只留前 4 后 2，并标出原长度', () => {
-  const out = maskSecret('pimobile2026secretvalue');
-  assert.ok(out.startsWith('pimo'), out);
-  assert.ok(out.endsWith('ue（23 位，已脱敏）'), out);
-  assert.ok(!out.includes('bile2026'), '中间那截不能出现');
+  const out = maskSecret('secret-value-abc123');
+  assert.ok(out.startsWith('secr'), out);
+  assert.ok(out.endsWith('23（19 位，已脱敏）'), out);
+  assert.ok(!out.includes('t-value-abc'), '中间那截不能出现');
 });
 
 test('原串本身不出现在结果里', () => {
@@ -26,7 +26,7 @@ test('原串本身不出现在结果里', () => {
 });
 
 test('redact 能把整段文本里的密钥换掉', () => {
-  const secret = 'pimobile2026';
+  const secret = 'secret-abc123';
   const text = `GET /api/health?token=${secret} 与再次出现 ${secret} 都换掉`;
   const out = redact(text, [secret]);
   assert.ok(!out.includes(secret), out);

@@ -1,11 +1,14 @@
 # task-12 证据：配对真的发生了（服务端自己的日志）
+#
+# 开源前已脱敏：真实 token 替换为 pim****26（本项目 maskSecret 同款风格）。
+# 其余内容（配对码、内网 IP、curl 的三种回答）一字未改。
 
 $ cat /tmp/pi-server.log
 pi-mobile-server 已启动
   pi 版本   : 1.0.0
   监听      : http://0.0.0.0:30142
   手机访问  : http://<本机局域网IP>:30142
-  token     : pimobile2026
+  token     : pim****26
   局域网地址: 10.1.1.195（以太网）
   配对码    : 368611（5 分钟内有效，手机扫局域网后填它）
   发现端口  : udp/30143
@@ -20,6 +23,6 @@ pi-mobile-server 已启动
 $ curl -X POST .../api/pair -d '{"code":"000000"}'
 {"error":"配对码不对"}
 $ curl -X POST .../api/pair -d '{"code":"368611"}'
-{"token":"pimobile2026","port":30142,"piVersion":"1.0.0","addresses":["10.1.1.195"]}
+{"token":"pim****26","port":30142,"piVersion":"1.0.0","addresses":["10.1.1.195"]}
 $ curl -X POST .../api/pair -d '{"code":"368611"}'   # 再用一次
 {"error":"配对窗口没开（在电脑端执行 pi-mobile server pair，或重启服务端会自动开 5 分钟）"}

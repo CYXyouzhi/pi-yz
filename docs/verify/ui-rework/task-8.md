@@ -28,7 +28,7 @@
 
 ## ⑦ 对账记录（独立核算 vs App 显示）
 
-会话 `C:\Users\YOUZHI\AppData\Local\Temp\od-conn-test-0mrhXg`：
+会话 `C:\Users\you\AppData\Local\Temp\od-conn-test-0mrhXg`：
 
 ```
 独立核算（自己读 JSONL 累加）: 轮数=1 输入=18963 输出=3 缓存读=0 缓存写=0 成本=$0.001423 合计=18966 (19.0k)
@@ -46,3 +46,5 @@ App 显示（用量明细页）      : 轮数=1 输入=19.0k 输出=3 缓存读=
 | `flutter analyze` | No issues found! |
 | 服务端 | `node --check` 通过；`/api/usage` 扫 244 个会话约 2.5 秒 |
 | 已知缺口 | ①「运行中标题行速度芯片」的实机截图未抓到（原因见上），其余均有截图或对账记录 |
+
+<!-- 开源前把用户名统一写成 you，其余内容未改（本文件是验证记录，不歪曲证据）。 -->

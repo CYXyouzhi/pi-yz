@@ -28,9 +28,9 @@
 **证据**：
 
 - 服务端逐级验证（`/api/files?path=…`）：
-  - `C:\Users\YOUZHI\Desktop` → `parent = C:\Users\YOUZHI` ✓
-  - `C:\Users\YOUZHI\Desktop\1` → `parent = C:\Users\YOUZHI\Desktop` ✓（**是真实上一级，不跳级**）
-  - `C:\Users\YOUZHI`（允许范围边界）→ `parent = null` ✓
+  - `C:\Users\you\Desktop` → `parent = C:\Users\you` ✓
+  - `C:\Users\you\Desktop\1` → `parent = C:\Users\you\Desktop` ✓（**是真实上一级，不跳级**）
+  - `C:\Users\you`（允许范围边界）→ `parent = null` ✓
   - `D:\`（超出范围）→ 拒绝：`路径不在允许范围内` ✓
 - 实机：`after-01-up-one-level.png` —— 在 `.od-skills` 里点「上一级」，回到工作区根，目录列表同步换成上一层内容。
 - 实机：`after-01-boundary-no-up-button.png` —— 到顶时（工作区根 `E:\OpenDesign\<id>`，其上一层不在允许范围）
@@ -141,3 +141,5 @@ onPopInvokedWithResult: (didPop, _) { if (!didPop) _goUp(); },
 | 服务端语法 | `node --check server/lib/fs.mjs` 通过 |
 | 实机 | MuMu 上逐条走查，证据见 `task-2/` |
 | 新增的额外修复 | 命令列表 12 条硬上限（顺带发现，已去掉） |
+
+<!-- 开源前把用户名统一写成 you，其余内容未改（本文件是验证记录，不歪曲证据）。 -->

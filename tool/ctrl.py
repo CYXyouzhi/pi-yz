@@ -21,6 +21,7 @@
 import re
 import subprocess
 import sys
+import tempfile
 
 # Windows 控制台默认编码是 GBK，而本脚本的输出里有 ✓ ✗ ⚠ ↔ 这类不在
 # GBK 字符集内的符号 —— 直接 print 不是显示乱码，而是整个脚本抛
@@ -193,7 +194,8 @@ def main():
             crop_bottom = int(sys.argv[sys.argv.index('--crop-bottom') + 1])
         if crop_bottom:
             from PIL import Image
-            temp = 'C:/Users/YOUZHI/AppData/Local/Temp/pi-ctrl-temp.png'
+            # 用系统临时目录、不写死用户名：换台机器也能跑
+            temp = str(Path(tempfile.gettempdir()) / 'pi-ctrl-temp.png')
             shot(temp, half=False)
             im = Image.open(temp)
             im.crop((0, im.height - crop_bottom, im.width, im.height)).save(out)

@@ -101,4 +101,4 @@ cd server && node --test test/*.test.mjs   # 20 个用例
 
 ## 许可
 
-待定。
+[MIT](LICENSE)

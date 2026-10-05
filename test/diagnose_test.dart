@@ -64,7 +64,7 @@ void main() {
 
   group('maskToken：导出给别人看时不能泄露 token', () {
     test('正常长度保留首尾各两位', () {
-      expect(maskToken('pimobile2026'), 'pi********26');
+      expect(maskToken('abcdefghijklmn'), 'ab**********mn');
     });
 
     test('很短的一律打满星号（几个字符就打几个星，不固定 4 个）', () {
@@ -80,7 +80,7 @@ void main() {
     DiagReport build(List<DiagStep> steps) => DiagReport(
           host: '10.1.1.195',
           port: 30142,
-          token: 'pimobile2026',
+          token: 'abcdefghijklmn',
           defaultCwd: 'C:/work',
           steps: steps,
           startedAt: DateTime(2026, 10, 4, 8, 30),
@@ -110,8 +110,8 @@ void main() {
         DiagStep(title: '鉴权', ok: false, detail: 'token 不正确', hint: '重新配对'),
       ]);
       final text = report.toText();
-      expect(text, contains('pi********26'));
-      expect(text, isNot(contains('pimobile2026')));
+      expect(text, contains('ab**********mn'));
+      expect(text, isNot(contains('abcdefghijklmn')));
       expect(text, contains('[失败] 鉴权：token 不正确'));
       expect(text, contains('下一步：重新配对'));
       expect(text, contains('默认工作区：C:/work'));

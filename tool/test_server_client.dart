@@ -24,7 +24,7 @@ Future<void> main() async {
   }
 
   print('\n=== 3. 新建会话 ===');
-  final sessionId = await client.createSession('C:/Users/YOUZHI/Desktop/1/pi-mobile');
+  final sessionId = await client.createSession(Directory.current.path);
   print('会话 id: $sessionId');
 
   print('\n=== 4. 订阅事件流 ===');
