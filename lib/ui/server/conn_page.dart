@@ -1007,13 +1007,17 @@ class _ServerConnPageState extends State<ServerConnPage> {
 
   /// 「远程访问」卡片：开/关隧道 + 地址 + 威胁模型（task-18 合同①②④⑤）
   Widget _remoteCard(NeuTokens t) {
-    return ListenableBuilder(
+    // RepaintBoundary：这块是页面上最大的阴影图层（NeuRaised + 内部一堆
+    // NeuPressable，每个都带两个大 blur 的 BoxShadow）。不隔离的话，
+    // 滚动时它会跟着视口一起重绘 —— 实测用户反映「手指滑、画面跟不上」。
+    // 隔离后滚动只移动已画好的图层，不再重新做高斯模糊。
+    return RepaintBoundary(
+      child: ListenableBuilder(
       listenable: _store,
       builder: (context, _) {
         final r = _store.remote;
         final up = r.status == 'up' && r.url.isNotEmpty;
         final starting = _store.remoteBusy || r.status == 'starting';
-
         return NeuRaised(
           radius: NeuRadii.md,
           padding: const EdgeInsets.all(NeuSpace.n14),
@@ -1199,6 +1203,7 @@ class _ServerConnPageState extends State<ServerConnPage> {
           ),
         );
       },
+      ),
     );
   }
 
