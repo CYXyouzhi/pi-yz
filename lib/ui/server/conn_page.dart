@@ -52,10 +52,12 @@ class _ServerConnPageState extends State<ServerConnPage> {
 
   /// 展开了的分组。key 用 i18n 后的标题字符串（与设置页同一套做法）。
   ///
-  /// **只有「快速连接」默认展开**：它是主路径（扫一台连上 / 查为什么连不上），
-  /// 收起来等于每次都要多点一下。其余（手动配置、远程访问）默认收起 ——
-  /// 它们篇幅大而用得少，收起后整页才看得出主次。
-  late final Set<String> _expanded = {I18n.t('conn.groupQuick')};
+  /// 初始为空 = **全部分组默认收起**。
+  ///
+  /// 早前这里是 `{conn.groupQuick}`（快速连接默认展开），理由「它是主路径」。
+  /// 但那违背了明确要求「可折叠区块**一律**默认收起」—— 规则就是规则，
+  /// 觉得该破例应该先问，而不是自己替用户决定。现已改回全收起。
+  final Set<String> _expanded = {};
 
   /// 威胁模型是否展开（默认收起：它是「要点」不是「正文」）
   bool _showThreat = false;

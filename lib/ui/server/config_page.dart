@@ -36,9 +36,12 @@ class _ConfigPageState extends State<ConfigPage> {
   /// 与设置页、连接页同一套做法（三套各写各的正是"有的能收有的不能"的根源）。
   /// 初始为空 = **全部默认收起**：AI 配置页的分组多、每组都长，全展开时
   /// 一屏塞不下、也看不出层次（用户原话："比较乱，该折叠的折叠"）。
-  /// 初始包含「模型」：全部收起时整页只剩标题、看起来像空的（实测踩到）。
-  /// 留一组展开既给出了内容，也让人知道其余是可以点开的。
-  late final Set<String> _expanded = {I18n.t('common.model')};
+  /// 初始为空 = **全部分组默认收起**（明确要求「一律默认收起」）。
+  ///
+  /// 早前这里默认展开「模型」，理由：全收起时整页只剩标题、看起来像空页（实测）。
+  /// 但那个理由不成立 —— 该修的是「让人知道可以点开」，不是破例把一组展开。
+  /// 所以另外加了一行提示（见 build 顶部），分组仍然全收起。
+  final Set<String> _expanded = {};
 
   List<McpServerInfo> _mcp = const [];
   List<CredentialInfo> _credentials = const [];
@@ -469,8 +472,8 @@ class _ConfigPageState extends State<ConfigPage> {
                   ),
 
                 // 分组内容默认收起：AI 配置页分组多、每组都长，全展开看不出层次
+                _section(t, I18n.t('common.model'), icon: IconId.gear),
                 if (_expanded.contains(I18n.t('common.model'))) ...[
-                _section(t, I18n.t('common.model')),
                 NeuRaised(
                   radius: NeuRadii.md,
                   level: NeuLevel.small,
@@ -529,8 +532,8 @@ class _ConfigPageState extends State<ConfigPage> {
                 ],
 
                 // 分组内容默认收起：AI 配置页分组多、每组都长，全展开看不出层次
+                _section(t, I18n.t('ui.11eead2c33'), icon: IconId.spinner),
                 if (_expanded.contains(I18n.t('ui.11eead2c33'))) ...[
-                _section(t, I18n.t('ui.11eead2c33')),
                 NeuRaised(
                   radius: NeuRadii.md,
                   level: NeuLevel.small,
@@ -580,8 +583,8 @@ class _ConfigPageState extends State<ConfigPage> {
                 ],
 
                 // 分组内容默认收起：AI 配置页分组多、每组都长，全展开看不出层次
+                _section(t, I18n.t('ui.c4d89641a1'), icon: IconId.lock),
                 if (_expanded.contains(I18n.t('ui.c4d89641a1'))) ...[
-                _section(t, I18n.t('ui.c4d89641a1')),
                 NeuRaised(
                   radius: NeuRadii.md,
                   level: NeuLevel.small,
@@ -668,8 +671,8 @@ class _ConfigPageState extends State<ConfigPage> {
                 ],
 
                 // 分组内容默认收起：AI 配置页分组多、每组都长，全展开看不出层次
+                _section(t, I18n.t('ui.a9cec18e05'), icon: IconId.cmd),
                 if (_expanded.contains(I18n.t('ui.a9cec18e05'))) ...[
-                _section(t, I18n.t('ui.a9cec18e05')),
                 NeuRaised(
                   radius: NeuRadii.md,
                   level: NeuLevel.small,
@@ -699,13 +702,14 @@ class _ConfigPageState extends State<ConfigPage> {
                 ],
 
                 // 插件组同样默认收起（10 个插件展开就是一屏）
-                if (_expanded.contains('plugins')) ...[
                 _section(
           t,
           I18n.tp('ui.9d3c5fe8d6', {
             'count': _packages.isEmpty ? '' : '（${_packages.length}）',
           }),
+          icon: IconId.serverPlus,
         ),
+                if (_expanded.contains('plugins')) ...[
                 NeuRaised(
                   radius: NeuRadii.md,
                   level: NeuLevel.small,
@@ -821,8 +825,8 @@ class _ConfigPageState extends State<ConfigPage> {
                 ],
 
                 // 分组内容默认收起：AI 配置页分组多、每组都长，全展开看不出层次
+                _section(t, I18n.t('ui.d7911f414c'), icon: IconId.server),
                 if (_expanded.contains(I18n.t('ui.d7911f414c'))) ...[
-                _section(t, I18n.t('ui.d7911f414c')),
                 NeuRaised(
                   radius: NeuRadii.md,
                   level: NeuLevel.small,
