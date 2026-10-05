@@ -389,6 +389,29 @@ class I18n {
     // 原来 label 与 hint 都在说「什么时候用」，两句话打架，还会被输入框截断。
     'conn.fallbackHint': ('留空则只用上面的地址，不启用自动切换',
         'Leave blank to use only the address above, with no auto-fallback'),
+    // ---- 远程访问面板的两段结构 ----
+    //
+    // 用户的要求（2026-10-05）：**并列多种方式、自己选** —— 不要写死只走
+    // Cloudflare。「也可用其他的比如焦月连这样的工具」，所以第二段是开放的
+    // 「你自己的工具」：App 不代管它们（Tailscale 这类是系统级 VPN，必须用户
+    // 自己在电脑和手机上装），只负责引导 + 把地址收下来。
+    'remote.managedTitle': ('① 让 App 开一条隧道', '① Let the app open a tunnel'),
+    'remote.managedHint': ('服务端自己起，选一条：', 'Started by the server — pick one:'),
+    'remote.optCloudflare': ('Cloudflare', 'Cloudflare'),
+    'remote.optCloudflareHint': (
+        '实测国内可达；临时地址每次重开都变',
+        'Reachable from CN; the URL changes every time you restart it'),
+    'remote.optSsh': ('SSH 反向', 'SSH reverse'),
+    'remote.optSshHint': ('零安装，但要求能连到外网中转',
+        'Nothing to install, but it needs outbound access'),
+    'remote.ownTitle': ('② 用你自己的工具', '② Use your own tool'),
+    'remote.ownHint': (
+        'Tailscale / 皎月连 / frp 等：在电脑上装好并拿到外网地址后，填在下面。',
+        'Tailscale, frp and the like — set it up on the computer, then paste the address it gives you.'),
+    'remote.ownPlaceholder': ('100.64.1.2:30142 或 https://…', '100.64.1.2:30142 or https://…'),
+    'remote.ownSave': ('存成一条连接', 'Save as a connection'),
+    'remote.ownSaved': ('已存成连接，到「已保存」里就能切过去',
+        'Saved — switch to it from the saved list'),
     // 回落生效时的标记。必须说清「为什么显示的地址和填的不一样」，
     // 否则用户会以为填错了。
     'conn.viaFallback': ('走的是备用地址（主地址连不上）',

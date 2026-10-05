@@ -62,6 +62,20 @@ class _ServerConnPageState extends State<ServerConnPage> {
   /// 威胁模型是否展开（默认收起：它是「要点」不是「正文」）
   bool _showThreat = false;
 
+  /// 远程访问里选的内置隧道类型（`'cloudflare'` / `'ssh'`）。
+  ///
+  /// 默认 Cloudflare：实测它在国内可达。选 SSH 则走反向隧道那条兜底路线
+  ///（零安装，但要求能连到外网中转）。
+  String _tunnelPref = 'cloudflare';
+
+  /// 「用你自己的工具」那个地址输入框。
+  ///
+  /// 不复用表单里的 `_fallback`：那个字段的语义是「出门时的备用地址」
+  /// （与主地址配对做回落），而这里是「用 Tailscale / 焦月连 这类工具拿到
+  /// 的外网地址」—— 两者只是长得像，填下去的结果也不同（这里会存成
+  /// 一条独立连接）。
+  final TextEditingController _ownRemote = TextEditingController();
+
   /// 电脑端两种启动方式，都能一键复制（合同④向导页）
   static const String _cmdViaPi = '/mobile start';
   static const String _cmdViaNode = 'node server/index.mjs --host 0.0.0.0';
@@ -86,6 +100,7 @@ class _ServerConnPageState extends State<ServerConnPage> {
     _token.dispose();
     _cwd.dispose();
     _fallback.dispose();
+    _ownRemote.dispose();
     super.dispose();
   }
 
@@ -873,7 +888,11 @@ class _ServerConnPageState extends State<ServerConnPage> {
   ///
   /// token 复用当前已连的那条（用户已经配对过了），不重复问。
   Future<void> _useRemoteAddress(String url) async {
-    final parsed = Uri.tryParse(url);
+    // 裸 `host:port` 补 http:// —— 自备穿透工具（Tailscale / 焦月连 / frp）
+    // 给的多半是「本机端口的转发」，没有 TLS 证书；带 scheme 的地址则原样尊重
+    //（Cloudflare 隧道给的就是 https）。
+    final withScheme = url.contains('://') ? url : 'http://$url';
+    final parsed = Uri.tryParse(withScheme);
     if (parsed == null || parsed.host.isEmpty) {
       NeuToast.show(context, message: I18n.tp('ui.3bff752a5d', {'url': url}), icon: IconId.warn);
       return;
@@ -888,9 +907,12 @@ class _ServerConnPageState extends State<ServerConnPage> {
       id: DateTime.now().microsecondsSinceEpoch.toString(),
       name: I18n.tp('ui.e96f1cf9ba', {'host': parsed.host.split('.').first}),
       host: parsed.host,
-      port: parsed.hasPort ? parsed.port : 443,
+      port: parsed.hasPort
+          ? parsed.port
+          : (parsed.scheme == 'https' ? 443 : 80),
       token: token,
-      secure: true,
+      // 有没有 TLS 看地址自己带没带，不替用户猜
+      secure: parsed.scheme == 'https',
     );
 
     final next = [..._profiles.where((p) => p.id != profile.id), profile];
@@ -1043,11 +1065,25 @@ class _ServerConnPageState extends State<ServerConnPage> {
                   ),
                 ],
                 const SizedBox(height: NeuSpace.n10),
+                // ── ① 让 App 开一条隧道：选走哪条道 ──
+                Text(I18n.t('remote.managedTitle'),
+                    style: TextStyle(
+                        fontSize: NeuFonts.bodySmall,
+                        fontWeight: FontWeight.w700,
+                        color: t.fg)),
+                const SizedBox(height: NeuSpace.n2),
+                Text(I18n.t('remote.managedHint'),
+                    style: TextStyle(fontSize: NeuFonts.label, color: t.muted)),
+                const SizedBox(height: NeuSpace.n6),
+                _tunnelOption(t, 'cloudflare'),
+                const SizedBox(height: NeuSpace.n4),
+                _tunnelOption(t, 'ssh'),
+                const SizedBox(height: NeuSpace.n10),
                 NeuPressable(
                   onTap: starting
                       ? null
                       : () async {
-                          final ok = await _store.startRemote();
+                          final ok = await _store.startRemote(prefer: _tunnelPref);
                           if (!context.mounted) return;
                           NeuToast.show(
                             context,
@@ -1065,6 +1101,12 @@ class _ServerConnPageState extends State<ServerConnPage> {
                   ),
                 ),
               ],
+              // ── ② 用你自己的工具 ──（与上面隧道是并列的两种做法，
+              // 所以不管隧道开没开都显示）
+              const SizedBox(height: NeuSpace.n12),
+              Divider(height: 1, color: t.border),
+              const SizedBox(height: NeuSpace.n10),
+              _ownToolSection(t),
               const SizedBox(height: NeuSpace.n10),
               GestureDetector(
                 onTap: () => setState(() => _showThreat = !_showThreat),
@@ -1100,6 +1142,112 @@ class _ServerConnPageState extends State<ServerConnPage> {
         );
       },
     );
+  }
+
+  /// 内置隧道的一个选项行：单选圆点 + 名称 + 一句代价说明。
+  ///
+  /// 点整行就选中，而不是只让小圆点可点：圆点只有 14dp，手指够不着，
+  /// 而这一行本来就该整行是目标。
+  Widget _tunnelOption(NeuTokens t, String value) {
+    final selected = _tunnelPref == value;
+    final isCf = value == 'cloudflare';
+    final label = I18n.t(isCf ? 'remote.optCloudflare' : 'remote.optSsh');
+    final hint = I18n.t(isCf ? 'remote.optCloudflareHint' : 'remote.optSshHint');
+    return NeuPressable(
+      onTap: () => setState(() => _tunnelPref = value),
+      radius: NeuRadii.sm,
+      // 选中 = 按进去（设计稿 .wsg-item.active 的那套语义）
+      flat: !selected,
+      alwaysInset: selected,
+      padding:
+          const EdgeInsets.symmetric(horizontal: NeuSpace.n10, vertical: NeuSpace.n10),
+      child: Row(
+        children: [
+          Container(
+            width: 14,
+            height: 14,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: selected ? t.accentInk : t.muted, width: 2),
+            ),
+            child: selected
+                ? Center(
+                    child: Container(
+                      width: 6,
+                      height: 6,
+                      decoration:
+                          BoxDecoration(shape: BoxShape.circle, color: t.accentInk),
+                    ),
+                  )
+                : null,
+          ),
+          const SizedBox(width: NeuSpace.n8),
+          // 名称不允许被压掉（它是选项的主信息），说明文字才让位
+          Text(label,
+              maxLines: 1,
+              style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.fg)),
+          const SizedBox(width: NeuSpace.n8),
+          Expanded(
+            child: Text(hint,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: NeuFonts.label, color: t.muted)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 「用你自己的工具」：说明 + 地址输入 + 存成连接。
+  ///
+  /// 为何 App 不代管这类工具：Tailscale 是系统级 VPN，必须在电脑**和**手机
+  /// 上各装一个、登录同一账号，App 装不了也点不了。所以这里只做两件事：
+  /// 把「先装工具、再拿地址」的顺序讲清楚，以及把地址收下来 —— 地址又长又
+  /// 随机，手拄进表单是常态性的失败来源。
+  Widget _ownToolSection(NeuTokens t) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(I18n.t('remote.ownTitle'),
+            style: TextStyle(
+                fontSize: NeuFonts.bodySmall,
+                fontWeight: FontWeight.w700,
+                color: t.fg)),
+        const SizedBox(height: NeuSpace.n2),
+        Text(I18n.t('remote.ownHint'),
+            style: TextStyle(fontSize: NeuFonts.label, height: 1.5, color: t.muted)),
+        const SizedBox(height: NeuSpace.n8),
+        TextField(
+          controller: _ownRemote,
+          style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.fg),
+          decoration: InputDecoration(
+            hintText: I18n.t('remote.ownPlaceholder'),
+            hintStyle: TextStyle(fontSize: NeuFonts.label, color: t.muted),
+            isDense: true,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(NeuRadii.sm)),
+          ),
+          onSubmitted: _saveOwnAddress,
+        ),
+        const SizedBox(height: NeuSpace.n8),
+        NeuPressable(
+          onTap: () => _saveOwnAddress(_ownRemote.text),
+          radius: NeuRadii.sm,
+          padding: EdgeInsets.symmetric(vertical: NeuSpace.n10),
+          child: Center(
+            child: Text(I18n.t('remote.ownSave'),
+                style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.accentInk)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _saveOwnAddress(String raw) async {
+    final value = raw.trim();
+    if (value.isEmpty) return;
+    await _useRemoteAddress(value);
+    if (!mounted) return;
+    setState(() => _ownRemote.clear());
   }
 
   /// 分组标题：把表单分成「基本」与「远程访问」两段。

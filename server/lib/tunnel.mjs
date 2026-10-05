@@ -190,11 +190,19 @@ export function startTunnel({ localPort, prefer = 'auto' }) {
   // 起不来的兜底：Cloudflare 一般 5-10 秒、SSH 一般 3-8 秒
   setTimeout(() => {
     if (status === 'starting' && !publicUrl) {
-      status = 'error';
-      lastError = provider === 'cloudflare'
-        ? '20 秒内没拿到 trycloudflare 地址（到 Cloudflare 的网络不通？）'
-        : '15 秒内没拿到公网地址（网络到不了 localhost.run？）';
+      // 顺序很重要：先收摊再写原因。
+      //
+      // `stopTunnel()` 会把 `lastError` 清空 —— 那对「用户主动关闭」是对的
+      //（关掉之后不该还挂着上一次的错误），但在这里会把刚写好的原因一起擦掉，
+      // 结果是界面上只回到「未开启」、看不到为什么没起来（实测就是“点了没反应”）。
+      const reason =
+        provider === 'cloudflare'
+          ? '20 秒内没拿到 trycloudflare 地址（到 Cloudflare 的网络不通？）'
+          : '15 秒内没拿到公网地址（网络到不了 localhost.run？）';
       stopTunnel();
+      status = 'error';
+      lastError = reason;
+      console.log(`[tunnel] ${reason}`);
     }
   }, 20000).unref?.();
 
