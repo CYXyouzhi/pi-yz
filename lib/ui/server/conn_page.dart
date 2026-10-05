@@ -603,7 +603,7 @@ class _ServerConnPageState extends State<ServerConnPage> {
                         NeuIcon(IconId.check, size: 16, color: t.accentInk),
                       const SizedBox(width: NeuSpace.n8),
                       NeuPressable(
-                        onTap: () => setState(() => _fill(profile)),
+                        onTap: () => _editProfile(profile),
                         radius: 10,
                         child: const Padding(
                           padding: EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
@@ -631,6 +631,7 @@ class _ServerConnPageState extends State<ServerConnPage> {
             // 整页看起来又长又杂。
             if (_expanded.contains(I18n.t('conn.groupManual'))) ...[
             NeuRaised(
+              key: _formKey,
               radius: NeuRadii.lg,
               padding: const EdgeInsets.all(NeuSpace.n16),
               child: Column(
@@ -851,7 +852,15 @@ class _ServerConnPageState extends State<ServerConnPage> {
   String _pairingLabel(bool open) =>
       open ? I18n.t('ui.b4912bca07') : I18n.t('ui.3b07ed0da7');
 
-  /// 新增一台机器：把「正在编辑的 id」清掉，保存时就会落成新条目
+  /// 表单区（「手动配置」那块折叠区）的锚点，用于新增/编辑后滚过去。
+  final GlobalKey _formKey = GlobalKey();
+
+  /// 新增一台机器：把「正在编辑的 id」清掉，保存时就会落成新条目。
+  ///
+  /// 为什么还要展开 + 滚动：表单在「手动配置」这块**默认收起的**折叠区里，
+  /// 而这些入口（「＋新增」、行尾的铅笔）都在页面下方的「已保存」里。
+  /// 早前它们只清/填表单，不展开也不滚动 —— 于是界面零变化（表单本来就
+  /// 没显示），用户只能认为按钮坏了。实测就是用户报的「这两个功能无法使用」。
   void _newProfile() {
     setState(() {
       _editingId = null;
@@ -860,6 +869,34 @@ class _ServerConnPageState extends State<ServerConnPage> {
       _token.clear();
       _cwd.clear();
       _port.text = '30142';
+      _expanded.add(I18n.t('conn.groupManual'));
+    });
+    _scrollToForm();
+  }
+
+  /// 把该条配置读进表单（编辑），同样要把它展开、滚出来 —— 理由同 `_newProfile`。
+  void _editProfile(ServerProfile profile) {
+    setState(() {
+      _fill(profile);
+      _expanded.add(I18n.t('conn.groupManual'));
+    });
+    _scrollToForm();
+  }
+
+  /// 滚到表单区。
+  ///
+  /// 下一帧再滚：`setState` 刚把折叠区展开，它的 `RenderObject` 要到下一帧
+  /// 才布局完成，此时 `ensureVisible` 才能算出正确位置（立即调用会滚不到位）。
+  void _scrollToForm() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final ctx = _formKey.currentContext;
+      if (ctx == null) return;
+      Scrollable.ensureVisible(
+        ctx,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+        alignment: 0.05,
+      );
     });
   }
 
