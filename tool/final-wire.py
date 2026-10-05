@@ -1,5 +1,18 @@
 # -*- coding: utf-8 -*-
 """把剩余中文接线到已有词表（键 = 代码原文，精确匹配）。"""
+import sys
+
+# Windows 控制台默认编码是 GBK，而本脚本的输出里有 ✓ ✗ ⚠ ↔ 这类不在
+# GBK 字符集内的符号 —— 直接 print 不是显示乱码，而是整个脚本抛
+# UnicodeEncodeError 退出（用户直接跑就会崩）。统一把标准输出重设为 UTF-8，
+# 并用 errors="replace" 兜底：万一终端仍不支持，也只是把个别字符显示成 ?，
+# 不会中断脚本。
+for _s in (sys.stdout, sys.stderr):
+    try:
+        _s.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 import hashlib
 from pathlib import Path
 BS = chr(92); NL = chr(10)
