@@ -1,0 +1,67 @@
+====================================================================
+① 代码里仍是中文字面量：121 处
+     main.dart:77  pi 远程
+     chat_models.dart:30  …（已截断）\n${output.substring(output.length - _maxOutpu
+     chat_models.dart:36  …（已截断）\n${text.substring(text.length - _maxOutputCha
+     diagnose.dart:37  连接超时（对方在 8 秒内没有应答）
+     diagnose.dart:38  常见原因：IP 不在同一网段、电脑防火墙挡了这个端口、服务端没在监听 0.0.0.0
+     diagnose.dart:53  域名解析不了（DNS 查不到这个名字）
+     diagnose.dart:54  检查名字有没有打错；不确定就直接填电脑的局域网 IP（形如 192.168.x.x）
+     diagnose.dart:61  端口通到主机了，但没人监听（连接被拒绝）
+     diagnose.dart:62  电脑上服务端可能没启动，或端口不对；在电脑上执行 pi-mobile server start 再试
+     diagnose.dart:68  找不到这台主机（不在同一网络里）
+     diagnose.dart:69  确认手机和电脑连的是同一个 Wi-Fi，且电脑没开防火墙隔离
+     diagnose.dart:74  网络错误：$osMessage
+     diagnose.dart:75  先在浏览器打开 http://<电脑IP>:30142/api/health 看能不能出 JSON
+     diagnose.dart:80  未知错误：$error
+     diagnose.dart:81  把这条导出给开发者
+     diagnose.dart:87  (空)
+     diagnose.dart:117  全部通过
+     diagnose.dart:119  没有采集到结果
+     diagnose.dart:119  ${failed.first.title} 有问题
+     diagnose.dart:125  pi-mobile 连接诊断
+     …另有 101 处
+
+② 定义了却没有调用点的 key：11 个（其中含中文的 11 个）
+     ui.2c32e9b31f  {h} 时 {mm} 分 → {h}h {mm}m
+     theme.system  跟随系统 → System
+     theme.light  浅色 → Light
+     theme.dark  深色 → Dark
+     start.newSession  新会话 → New session
+     start.search  搜索会话（名称 / 首条消息 / 路径） → Search sessions (name / first messag
+     start.history  历史会话 · 按工作区 → History · by workspace
+     start.notConnected  未连接 → Not connected
+     chat.startTalk  开始对话 → Start a conversation
+     chat.startTalkHint  输入消息，或打 / 调出命令 → Type a message, or / for commands
+     common.untranslated  未翻译 → not translated
+
+③ 已接上的 i18n 调用点：674 个 key 在用（词表共 676 条）
+====================================================================
+⚠ 只要 ① 或 ② 不为 0，英文模式下就一定有中文漏出来
+
+== 第七轮（审计第三轮的意见）：把扫描范围扩到全 lib/，修运行时层文案 ==
+审计指出：tool/i18n_coverage.py 之前只扫 lib/ui/，而 lib/server/ 里的运行时文案
+（通知标题、活动时间线标签、状态提示、错误消息）会直接渲染到界面，整片漏掉。
+这条意见是对的。本轮做了三件事：
+
+1) **扫描范围扩到 lib/**（并修了两个脚本 bug：i18n.dart 自身因 Windows 反斜杠
+   路径未被排除，600+ 条词表中文被误算成"未翻译文案"）。
+2) **修掉运行时层里用户可见的高频文案 46 处**：
+   · activity_feed  你 / 思考 / 回复 / 等你确认 / 0 秒 / N 秒  → I18n
+   · chat_reducer   已切换到 x/y / 正在重试 / 正在压缩上下文 / 压缩失败 / 自动重试 /
+                    重试失败 / 会话已关闭 / 工具  → I18n
+   · notification_center  需要你确认 / pi 在等你选一个选项 / 出错了 / 跑完了 /
+                    好像卡住了 / （没有正文输出）/ 卡住时长文案 / 五条抑制理由 /
+                    测试通知标题与正文  → I18n
+   · server_store   读用量失败 / 读累计用量失败 / 读默认模型失败 / 没连上服务端 /
+                    载入超时 / 尚未连接服务端 / 未指定工作目录 / 删除失败 /
+                    事件流出错 / 回应失败 / 连接已断开  → I18n
+   顺带修了 44 条词条的占位符错位（中文写成 `$total` 而 tp 只替换 `{n}`）与
+   54 处误留在 `{n}` 前的反斜杠。
+
+3) **如实报告剩余**：全量扫描后 ① 仍是中文字面量 **121 处**，分布：
+   diagnose.dart 47（诊断页的步骤标题/详情/建议）、server_store.dart 42（其余内部提示）、
+   notification_center.dart 11、discovery.dart 6、server_client.dart 4、
+   server_types.dart 4、chat_models.dart 2 等。
+   **lib/ui（界面层）是 0 处；lib/server（运行时层）完成了用户可见的高频文案，
+   但诊断页与其余内部提示尚未翻。**这一条不假称已做完。

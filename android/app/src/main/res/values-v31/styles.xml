@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android 12+ 的启动画面由系统的 SplashScreen API 接管。
+         若不在这里声明，系统会自己拿 windowBackground 兜底、再叠一层旧遮罩，
+         于是出现「系统的图标闪一下 → 又整屏遮罩图」的双重动画。
+         所以：底色调成与遮罩一致，图标用自适应前景，windowBackground 也收成纯色 ——
+         系统启动画面 → 纯色 → Flutter 首帧，衔接上不再跳。 -->
+    <style name="LaunchTheme" parent="@android:style/Theme.Light.NoTitleBar">
+        <item name="android:windowSplashScreenBackground">@color/splash_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
+        <item name="android:windowBackground">@color/splash_background</item>
+    </style>
+
+    <style name="NormalTheme" parent="@android:style/Theme.Light.NoTitleBar">
+        <item name="android:windowBackground">?android:colorBackground</item>
+    </style>
+</resources>

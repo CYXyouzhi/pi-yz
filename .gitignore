@@ -1,0 +1,83 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# Widget Preview related
+.widget_preview/
+
+# ==================== 本次新增（2026-10，准备发布 pi-yz）====================
+#
+# 取舍：仓库只收「源码 + 文档」，不收验证截图与调试产物。
+#   · docs/verify 下有 424 张 png 共 147MB —— 它们是验证证据，留在本机；
+#     文档（.md）照常入库，需要看图时按文档里的路径在本机查。
+#   · server/ 下的 probe-*.mjs / test-step*.mjs / *.log / pi-session-*.html
+#     是本机调试留下的，不入库（本地文件一个都不删）。
+#   · server/bin/cloudflared.exe 是 53MB 的第三方二进制，不入库。
+
+# 验证证据图（保留同目录的 .md）
+docs/verify/**/*.png
+docs/verify/**/*.jpg
+
+# 设计源文件（成品已落在 assets/ 与 android/app/src/main/res/）
+tool/artwork/*.png
+
+# Android 构建缓存
+android/.gradle/
+android/.cxx/
+
+# 服务端调试产物
+server/node_modules/
+server/probe-*.mjs
+server/test-step*.mjs
+server/*.log
+server/pi-session-*.html
+server/bin/cloudflared.exe
+
+# Python 中间产物
+__pycache__/
+tool/__pycache__/
+
+# agent 工作目录（goal / 会话状态）
+.pi/

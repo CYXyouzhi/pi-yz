@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 启动遮罩（Android 6.0–11 走这里；Android 12+ 见 values-v31/styles.xml）
+     用 tool/make-android-assets.ps1 从 tool/artwork/splash_source.png 生成。
+     换图后重跑那个脚本即可。 -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/splash_background" />
+
+    <!-- fill 会把图按屏幕拉伸。遮罩本身是「渐变底 + 居中徽章」，
+         纵向拉伸看不出来；横向在 20:9 这类长屏上会略宽一点。 -->
+    <item>
+        <bitmap
+            android:gravity="fill"
+            android:src="@drawable/splash" />
+    </item>
+</layer-list>

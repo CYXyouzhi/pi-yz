@@ -1,0 +1,35 @@
+=== flutter analyze ===
+Analyzing pi-mobile...                                          
+No issues found! (ran in 2.6s)
+
+=== flutter test ===
+00:02 +104: All tests passed!
+
+=== server tests ===
+ℹ tests 10
+ℹ pass 10
+ℹ fail 0
+
+=== i18n audit ===
+⑨ 词表自身引用了却未定义：0 个
+======================================================================
+✅ 九项全部为 0
+
+=== token stats ===
+剩余硬编码 fontSize        : 2
+剩余硬编码 radius          : 5
+剩余硬编码 Color(0x...)    : 2
+剩余硬编码 EdgeInsets 数值 : 30 (其中 0 有 11 个)
+剩余硬编码 SizedBox        : 0
+NeuSpace 令牌引用          : 1017
+
+=== 残余 (s) 单复数 ===
+0
+
+=== 证据链时间戳（要求：dart < APK < 截图）===
+18:17:09 build/app/outputs/flutter-apk/app-release.apk
+18:18:24 docs/verify/health-check/shots/v2-01-chat.png
+18:18:24 docs/verify/health-check/shots/v2-02-home.png
+18:18:24 docs/verify/health-check/shots/v2-03-settings.png
+18:12:27 lib/server/i18n.dart
+18:12:44 lib/ui/server/chat_page.dart
