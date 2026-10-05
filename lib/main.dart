@@ -191,6 +191,9 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
       token: active.token,
       defaultCwd: active.defaultCwd,
       secure: active.secure,
+      fallbackHost: active.fallbackHost,
+      fallbackPort: active.fallbackPort,
+      fallbackSecure: active.fallbackSecure,
     ));
   }
 

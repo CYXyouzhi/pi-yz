@@ -359,6 +359,26 @@ class I18n {
     'ui.b6d1510faf': ('额度预警', 'Quota warning'),
     'ui.96dba48253': ('默认工作区', 'Default workspace'),
     'ui.e963f6371c': ('默认工作区路径', 'Default workspace path'),
+    // 备用地址（双地址回落）：主地址连不上时自动试它。
+    // 典型用法 —— 主地址填家里局域网 IP，备用填 VPN（Tailscale 之类）的 IP，
+    // 这样在家走局域网、出门走 VPN，不用手动切 profile。
+    'conn.fallbackHost': ('备用地址（可选）', 'Fallback address (optional)'),
+    'conn.fallbackHint': ('出门时用，如 VPN 地址；留空则不启用',
+        'Used when away, e.g. a VPN address; blank disables it'),
+    // 回落生效时的标记。必须说清「为什么显示的地址和填的不一样」，
+    // 否则用户会以为填错了。
+    'conn.viaFallback': ('走的是备用地址（主地址连不上）',
+        'via fallback address (primary unreachable)'),
+    // 连接页的安全提示。三条都是**实际存在**的机制，不是泛泛的「注意安全」——
+    // 泛泛的提醒用户会直接跳过，具体的信息才会真的影响他的选择。
+    'conn.securityTitle': ('安全提示', 'Security notes'),
+    'conn.securityBody': (
+        '· token 由服务端首次启动时自动生成，保存在 server/.token（已在 .gitignore 里）；\n'
+        '· 不要把这个端口直接暴露到公网。出门请用 VPN（如 Tailscale）而不是公共隧道；\n'
+        '· 配对码只在你于电脑端打开的 5 分钟窗口内有效，连续填错会被限速。',
+        '· The token is generated on first launch and kept in server/.token (git-ignored);\n'
+        '· Do not expose this port to the public internet. Prefer a VPN (e.g. Tailscale) over a public tunnel;\n'
+        '· The pairing code only works inside the 5-minute window you open on the computer, and repeated wrong entries are rate-limited.'),
 
     // ============ 第二批：短句 UI 元素（task-23）============
     'ui.af767b7e4a': ('上', 'Up'),

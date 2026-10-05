@@ -27,6 +27,9 @@ class ServerTarget {
     required this.token,
     this.defaultCwd,
     this.secure = false,
+    this.fallbackHost,
+    this.fallbackPort,
+    this.fallbackSecure = false,
   });
 
   final String host;
@@ -39,7 +42,51 @@ class ServerTarget {
   /// HTTPS（远程隧道）；局域网直连是 http
   final bool secure;
 
+  /// 备用地址（可选）：主地址连不上时自动试它，见 [ServerStore.connect]。
+  /// 典型配法 —— 主地址填家里局域网 IP，备用填 Tailscale 的 100.x.x.x。
+  final String? fallbackHost;
+  final int? fallbackPort;
+  final bool fallbackSecure;
+
   String get label => secure ? 'https://$host:$port' : '$host:$port';
+
+  /// 候选地址列表：主地址在前、备用在后。
+  ///
+  /// 主地址排第一是**故意的**：局域网延迟比走 VPN 低一个数量级，
+  /// 所以「在家优先直连」是默认行为；出门时第一条自然连不上，
+  /// 自动落到第二条 —— 用户不需要切任何东西。
+  List<ServerEndpoint> get candidates => [
+        ServerEndpoint(host, port, secure, isFallback: false),
+        if ((fallbackHost ?? '').trim().isNotEmpty)
+          ServerEndpoint(
+            fallbackHost!.trim(),
+            fallbackPort ?? port,
+            fallbackSecure,
+            isFallback: true,
+          ),
+      ];
+}
+
+/// 一个可尝试的地址（主地址或备用地址）。
+class ServerEndpoint {
+  const ServerEndpoint(this.host, this.port, this.secure, {required this.isFallback});
+
+  final String host;
+  final int port;
+  final bool secure;
+
+  /// true = 这是备用地址。回落成功时界面要如实标出来，否则用户
+  /// 根本不知道现在走的是局域网还是 VPN，排查问题会很糊涂。
+  final bool isFallback;
+
+  /// 展示用。**与 `ServerProfile.endpoint` 用同一条规则**：HTTPS 且端口是 443 时
+  /// 不带端口 —— 否则同一台服务器在连接页显示 `https://pi.example.com`、
+  /// 在状态栏显示 `https://pi.example.com:443`，看起来像两个不同的地址。
+  /// （这条不一致是单元测试抓出来的，不是看代码看出来的。）
+  String get label {
+    if (!secure) return '$host:$port';
+    return port == 443 ? 'https://$host' : 'https://$host:$port';
+  }
 }
 
 class ServerStore extends ChangeNotifier {
@@ -55,6 +102,13 @@ class ServerStore extends ChangeNotifier {
   String? errorMessage;
   HealthInfo? health;
   ServerTarget? target;
+
+  /// 当前**实际**连上的那个地址。配了备用地址且回落成功时，这里指向备用那条。
+  /// 界面靠它显示「当前走的是哪条路」。
+  ServerEndpoint? activeEndpoint;
+
+  /// 探活超时。见 connect() 里的说明：必须足够短，回落才有意义。
+  static const _probeTimeout = Duration(seconds: 5);
 
   List<ServerSession> sessions = const [];
   bool loadingSessions = false;
@@ -173,25 +227,59 @@ class ServerStore extends ChangeNotifier {
     target = newTarget;
     state = ServerConnectionState.connecting;
     errorMessage = null;
+    activeEndpoint = null;
     _notify();
 
-    final client = ServerClient(
-      host: newTarget.host,
-      port: newTarget.port,
-      token: newTarget.token,
-      secure: newTarget.secure,
-    );
+    // 逐个试候选地址：主地址连不上就**静默**试备用地址。
+    //
+    // 不在第一条失败时就报错 —— 那样「出门自动走 VPN」永远不会生效，
+    // 用户还是会看到连接错误，只是这次他没法手动救。
+    final failures = <String>[];
+    ServerClient? client;
+    HealthInfo? healthResult;
+    ServerEndpoint? connectedVia;
+    for (final endpoint in newTarget.candidates) {
+      final candidate = ServerClient(
+        host: endpoint.host,
+        port: endpoint.port,
+        token: newTarget.token,
+        secure: endpoint.secure,
+      );
+      try {
+        // 5 秒硬超时：这是「探活」不是「干活」。主地址不可达时（出门在外的
+        // 常态）必须很快判定失败才能落到备用地址，否则用户得盯着「连接中…」
+        // 等满默认的 30 秒 —— 回落就白做了。
+        healthResult = await candidate.health(timeout: _probeTimeout);
+        client = candidate;
+        connectedVia = endpoint;
+        break;
+      } on ServerException catch (error) {
+        await candidate.dispose();
+        failures.add('${endpoint.label} — ${error.message}');
+      } catch (error) {
+        // 兜底：网络层还能抛出别的异常。特别是 TimeoutException ——
+        // `_json` 只把 `openUrl` 阶段的超时翻译成了 ServerException，
+        // 而 `request.close()` 和读 body 的 `.timeout()` 抛的是 Dart 内置的
+        // TimeoutException。不接住它就会冒泡出 connect()，
+        // 状态永远停在「连接中」—— 这是实测踩到的现象。
+        await candidate.dispose();
+        failures.add('${endpoint.label} — $error');
+      }
+    }
 
-    try {
-      health = await client.health();
-    } on ServerException catch (error) {
-      await client.dispose();
+    if (client == null || connectedVia == null || healthResult == null) {
       state = ServerConnectionState.error;
-      errorMessage = error.message;
+      // 两条都失败时把原因都列出来。只说第一条会让人以为备用地址
+      // 根本没被尝试过 —— 其实试了，只是也没通。
+      errorMessage = failures.length > 1
+          ? failures.map((f) => '· $f').join('\n')
+          : (failures.isEmpty ? '没有可用的地址' : failures.first);
       _notify();
       return;
     }
 
+    health = healthResult;
+    activeEndpoint = connectedVia;
     _client = client;
     state = ServerConnectionState.connected;
     _reconnectAttempt = 0;
