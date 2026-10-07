@@ -293,3 +293,166 @@ Map<String, dynamic> builtin,
     await store.setThinkingLevel(picked);
   }
 }
+
+Future<String?> askText(
+BuildContext context,
+{
+  required String title,
+  String? placeholder,
+  String? prefill,
+  required bool multiline,
+}) async {
+  final controller = TextEditingController(text: prefill ?? '');
+  final t = context.neu;
+  try {
+    return await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: t.bg,
+        title: Text(title, style: TextStyle(color: t.fg, fontSize: NeuFonts.sectionTitle)),
+        content: NeuInset(
+          radius: NeuRadii.sm,
+          padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n12),
+          child: TextField(
+            controller: controller,
+            autofocus: true,
+            minLines: multiline ? 4 : 1,
+            maxLines: multiline ? 10 : 1,
+            style: TextStyle(fontSize: NeuFonts.bodyTight, color: t.fg),
+            decoration: InputDecoration(
+              isDense: true,
+              border: InputBorder.none,
+              hintText: placeholder,
+              hintStyle: TextStyle(fontSize: NeuFonts.bodySmall, color: t.muted),
+              contentPadding: const EdgeInsets.symmetric(vertical: NeuSpace.n12),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text(I18n.t('common.cancel'), style: TextStyle(color: t.muted)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(controller.text),
+            child: Text(I18n.t('common.ok'), style: TextStyle(color: t.accentInk)),
+          ),
+        ],
+      ),
+    );
+  } finally {
+    controller.dispose();
+  }
+}
+
+Future<bool?> askConfirm(
+BuildContext context,
+UiRequest request,
+) async {
+  final t = context.neu;
+  return showDialog<bool>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      backgroundColor: t.bg,
+      title: Text(
+        request.title ?? I18n.t('ui.e83a256e4f'),
+        style: TextStyle(color: t.fg, fontSize: NeuFonts.sectionTitle),
+      ),
+      content: Text(
+        request.message ?? '',
+        style: TextStyle(color: t.muted, fontSize: NeuFonts.bodyMid, height: 1.6),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(dialogContext).pop(false),
+          child: Text(I18n.t('common.cancel'), style: TextStyle(color: t.muted)),
+        ),
+        TextButton(
+          onPressed: () => Navigator.of(dialogContext).pop(true),
+          child: Text(I18n.t('common.ok'), style: TextStyle(color: t.accentInk)),
+        ),
+      ],
+    ),
+  );
+}
+
+Future<String?> askSelect(
+BuildContext context,
+UiRequest request,
+) async {
+  return showModalBottomSheet<String?>(
+    context: context,
+    backgroundColor: Colors.transparent,
+    isScrollControlled: true,
+    builder: (sheetContext) {
+      final t = sheetContext.neu;
+      return Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.7,
+        ),
+        decoration: BoxDecoration(
+          color: t.bg,
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(NeuRadii.lg),
+          ),
+        ),
+        padding: const EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n10, NeuSpace.n18, NeuSpace.n24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: t.muted.withValues(alpha: 0.35),
+                  borderRadius: BorderRadius.circular(NeuRadii.hairline),
+                ),
+              ),
+            ),
+            SizedBox(height: NeuSpace.n14),
+            Text(
+              request.title ?? I18n.t('ui.708c9d6d2a'),
+              style: TextStyle(
+                fontSize: NeuFonts.sectionTitle,
+                fontWeight: FontWeight.w700,
+                color: t.onBg,
+              ),
+            ),
+            if (request.message != null && request.message!.isNotEmpty) ...[
+              const SizedBox(height: NeuSpace.n4),
+              Text(
+                request.message!,
+                style: TextStyle(fontSize: NeuFonts.small, color: t.muted),
+              ),
+            ],
+            const SizedBox(height: NeuSpace.n14),
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: request.options.length,
+                itemBuilder: (_, index) {
+                  final option = request.options[index];
+                  return NeuPressable(
+                    onTap: () => Navigator.of(sheetContext).pop(option),
+                    flat: true,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: NeuSpace.n14,
+                      vertical: NeuSpace.n12,
+                    ),
+                    margin: const EdgeInsets.only(bottom: NeuSpace.n6),
+                    child: Text(
+                      option,
+                      style: TextStyle(fontSize: NeuFonts.bodyTight, color: t.fg),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}

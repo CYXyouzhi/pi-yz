@@ -253,19 +253,19 @@ class _ServerChatPageState extends State<ServerChatPage> {
   Future<void> _showUiDialog(UiRequest request) async {
     switch (request.method) {
       case 'select':
-        final picked = await _askSelect(request);
+        final picked = await askSelect(context, request);
         await _store.respondUi(
           request.id,
           picked == null ? {'cancelled': true} : {'value': picked},
         );
       case 'confirm':
-        final confirmed = await _askConfirm(request);
+        final confirmed = await askConfirm(context, request);
         await _store.respondUi(
           request.id,
           confirmed == null ? {'cancelled': true} : {'confirmed': confirmed},
         );
       case 'input':
-        final text = await _askText(
+        final text = await askText(context, 
           title: request.title ?? I18n.t('common.input'),
           placeholder: request.placeholder,
           multiline: false,
@@ -275,7 +275,7 @@ class _ServerChatPageState extends State<ServerChatPage> {
           text == null ? {'cancelled': true} : {'value': text},
         );
       case 'editor':
-        final text = await _askText(
+        final text = await askText(context, 
           title: request.title ?? I18n.t('ui.95b351c862'),
           prefill: request.prefill,
           multiline: true,
@@ -291,163 +291,8 @@ class _ServerChatPageState extends State<ServerChatPage> {
   }
 
   /// 选择：底部面板列表（手机上比中间弹窗好点）
-  Future<String?> _askSelect(UiRequest request) async {
-    return showModalBottomSheet<String?>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (sheetContext) {
-        final t = sheetContext.neu;
-        return Container(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.7,
-          ),
-          decoration: BoxDecoration(
-            color: t.bg,
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(NeuRadii.lg),
-            ),
-          ),
-          padding: const EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n10, NeuSpace.n18, NeuSpace.n24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: t.muted.withValues(alpha: 0.35),
-                    borderRadius: BorderRadius.circular(NeuRadii.hairline),
-                  ),
-                ),
-              ),
-              SizedBox(height: NeuSpace.n14),
-              Text(
-                request.title ?? I18n.t('ui.708c9d6d2a'),
-                style: TextStyle(
-                  fontSize: NeuFonts.sectionTitle,
-                  fontWeight: FontWeight.w700,
-                  color: t.onBg,
-                ),
-              ),
-              if (request.message != null && request.message!.isNotEmpty) ...[
-                const SizedBox(height: NeuSpace.n4),
-                Text(
-                  request.message!,
-                  style: TextStyle(fontSize: NeuFonts.small, color: t.muted),
-                ),
-              ],
-              const SizedBox(height: NeuSpace.n14),
-              Flexible(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: request.options.length,
-                  itemBuilder: (_, index) {
-                    final option = request.options[index];
-                    return NeuPressable(
-                      onTap: () => Navigator.of(sheetContext).pop(option),
-                      flat: true,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: NeuSpace.n14,
-                        vertical: NeuSpace.n12,
-                      ),
-                      margin: const EdgeInsets.only(bottom: NeuSpace.n6),
-                      child: Text(
-                        option,
-                        style: TextStyle(fontSize: NeuFonts.bodyTight, color: t.fg),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   /// 确认：居中弹窗（默认焦点在「取消」，避免误点确认）
-  Future<bool?> _askConfirm(UiRequest request) async {
-    final t = context.neu;
-    return showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: t.bg,
-        title: Text(
-          request.title ?? I18n.t('ui.e83a256e4f'),
-          style: TextStyle(color: t.fg, fontSize: NeuFonts.sectionTitle),
-        ),
-        content: Text(
-          request.message ?? '',
-          style: TextStyle(color: t.muted, fontSize: NeuFonts.bodyMid, height: 1.6),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(I18n.t('common.cancel'), style: TextStyle(color: t.muted)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(I18n.t('common.ok'), style: TextStyle(color: t.accentInk)),
-          ),
-        ],
-      ),
-    );
-  }
-
   /// 文本输入 / 多行编辑
-  Future<String?> _askText({
-    required String title,
-    String? placeholder,
-    String? prefill,
-    required bool multiline,
-  }) async {
-    final controller = TextEditingController(text: prefill ?? '');
-    final t = context.neu;
-    try {
-      return await showDialog<String>(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          backgroundColor: t.bg,
-          title: Text(title, style: TextStyle(color: t.fg, fontSize: NeuFonts.sectionTitle)),
-          content: NeuInset(
-            radius: NeuRadii.sm,
-            padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n12),
-            child: TextField(
-              controller: controller,
-              autofocus: true,
-              minLines: multiline ? 4 : 1,
-              maxLines: multiline ? 10 : 1,
-              style: TextStyle(fontSize: NeuFonts.bodyTight, color: t.fg),
-              decoration: InputDecoration(
-                isDense: true,
-                border: InputBorder.none,
-                hintText: placeholder,
-                hintStyle: TextStyle(fontSize: NeuFonts.bodySmall, color: t.muted),
-                contentPadding: const EdgeInsets.symmetric(vertical: NeuSpace.n12),
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text(I18n.t('common.cancel'), style: TextStyle(color: t.muted)),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(controller.text),
-              child: Text(I18n.t('common.ok'), style: TextStyle(color: t.accentInk)),
-            ),
-          ],
-        ),
-      );
-    } finally {
-      controller.dispose();
-    }
-  }
-
   /// 内置命令执行完毕（服务端在 data.builtin 里给出结果）
   void _handleBuiltinResult(Map<String, dynamic> builtin) {
     if (!mounted) return;
