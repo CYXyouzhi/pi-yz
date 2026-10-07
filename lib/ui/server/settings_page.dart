@@ -218,44 +218,6 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
                 children: [
                   NeuPressable(
                     onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => ConfigPage(store: store),
-                        ),
-                      );
-                    },
-                    flat: true,
-                    padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n12),
-                    child: Row(
-                      children: [
-                        NeuIcon(IconId.spinner, size: 17, color: t.accentInk),
-                        SizedBox(width: NeuSpace.n12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                I18n.t('ui.5258ce61e8'),
-                                style: TextStyle(fontSize: NeuFonts.bodyTight, color: t.fg),
-                              ),
-                              SizedBox(height: NeuSpace.n2),
-                              Text(
-                                I18n.t('ui.0874b95e15'),
-                                style: TextStyle(
-                                  fontSize: NeuFonts.label,
-                                  color: t.muted,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        NeuIcon(IconId.chevronRight, size: 16, color: t.muted),
-                      ],
-                    ),
-                  ),
-                  Container(height: 1, color: t.border),
-                  NeuPressable(
-                    onTap: () {
                       final cwd = store.chat.cwd.isNotEmpty
                           ? store.chat.cwd
                           : (store.target?.defaultCwd ?? '');
@@ -344,6 +306,51 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
               ),
             ),
           ],
+          SizedBox(height: NeuSpace.n20),
+          // 「AI 配置」原先藏在「工作区」分组里，而模型、思考等级、技能命令、
+          // MCP 服务器跟工作区没有任何关系。更麻烦的是 ConfigPage 全 App 只有
+          // 这一个入口 —— 想改模型必须猜到「去工作区下面找 AI 配置」，猜不到就
+          // 以为没这个功能。
+          // 提到顶层独立成行后：一次点击直达（原先要先展开分组），也没有
+          // 「分组标题 + 展开后又一行同样标题」的重复感。
+          NeuRaised(
+            radius: NeuRadii.lg,
+            padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n14, vertical: NeuSpace.n4),
+            child: NeuPressable(
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => ConfigPage(store: store),
+                  ),
+                );
+              },
+              flat: true,
+              padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n12),
+              child: Row(
+                children: [
+                  NeuIcon(IconId.spinner, size: 17, color: t.accentInk),
+                  SizedBox(width: NeuSpace.n12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          I18n.t('ui.5258ce61e8'),
+                          style: TextStyle(fontSize: NeuFonts.bodyTight, color: t.fg),
+                        ),
+                        SizedBox(height: NeuSpace.n2),
+                        Text(
+                          I18n.t('ui.0874b95e15'),
+                          style: TextStyle(fontSize: NeuFonts.label, color: t.muted),
+                        ),
+                      ],
+                    ),
+                  ),
+                  NeuIcon(IconId.chevronRight, size: 16, color: t.muted),
+                ],
+              ),
+            ),
+          ),
           SizedBox(height: NeuSpace.n20),
           _section(t, I18n.t('settings.appearance', context: context), icon: IconId.image),
           if (_expanded.contains(
