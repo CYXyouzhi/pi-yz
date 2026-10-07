@@ -1755,11 +1755,11 @@ class _ServerChatPageState extends State<ServerChatPage> {
                   SizedBox(height: NeuSpace.n4),
                   InfoLine(I18n.t('ui.50f198f07f'),
                     stats.contextPercent != null
-                        ? '${stats.contextPercent!.toStringAsFixed(1)}% · ${_tokens(stats.contextTokens)} / ${_tokens(stats.contextWindow)}'
+                        ? '${stats.contextPercent!.toStringAsFixed(1)}% · ${formatTokens(stats.contextTokens)} / ${formatTokens(stats.contextWindow)}'
                         : I18n.t('ui.4f23e4de2b'),
                   ),
                   InfoLine('tokens',
-                    I18n.tp('ui.37e8f35792', {'total': _tokens(stats.totalTokens), 'input': _tokens(stats.inputTokens), 'output': _tokens(stats.outputTokens), 'cr': _tokens(stats.cacheReadTokens), 'cw': _tokens(stats.cacheWriteTokens)}),
+                    I18n.tp('ui.37e8f35792', {'total': formatTokens(stats.totalTokens), 'input': formatTokens(stats.inputTokens), 'output': formatTokens(stats.outputTokens), 'cr': formatTokens(stats.cacheReadTokens), 'cw': formatTokens(stats.cacheWriteTokens)}),
                   ),
                   if (stats.costTotal > 0)
                     InfoLine(I18n.t('ui.f970d0272c'),
@@ -2055,13 +2055,6 @@ class _ServerChatPageState extends State<ServerChatPage> {
   }
 
   /// 把 token 数按人类读法缩短（1.2M / 34.5k / 900）
-  static String _tokens(int? value) {
-    if (value == null) return '?';
-    if (value >= 1000000) return '${(value / 1000000).toStringAsFixed(2)}M';
-    if (value >= 1000) return '${(value / 1000).toStringAsFixed(1)}k';
-    return '$value';
-  }
-
   /// 把树压成带缩进的列表（深度优先）
   List<Widget> _treeRows(
     NeuTokens t,
