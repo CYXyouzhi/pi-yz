@@ -2895,7 +2895,7 @@ class _ServerChatPageState extends State<ServerChatPage> {
           if (hasChanges)
             Expanded(
               child: NeuPressable(
-                onTap: () => _showTurnSummarySheet(summary),
+                onTap: () => showTurnSummarySheet(context, summary),
                 flat: true,
                 radius: NeuRadii.sm,
                 padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n14, vertical: NeuSpace.n14),
@@ -2948,91 +2948,6 @@ class _ServerChatPageState extends State<ServerChatPage> {
   }
 
   /// 本轮改动明细：逐文件 + 口径说明（口径必须显示，否则数字看起来像漏算）
-  void _showTurnSummarySheet(TurnSummary summary) {
-    final t = context.neu;
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) => Container(
-        margin: EdgeInsets.fromLTRB(
-          NeuSpace.n14,
-          0,
-          NeuSpace.n14,
-          NeuSpace.n14 + MediaQuery.paddingOf(sheetContext).bottom,
-        ),
-        padding: const EdgeInsets.fromLTRB(NeuSpace.n16, NeuSpace.n14, NeuSpace.n16, NeuSpace.n10),
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.6,
-        ),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(NeuRadii.lg),
-          gradient: NeuDecorations.raisedGradient(t),
-          boxShadow: NeuShadows.raise(t),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(
-                  I18n.t('ui.94d80e751a'),
-                  style: TextStyle(
-                    fontSize: NeuFonts.bodyLg,
-                    fontWeight: FontWeight.w700,
-                    color: t.fg,
-                  ),
-                ),
-                SizedBox(width: NeuSpace.n8),
-                Text(
-                  I18n.tp('ui.064981f079', {'files': summary.files.length, 'added': summary.added, 'removed': summary.removed}),
-                  style: TextStyle(fontSize: NeuFonts.label, color: t.accentInk),
-                ),
-              ],
-            ),
-            const SizedBox(height: NeuSpace.n8),
-            Flexible(
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: summary.files.length,
-                itemBuilder: (_, index) {
-                  final file = summary.files[index];
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: NeuSpace.n6),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          file.path,
-                          maxLines: 2,
-                          // 文件路径可以很长，截断后没有省略号用户会以为路径就这么短
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: NeuFonts.sub, color: t.fg),
-                        ),
-                        SizedBox(height: NeuSpace.n2),
-                        Text(
-                          '+${file.added}/-${file.removed}'
-                          '${file.writes > 0 ? I18n.tp('ui.eddf38f2db', {'n': file.writes}) : ''}'
-                          '${file.edits > 0 ? I18n.tp('ui.038edd57e7', {'n': file.edits}) : ''}',
-                          style: TextStyle(fontSize: NeuFonts.badge, color: t.muted),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-            SizedBox(height: NeuSpace.n6),
-            Text(
-              summary.basis.isEmpty ? I18n.t('ui.4dc7b743df') : summary.basis,
-              style: TextStyle(fontSize: NeuFonts.micro, color: t.muted),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildComposer(NeuTokens t, ChatReducer chat) {
     final running = chat.isRunning;
     return Container(

@@ -9,6 +9,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../server/i18n.dart';
+import '../../../theme/neu.dart';
+import '../../../server/chat_models.dart';
 import '../../../theme/design_tokens.dart';
 
 /// 「已删除，撤销」提示（5 秒，带撤销按钮）。
@@ -27,4 +29,94 @@ void showUndoSnack(BuildContext context, String message, VoidCallback onUndo) {
       action: SnackBarAction(label: I18n.t('ui.bd9fcf46b4'), onPressed: onUndo),
     ),
   );
+}
+
+/// 本轮改动速览 + 继续 / 再来一次。
+///
+/// 依赖为 0：它只用传入的 summary 与自己的局部变量 ——
+/// 「继续 / 重做」两个动作通过 Navigator 的返回值交回调用方。
+void showTurnSummarySheet(BuildContext context, TurnSummary summary) {
+    final t = context.neu;
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => Container(
+        margin: EdgeInsets.fromLTRB(
+          NeuSpace.n14,
+          0,
+          NeuSpace.n14,
+          NeuSpace.n14 + MediaQuery.paddingOf(sheetContext).bottom,
+        ),
+        padding: const EdgeInsets.fromLTRB(NeuSpace.n16, NeuSpace.n14, NeuSpace.n16, NeuSpace.n10),
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.6,
+        ),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(NeuRadii.lg),
+          gradient: NeuDecorations.raisedGradient(t),
+          boxShadow: NeuShadows.raise(t),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  I18n.t('ui.94d80e751a'),
+                  style: TextStyle(
+                    fontSize: NeuFonts.bodyLg,
+                    fontWeight: FontWeight.w700,
+                    color: t.fg,
+                  ),
+                ),
+                SizedBox(width: NeuSpace.n8),
+                Text(
+                  I18n.tp('ui.064981f079', {'files': summary.files.length, 'added': summary.added, 'removed': summary.removed}),
+                  style: TextStyle(fontSize: NeuFonts.label, color: t.accentInk),
+                ),
+              ],
+            ),
+            const SizedBox(height: NeuSpace.n8),
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: summary.files.length,
+                itemBuilder: (_, index) {
+                  final file = summary.files[index];
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: NeuSpace.n6),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          file.path,
+                          maxLines: 2,
+                          // 文件路径可以很长，截断后没有省略号用户会以为路径就这么短
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: NeuFonts.sub, color: t.fg),
+                        ),
+                        SizedBox(height: NeuSpace.n2),
+                        Text(
+                          '+${file.added}/-${file.removed}'
+                          '${file.writes > 0 ? I18n.tp('ui.eddf38f2db', {'n': file.writes}) : ''}'
+                          '${file.edits > 0 ? I18n.tp('ui.038edd57e7', {'n': file.edits}) : ''}',
+                          style: TextStyle(fontSize: NeuFonts.badge, color: t.muted),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+            SizedBox(height: NeuSpace.n6),
+            Text(
+              summary.basis.isEmpty ? I18n.t('ui.4dc7b743df') : summary.basis,
+              style: TextStyle(fontSize: NeuFonts.micro, color: t.muted),
+            ),
+          ],
+        ),
+      ),
+    );
+  
 }
