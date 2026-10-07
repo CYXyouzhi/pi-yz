@@ -233,4 +233,25 @@ void main() {
       }
     });
   });
+
+  // 上面那些用例回答的是「布局有没有爆」（溢出会抛异常），
+  // 这一组回答的是「样子变了没有」—— 颜色、间距、层级、圆角这类变化
+  // 断言抓不到，只能靠图片基线。两者的价值不一样，都要有。
+  //
+  // 基线生成：flutter test --update-goldens test/resolution_test.dart
+  // 注：换了字体或 Flutter 版本可能让基线整体偏移，那属于环境变化，
+  // 确认无误后重新生成即可 —— 不要为了让它变绿而放宽断言。
+  group('⑦ 渲染基线（golden）：三种宽度的设置页', () {
+    for (final width in kTargetWidths) {
+      testWidgets('${width.toInt()}dp：设置页渲染基线', (tester) async {
+        setPhoneSurface(tester, width: width);
+        await boot(tester);
+        await tapTab(tester, '设置');
+        await expectLater(
+          find.byType(Scaffold).first,
+          matchesGoldenFile('goldens/settings_${width.toInt()}dp.png'),
+        );
+      });
+    }
+  });
 }

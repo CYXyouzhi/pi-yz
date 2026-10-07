@@ -341,6 +341,11 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
                         SizedBox(height: NeuSpace.n2),
                         Text(
                           I18n.t('ui.0874b95e15'),
+                          // 与 NeuSection 里的摘要一致：单行 + 省略号。
+                          // 不加的话在 360dp 窄屏下这句会换行，卡片比旁边几个分组高出一截
+                          // （这是先靠 golden 基线看出来的 —— 断言式用例抓不到「没溢出但换了行」）。
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(fontSize: NeuFonts.label, color: t.muted),
                         ),
                       ],
