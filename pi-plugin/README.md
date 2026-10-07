@@ -4,8 +4,12 @@
 
 | 扩展 | 干什么 |
 |---|---|
-| `extensions/mobile-server.ts` | 把 pi-mobile 的电脑端服务做成 pi 命令：`/mobile start` 起服务、`stop` 停、`status` 看状态、`token` 看配对码、`doctor` 自检 |
+| `extensions/mobile-server.ts` | 把 pi-mobile 的电脑端服务做成 pi 命令：`/yz start` 起服务、`stop` 停、`status` 看状态、`doctor` 自检、`token` 换 token |
 | `extensions/quota-fallback.ts` | **额度兜底**：主 provider 因额度/计费失败时，自动切到备用 provider，并让 agent 接着把没干完的活干完（无人值守） |
+
+两者共用 `lib/ctl.mjs` —— 真正的进程控制逻辑写在那里（纯 Node，不依赖 pi 的 API），
+所以它既能被 pi 命令调用，也能被 `pi-yz` 命令行和测试直接调用。
+两边各写一套的后果是「命令行说在跑、pi 里说没跑」这类分歧会悄悄长出来。
 
 ## 安装
 
@@ -15,15 +19,28 @@ pi install ./pi-plugin          # 在 pi-mobile 仓库里执行
 
 装完重启 pi（或在 pi 里 `/reload`）。文件直接放到 `~/.pi/agent/extensions/` 下也能生效（pi 启动时自动加载该目录）。
 
-## mobile-server
+命令行的 `pi-yz` 是另一个入口，需要在 PATH 里放个转发脚本：
+`~/.pi/agent/bin/pi-yz.cmd`（cmd / PowerShell）和 `~/.pi/agent/bin/pi-yz`（Git Bash），
+两者都只负责把参数转给 `pi-plugin/bin/pi-yz.mjs`，项目挪位置时改转发脚本里的 `PI_YZ_HOME` 即可。
+
+## 两种入口，同一套实现
 
 ```
-/mobile start        起服务（后台跑，终端打印手机该填的地址与 token）
-/mobile stop         停服务
-/mobile status       看状态（含活跃会话数、远程入口）
-/mobile token        重新配对：打印配对码与新 token
-/mobile doctor       自检：端口占用、防火墙、隧道可达性
+pi 里                     终端里（不依赖 pi 主进程）
+─────────────────────     ──────────────────────────────────
+/yz                        pi-yz              后台启动 + 打印手机要填的三行
+/yz start [端口]           pi-yz start [端口]  同上
+/yz stop                   pi-yz stop         停服务
+/yz                        pi-yz status       看状态（谁拉起的、在不在跑）
+/yz doctor                 pi-yz doctor       自检
+/yz token <t>              pi-yz token <t>    换 token
+                           pi-yz logs [行数]  看日志尾部
 ```
+
+两种入口**共用同一份 ctl.mjs**，所以「谁拉起的、在不在跑」的判断不会打架。
+
+**启动时机是手动的** —— 不做「pi 启动就自动拉起」：服务什么时候在跑完全由你决定，
+不会在你不知情时躺着一个进程。
 
 ## quota-fallback
 

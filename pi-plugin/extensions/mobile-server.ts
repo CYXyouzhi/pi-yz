@@ -2,17 +2,17 @@
  * pi-mobile-server —— 把「电脑端服务」做成 pi 插件。
  *
  * 装了它以后不用再记「cd 到某个目录再 node index.mjs」：
- *   /mobile            看状态（起没起、端口、手机该填什么、日志在哪）
- *   /mobile start      起服务（后台跑，日志落到 ~/.pi/agent/pi-mobile-server.log）
- *   /mobile stop       停服务
- *   /mobile doctor     自检：进程、端口、/api/health、当前会话数
- *   /mobile token <t>  设置/更换 token（手机端要填同一个）
+ *   /yz            看状态（起没起、端口、手机该填什么、日志在哪）
+ *   /yz start      起服务（后台跑，日志落到 ~/.pi/agent/pi-mobile-server.log）
+ *   /yz stop       停服务
+ *   /yz doctor     自检：进程、端口、/api/health、当前会话数
+ *   /yz token <t>  设置/更换 token（手机端要填同一个）
  *
  * 设计取舍：
  *   · 服务端是独立 Node 进程，插件只负责**拉起/停止/探活**，不在 pi 进程里跑 HTTP；
  *     这样 pi 退出、切会话都不会把手机端连接带崩。
  *   · 真正的逻辑在 lib/ctl.mjs（纯 Node），插件只做命令与展示 ——
- *     于是它既能被 /mobile 调用，也能被命令行/测试直接验证。
+ *     于是它既能被 /yz 调用，也能被命令行/测试直接验证。
  */
 
 import { existsSync, rmSync } from 'node:fs';
@@ -33,7 +33,7 @@ export default function mobileServer(pi: ExtensionAPI) {
     default: false,
   });
 
-  // 不做「pi 启动就自动拉起服务」—— 启动/停止一律手动，/mobile start 与 /mobile stop，
+  // 不做「pi 启动就自动拉起服务」—— 启动/停止一律手动，/yz start 与 /yz stop，
   // 这样服务什么时候在跑完全由你决定，不会在你不知情时躺着一个进程。
   pi.on('session_start', async (_event, ctx) => {
     if (pi.getFlag('mobile-status') !== true) return;
@@ -44,7 +44,7 @@ export default function mobileServer(pi: ExtensionAPI) {
       self: '运行中（本插件拉起）',
       foreign: '运行中（别的进程拉起）',
       zombie: '僵死（进程在、端口没服务）',
-      down: '未运行（用 /mobile start 启动）',
+      down: '未运行（用 /yz start 启动）',
     }[info.kind] ?? info.kind;
 
     const lines = [
@@ -59,7 +59,7 @@ export default function mobileServer(pi: ExtensionAPI) {
     ctx.ui.notify(`pi-mobile-server：${label}（${info.hostAddress}:${info.port}）`, 'info');
   });
 
-  pi.registerCommand('mobile', {
+  pi.registerCommand('yz', {
     description: 'pi 远程服务：status / start / stop / doctor / token <新token>',
     handler: async (args, ctx) => {
       const mod = await ctl();
@@ -127,13 +127,13 @@ export default function mobileServer(pi: ExtensionAPI) {
       if (action === 'token') {
         const token = parts[1];
         if (!token) {
-          ctx.ui.notify('用法：/mobile token <新token>', 'warning');
+          ctx.ui.notify('用法：/yz token <新token>', 'warning');
           return;
         }
         const config = mod.readConfig();
         mod.writeConfig({ ...config, token });
         ctx.ui.notify(
-          `token 已写入 ${mod.CONFIG_PATH}\n注意：正在跑的服务端要 /mobile stop 再 /mobile start 才生效`,
+          `token 已写入 ${mod.CONFIG_PATH}\n注意：正在跑的服务端要 /yz stop 再 /yz start 才生效`,
           'info',
         );
         return;
