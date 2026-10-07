@@ -29,6 +29,10 @@ import '../neu_toast.dart';
 import 'activity_view.dart';
 import 'export_page.dart';
 import 'files_page.dart';
+// slashPanelMaxHeight 搬到了 chat/widgets.dart，但测试还从本文件引用它 ——
+// export 回去保持兼容（纯函数搬家，不改行为）。
+export 'chat/widgets.dart' show slashPanelMaxHeight;
+
 import 'chat/sheets.dart';
 import 'chat/widgets.dart';
 import 'message_view.dart';
@@ -860,7 +864,12 @@ class _ServerChatPageState extends State<ServerChatPage> {
                     ],
                   ),
                 ),
-              if (_showSuggestions) _buildSuggestions(t, _matchingCommands),
+              if (_showSuggestions)
+                Suggestions(
+                  commands: _matchingCommands,
+                  onApply: _applyCommand,
+                  store: _store,
+                ),
               if (_showFileRefs) FileRefs(refs: _fileRefs, onApply: _applyFileRef),
               // 按键条放在输入框上方、参与布局（不是浮层）：
               // 既不遮挡输入框，也不遮消息
@@ -2235,147 +2244,6 @@ class _ServerChatPageState extends State<ServerChatPage> {
   }
 
   /// @ 引用候选列表（与命令面板同一套样式，只是数据源是工作区文件）
-  Widget _buildSuggestions(NeuTokens t, List<SlashCommand> commands) {
-    // 面板高度跟屏幕走。以前写死 200：手机上只能看到 4 条，
-    // 12 条命令得一直滑，看起来就像「显示不完全」。
-    // 必须减掉键盘高度（viewInsets.bottom）：否则软键盘弹起来会盖住面板底部几条，
-    // 用户会以为「命令就这些」。
-    final maxHeight = slashPanelMaxHeight(MediaQuery.of(context));
-    return Container(
-      constraints: BoxConstraints(maxHeight: maxHeight),
-      margin: const EdgeInsets.symmetric(horizontal: NeuSpace.n18),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(NeuRadii.md),
-        gradient: NeuDecorations.wellGradient(t),
-        boxShadow: NeuShadows.inset(t),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (commands.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n16),
-              child: Row(
-                children: [
-                  NeuIcon(IconId.spinner, size: 14, color: t.muted),
-                  SizedBox(width: NeuSpace.n8),
-                  Expanded(
-                    child: Text(
-                      I18n.t('ui.8109beab3c'),
-                      style: TextStyle(fontSize: NeuFonts.small, color: t.muted),
-                    ),
-                  ),
-                ],
-              ),
-            )
-          else
-            Flexible(
-              child: ListView.builder(
-                shrinkWrap: true,
-                padding: const EdgeInsets.all(NeuSpace.n6),
-                itemCount: commands.length,
-                itemBuilder: (context, index) {
-                  final command = commands[index];
-                  // 中文模式优先中文说明；没有就原文 + 标注（不假装翻过）
-                  final description = I18n.describe(
-                    command.description,
-                    command.descriptionZh,
-                    context: context,
-                  );
-                  return NeuPressable(
-                    onTap: () => _applyCommand(command),
-                    flat: true,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: NeuSpace.n10,
-                      vertical: NeuSpace.n8,
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(top: NeuSpace.n2),
-                          child: NeuIcon(
-                            switch (command.source) {
-                              'builtin' => IconId.cmd,
-                              'skill' => IconId.spinner,
-                              'prompt' => IconId.pen,
-                              _ => IconId.terminal,
-                            },
-                            size: 15,
-                            color: t.accentInk,
-                          ),
-                        ),
-                        const SizedBox(width: NeuSpace.n8),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // 命令名长短不一（扩展命令可以是长路径），
-                              // 所以给一行横向滚动：名字再长也能滑着读完，不截断
-                              SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: Text.rich(
-                                  TextSpan(
-                                    children: [
-                                      TextSpan(
-                                        text: '/${command.name}',
-                                        style: TextStyle(
-                                          fontSize: NeuFonts.bodyMid,
-                                          fontFamily: 'monospace',
-                                          color: t.fg,
-                                        ),
-                                      ),
-                                      if (command.argHint != null &&
-                                          command.argHint!.isNotEmpty)
-                                        TextSpan(
-                                          text: '  ${command.argHint}',
-                                          style: TextStyle(
-                                            fontSize: NeuFonts.badge,
-                                            color: t.muted,
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              if (description.isNotEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: NeuSpace.n2),
-                                  child: Text(
-                                    description,
-                                    // 说明不再截断：面板本身可以滚，读全比好看重要
-                                    style: TextStyle(
-                                      fontSize: NeuFonts.label,
-                                      height: 1.45,
-                                      color: t.muted,
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-          if (commands.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(bottom: NeuSpace.n6),
-              child: Text(
-                // 数字必须是真话：显示了多少 / 一共多少（筛选时两个数不一样）
-                commands.length == _store.commands.length
-                    ? I18n.tp('ui.a977d99ebd', {'n': commands.length})
-                    : I18n.tp('ui.6e9ce7a03e', {'a': commands.length, 'b': _store.commands.length}),
-                style: TextStyle(fontSize: NeuFonts.micro, color: t.muted),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
   /// 引用：把这段文字带上引用标记塞回输入框（引用后还能补一句自己的话）
   void _quoteText(String text) {
     final quoted = text.trim().split('\n').map((line) => '> $line').join('\n');
@@ -2627,7 +2495,3 @@ class ServerChatScreen extends StatelessWidget {
 /// 抽成纯函数是为了能被单测钉住：面板高度必须按「键盘之上的可用高度」算，
 /// 否则软键盘弹起会盖住底部几条命令，用户会以为「命令就这些」。
 /// 上下限的来历：以前写死 200，手机上只能看到 4 条、12 条命令得一直滑。
-double slashPanelMaxHeight(MediaQueryData media) {
-  final available = media.size.height - media.viewInsets.bottom;
-  return (available * 0.45).clamp(160.0, 420.0);
-}
