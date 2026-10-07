@@ -32,7 +32,7 @@
 | `lib/ui/server/files_page.dart` | 1059 | ✅ 645 行（6 个组件 + 2 个工具函数 + 2 个底部面板）|
 | `lib/ui/server/sessions_page.dart` | 1316 | ✅ 1103 行（5 个组件已抽；`_buildSessionRow`/`_buildGroup` 是雷区，不抽）|
 | `lib/ui/server/conn_page.dart` | 1300 | ✅ 1209 行（3 个组件已抽；`_remoteCard` 待手工加参数）|
-| `lib/ui/server/chat_page.dart` | 3374 | ✅ 2395 行（减 29%；余下见文档）|
+| `lib/ui/server/chat_page.dart` | 3374 | ✅ 2344 行（减 31%；余下见文档）|
 | `lib/server/server_store.dart` | 1814 | 🚫 **不动**（「唯一状态源」是架构决策的载体，拆它等于动地基）|
 
 相关提交：`6138d6d`（server_types）、`8424632`（设置页共用件）
@@ -480,6 +480,26 @@ chat_page **3374 → 2740 行**（减 634 / 19%），新建 `chat/sheets.dart`�
 **还有一条**：`chat.model` 这类**字段路径**不要用 `model` 去改（会命中 `chat.model`）
 —— 正确做法是**在生成组件时就把参数名设计对**（收 `chat` 而不是 `model`），
 压根不给事后替换的机会。
+
+**⑯ chat_page 收在 2344 行（减 31%）；_treeRows 失败**
+
+本轮又抽了三个「纯函数 / 小组件」：`InfoLine`（19 行）、`countTree`（10 行）、
+`formatTokens`（6 行）。它们都是 `_showSessionInfo` 的依赖，按「分步抽有复利」先搬走。
+
+**chat_page：3374 → 2344 行**（减 1030 / 31%）。
+
+**`_treeRows`（96 行，递归）失败**。它比之前所有目标都多两层麻烦：
+  · 签名多行（4 个参数）；
+  · **递归** —— 内部要再调自己，`context` 得一路往下传；
+  · 我给它加 `context` 参数，同时组件里又写了 `final t = context.neu;`，
+    而签名里本来就有 `NeuTokens t` —— 重复声明；
+  · 页面的两处调用点，我的替换只命中了一处。
+
+报错混着三种（`extra_positional_arguments` / `missing_required_argument` /
+`argument_type_not_assignable`），来回修两轮没清干净，**回退**。
+
+**建议下一轮**：这类「递归 + 多参数 + 签名多行」的方法**手工搬**，别用脚本 ——
+脚本对它的隐式假设太多（不是 State 方法、参数要对齐、内部递归调用不能漏改）。
 
 **结果**：`settings_page.dart` 停在 **875 行**（原 1472，减 597 行 / 40%），未达 800 目标。
 差的就是「外观」这 367 行。它仍作为整体留在页面里 —— 至少是**自洽**的
