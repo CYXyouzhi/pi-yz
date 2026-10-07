@@ -30,7 +30,7 @@
 | `lib/ui/server/settings_page.dart` | 1472 | ✅ 875 行（8 个分组抽了 7 个；「外观」未能抽出，原因见「踩过的坑⑤」）|
 | `lib/ui/server/config_page.dart` | 1307 | ✅ 811 行（6 个分组抽了 5 个；MCP 分组未抽）|
 | `lib/ui/server/files_page.dart` | 1059 | ✅ 645 行（6 个组件 + 2 个工具函数 + 2 个底部面板）|
-| `lib/ui/server/sessions_page.dart` | 1316 | ⬜ 未开始 |
+| `lib/ui/server/sessions_page.dart` | 1316 | ⚠️ 试了五次未成，回退到原状（原因见踩坑⑦）|
 | `lib/ui/server/conn_page.dart` | 1300 | ⬜ 未开始 |
 | `lib/ui/server/chat_page.dart` | 3374 | ⬜ 未开始（最痛也最难，放最后）|
 | `lib/server/server_store.dart` | 1814 | 🚫 **不动**（「唯一状态源」是架构决策的载体，拆它等于动地基）|
@@ -186,6 +186,39 @@ bash heredoc 被吃掉转义 —— 都浪费了一轮。
 analyze 干净之前都不算完成。
 
 **两次失败都及时 checkout 回退了** —— 这比在现场修补省事得多（修补过一次，越修越乱）。
+
+**⑦ sessions_page 失败五次仍未完成 —— 这个文件只能用脑，不能用脚本**
+
+`sessions_page.dart`（1316 行）试了五次，每次都在同一个坑里打转，最后全部回退：
+
+  · **方法签名是多行的**：
+    ```
+    Widget _buildGroup(
+      NeuTokens t,
+      String cwd,
+      ...
+    ) {
+    ```
+    第一版脚本按「去掉 body 的第 1 行」剥签名 → 参数列表残留进组件 →
+    报 103 个 expected_class_member / already defined。
+    改成按「签名结束的 `) {`」定位后单这个方法能过了（SessionRow / SessionGroup 实测干净）。
+  · **同文件里多个 class 的构造签名文本完全相同**（SessionRow 与 SessionGroup 都有
+    `required this.onOpen, required this.onLongPress`），我用 `str.replace` 加字段时
+    命中了错的那个 → 报 67 个「All final variables must be initialized」。
+  · 脚本自己还引入两处：多加一个 `return`（原方法体本来就有）、
+    `setState` 要改走回调、`widget.onXxx` 要加参数。
+
+**结论：这个文件应当手工搬。** 它有四个特征叠在一起，脚本「猜」的成本高于人「看」的成本：
+  1. 方法签名多行；
+  2. 多个 class 结构高度相似（替换会命中错的那个）；
+  3. 方法体内混着 `setState`、`widget.xxx`、跨方法调用三类需要逐个判断的引用；
+  4. 单个方法 58~94 行，手工搬也不算太长。
+
+**下次的做法**：一次只搬一个方法，用 edit 工具（精确匹配，不匹配就拒绝），
+搬完立刻 analyze；先读 30 行看清引用类型，再决定传参还是回调。
+
+**教训**：五次失败里我每次改的都是**不同的点**，但每次「改完 analyze 仍有几十条」就回退 ——
+其实从第三次起就该换方法了。**同一个文件失败两次，就该停下来改用手工。**
 
 **结果**：`settings_page.dart` 停在 **875 行**（原 1472，减 597 行 / 40%），未达 800 目标。
 差的就是「外观」这 367 行。它仍作为整体留在页面里 —— 至少是**自洽**的
