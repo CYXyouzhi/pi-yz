@@ -31,7 +31,7 @@
 | `lib/ui/server/config_page.dart` | 1307 | ✅ 811 行（6 个分组抽了 5 个；MCP 分组未抽）|
 | `lib/ui/server/files_page.dart` | 1059 | ✅ 645 行（6 个组件 + 2 个工具函数 + 2 个底部面板）|
 | `lib/ui/server/sessions_page.dart` | 1316 | ✅ 1103 行（5 个组件已抽；`_buildSessionRow`/`_buildGroup` 是雷区，不抽）|
-| `lib/ui/server/conn_page.dart` | 1300 | ⬜ 未开始 |
+| `lib/ui/server/conn_page.dart` | 1300 | ✅ 1209 行（3 个组件已抽；`_remoteCard` 待手工加参数）|
 | `lib/ui/server/chat_page.dart` | 3374 | ⬜ 未开始（最痛也最难，放最后）|
 | `lib/server/server_store.dart` | 1814 | 🚫 **不动**（「唯一状态源」是架构决策的载体，拆它等于动地基）|
 
@@ -286,6 +286,27 @@ sessions/widgets.dart（新建）
 未达 800，差的就是那两个雷区方法 —— 但它已经比原状好，不值得再耗轮次。
 
 **下一轮直接从步骤 5（conn_page）开始。**
+
+**⑧ conn_page 停在 1209 行；「文本替换命中错 class」第 3 次出现**
+
+步骤 5 的进展：1300 → **1209 行**（减 91），3 个组件已抽出并提交
+（`CmdRow` / `TunnelOption` / `OwnToolSection`，见 conn/widgets.dart）。
+
+`_remoteCard`（208 行）没抽成。它依赖 5 个页面成员（store / tunnelPref / ownRemote /
+saveOwnAddress / showThreat）与 3 处 setState，加参数时**又一次踩了同一个坑**：
+用 `str.replace` 给 `RemoteCard` 加字段，**命中了文件里另一个 class（CmdRow）**，
+于是 `CmdRow` 多了三个用不上的字段、`RemoteCard` 一个都没加上。
+
+**这是同一个错误第 3 次出现**（前两次分别在 settings_page 和 sessions_page）。
+规律很清楚：
+
+> **当一个文件里有多个结构相似的 class 时，`str.replace` 一定会命中错的那个。**
+
+凡是给某个 class 加字段/参数，**必须先定位到那个 class 的行范围**，只在范围内替换；
+或者直接用 edit 工具 —— 它要求精确匹配，不匹配就拒绝，不会静默改错地方。
+
+**下一轮**：`_remoteCard` 用 edit 手工加参数（一个 class 一段，不批量 replace）；
+之后是步骤 6（chat_page，3374 行）。
 
 **结果**：`settings_page.dart` 停在 **875 行**（原 1472，减 597 行 / 40%），未达 800 目标。
 差的就是「外观」这 367 行。它仍作为整体留在页面里 —— 至少是**自洽**的
