@@ -4,6 +4,7 @@ import '../../../server/activity_feed.dart';
 import '../../../server/chat_reducer.dart';
 import '../../../server/i18n.dart';
 import '../../../server/server_store.dart';
+import '../../../server/server_types.dart';
 import '../../../theme/design_tokens.dart';
 import '../../../theme/neu.dart';
 import '../../neu_icons.dart';
@@ -309,6 +310,59 @@ class UndoBar extends StatelessWidget {
               NeuIcon(IconId.close, size: 13, color: t.accentInk),
             ],
           ),
+        ),
+      );
+  }
+}
+
+/// _buildFileRefs 的组件化版本。
+class FileRefs extends StatelessWidget {
+  const FileRefs({super.key, required this.refs, required this.onApply});
+
+  final List<FileRef> refs;
+  final void Function(FileRef ref) onApply;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.neu;
+    return Container(
+        constraints: const BoxConstraints(maxHeight: 200),
+        margin: const EdgeInsets.symmetric(horizontal: NeuSpace.n18),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(NeuRadii.md),
+          gradient: NeuDecorations.wellGradient(t),
+          boxShadow: NeuShadows.inset(t),
+        ),
+        child: ListView.builder(
+          shrinkWrap: true,
+          padding: const EdgeInsets.all(NeuSpace.n6),
+          itemCount: refs.length,
+          itemBuilder: (context, index) {
+            final ref = refs[index];
+            return NeuPressable(
+              onTap: () => onApply(ref),
+              flat: true,
+              padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
+              child: Row(
+                children: [
+                  NeuIcon(IconId.terminal, size: 14, color: t.accentInk),
+                  const SizedBox(width: NeuSpace.n8),
+                  Expanded(
+                    child: Text(
+                      ref.relative,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: NeuFonts.sub,
+                        fontFamily: 'monospace',
+                        color: t.fg,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
         ),
       );
   }

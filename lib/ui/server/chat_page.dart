@@ -861,7 +861,7 @@ class _ServerChatPageState extends State<ServerChatPage> {
                   ),
                 ),
               if (_showSuggestions) _buildSuggestions(t, _matchingCommands),
-              if (_showFileRefs) _buildFileRefs(t),
+              if (_showFileRefs) FileRefs(refs: _fileRefs, onApply: _applyFileRef),
               // 按键条放在输入框上方、参与布局（不是浮层）：
               // 既不遮挡输入框，也不遮消息
               if (_pendingImages.isNotEmpty) _buildPendingImages(t),
@@ -2235,49 +2235,6 @@ class _ServerChatPageState extends State<ServerChatPage> {
   }
 
   /// @ 引用候选列表（与命令面板同一套样式，只是数据源是工作区文件）
-  Widget _buildFileRefs(NeuTokens t) {
-    return Container(
-      constraints: const BoxConstraints(maxHeight: 200),
-      margin: const EdgeInsets.symmetric(horizontal: NeuSpace.n18),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(NeuRadii.md),
-        gradient: NeuDecorations.wellGradient(t),
-        boxShadow: NeuShadows.inset(t),
-      ),
-      child: ListView.builder(
-        shrinkWrap: true,
-        padding: const EdgeInsets.all(NeuSpace.n6),
-        itemCount: _fileRefs.length,
-        itemBuilder: (context, index) {
-          final ref = _fileRefs[index];
-          return NeuPressable(
-            onTap: () => _applyFileRef(ref),
-            flat: true,
-            padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
-            child: Row(
-              children: [
-                NeuIcon(IconId.terminal, size: 14, color: t.accentInk),
-                const SizedBox(width: NeuSpace.n8),
-                Expanded(
-                  child: Text(
-                    ref.relative,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: NeuFonts.sub,
-                      fontFamily: 'monospace',
-                      color: t.fg,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
   Widget _buildSuggestions(NeuTokens t, List<SlashCommand> commands) {
     // 面板高度跟屏幕走。以前写死 200：手机上只能看到 4 条，
     // 12 条命令得一直滑，看起来就像「显示不完全」。
