@@ -416,9 +416,7 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _notifToggle(
-                      t,
-                      I18n.t('ui.97f76f1a29'),
+                    NotifToggle(I18n.t('ui.97f76f1a29'),
                       AppPrefs.instance.keepAlive,
                       (value) async {
                         await AppPrefs.instance.setKeepAlive(value);
@@ -474,41 +472,35 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _notifToggle(t, I18n.t('ui.0a2ef2dec1'), notif.notifyOnDone, (
+                          NotifToggle(I18n.t('ui.0a2ef2dec1'), notif.notifyOnDone, (
                             v,
                           ) async {
                             notif.notifyOnDone = v;
                             await notif.setEnabled(notif.enabled);
                           }),
-                          _notifToggle(t, I18n.t('ui.dd24107d75'), notif.notifyOnError, (
+                          NotifToggle(I18n.t('ui.dd24107d75'), notif.notifyOnError, (
                             v,
                           ) async {
                             notif.notifyOnError = v;
                             await notif.setEnabled(notif.enabled);
                           }),
-                          _notifToggle(t, I18n.t('ui.a7b4addcc2'), notif.notifyOnNeedInput, (
+                          NotifToggle(I18n.t('ui.a7b4addcc2'), notif.notifyOnNeedInput, (
                             v,
                           ) async {
                             notif.notifyOnNeedInput = v;
                             await notif.setEnabled(notif.enabled);
                           }),
-                          _notifToggle(
-                            t,
-                            I18n.t('ui.4f1313e28c'),
+                          NotifToggle(I18n.t('ui.4f1313e28c'),
                             notif.watchOnly,
                             notif.setWatchOnly,
                           ),
-                          _notifToggle(
-                            t,
-                            I18n.t('ui.a8b60db178'),
+                          NotifToggle(I18n.t('ui.a8b60db178'),
                             notif.quickReply,
                             notif.setQuickReply,
                           ),
                           SizedBox(height: NeuSpace.n6),
-                          _prefLabel(t, I18n.t('ui.b33eaa597b')),
-                          _prefChips(
-                            t,
-                            [
+                          PrefLabel(I18n.t('ui.b33eaa597b')),
+                          PrefChips([
                               (I18n.t('ui.f4ae4ba20c'), 60),
                               (I18n.t('ui.265b0f8cf7'), 120),
                               (I18n.t('ui.ec13baff37'), 300),
@@ -518,13 +510,11 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
                             onPick: (v) => notif.setStallSeconds(v.round()),
                           ),
                           SizedBox(height: NeuSpace.n10),
-                          _prefLabel(t, I18n.t('ui.be63fac285')),
+                          PrefLabel(I18n.t('ui.be63fac285')),
                           Row(
                             children: [
                               Expanded(
-                                child: _prefChips(
-                                  t,
-                                  [
+                                child: PrefChips([
                                     (I18n.t('ui.6224248126'), 0),
                                     ('23→8', 1),
                                     ('22→7', 2),
@@ -750,13 +740,9 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _prefLabel(
-                        t,
-                        I18n.t('settings.fontSize', context: context),
+                      PrefLabel(I18n.t('settings.fontSize', context: context),
                       ),
-                      _prefChips(
-                        t,
-                        [
+                      PrefChips([
                           (I18n.t('ui.391b8fa9c7'), 0.9),
                           (I18n.t('ui.544fac400d'), 1.0),
                           (I18n.t('ui.ab18e30c0d'), 1.15),
@@ -765,47 +751,33 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
                         current: prefs.fontScale,
                         onPick: prefs.setFontScale,
                       ),
-                      _prefLabel(
-                        t,
-                        I18n.t('settings.lineHeight', context: context),
+                      PrefLabel(I18n.t('settings.lineHeight', context: context),
                       ),
-                      _prefChips(
-                        t,
-                        [(I18n.t('ui.03e59bb33c'), 1.3), (I18n.t('ui.544fac400d'), 1.45), (I18n.t('ui.43e534acf9'), 1.7)],
+                      PrefChips([(I18n.t('ui.03e59bb33c'), 1.3), (I18n.t('ui.544fac400d'), 1.45), (I18n.t('ui.43e534acf9'), 1.7)],
                         current: prefs.lineHeight,
                         onPick: prefs.setLineHeight,
                       ),
-                      _prefLabel(t, I18n.t('settings.enter', context: context)),
-                      _prefChips(
-                        t,
-                        [(I18n.t('ui.2629bdbfad'), 0.0), (I18n.t('ui.63000cee55'), 1.0)],
+                      PrefLabel(I18n.t('settings.enter', context: context)),
+                      PrefChips([(I18n.t('ui.2629bdbfad'), 0.0), (I18n.t('ui.63000cee55'), 1.0)],
                         current: prefs.sendWithEnter ? 1.0 : 0.0,
                         onPick: (v) => prefs.setSendWithEnter(v > 0.5),
                       ),
-                      _prefLabel(
-                        t,
-                        I18n.t('settings.defaultWorkspace', context: context),
+                      PrefLabel(I18n.t('settings.defaultWorkspace', context: context),
                       ),
-                      _prefRow(
-                        t,
-                        prefs.defaultCwd.isEmpty ? I18n.t('ui.fe2d26a257') : prefs.defaultCwd,
+                      PrefRow(prefs.defaultCwd.isEmpty ? I18n.t('ui.fe2d26a257') : prefs.defaultCwd,
                         actionLabel: I18n.t('common.select'),
                         onAction: () => _pickDefaultWorkspace(context, t),
                       ),
-                      _prefLabel(
-                        t,
-                        I18n.t('settings.defaultModel', context: context),
+                      PrefLabel(I18n.t('settings.defaultModel', context: context),
                       ),
-                      _prefRow(
-                        t,
-                        (store.defaultModelId == null ||
+                      PrefRow((store.defaultModelId == null ||
                                 store.defaultModelProvider == null)
                             ? I18n.t('ui.56420c43ac')
                             : '${store.defaultModelId} · ${store.defaultModelProvider}',
                         actionLabel: I18n.t('common.select'),
                         onAction: () => _pickDefaultModel(context, t),
                       ),
-                      _prefLabel(t, I18n.t('ui.6e33906ae2')),
+                      PrefLabel(I18n.t('ui.6e33906ae2')),
                       ValueListenableBuilder<int>(
                         valueListenable: cacheTick,
                         builder: (context, tick, _) => FutureBuilder<List<CacheEntry>>(
@@ -927,9 +899,7 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
                         ),
                       ),
                       SizedBox(height: NeuSpace.n10),
-                      _prefLabel(
-                        t,
-                        I18n.t('settings.localData', context: context),
+                      PrefLabel(I18n.t('settings.localData', context: context),
                       ),
                       Row(
                         children: [
@@ -1017,46 +987,6 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
     );
   }
 
-  Widget _prefLabel(NeuTokens t, String text) => Padding(
-    padding: const EdgeInsets.only(top: NeuSpace.n12, bottom: NeuSpace.n6),
-    child: Text(text, style: TextStyle(fontSize: NeuFonts.small, color: t.muted)),
-  );
-
-  /// 一行 chip 选择器（选中的那个凹进去）
-  /// 通知项的一行开关（开关状态直接写在右侧，不靠颜色猜）
-  Widget _notifToggle(
-    NeuTokens t,
-    String label,
-    bool value,
-    ValueChanged<bool> onChanged,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: NeuSpace.n3),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(label, style: TextStyle(fontSize: NeuFonts.bodyMid, color: t.fg)),
-          ),
-          NeuPressable(
-            onTap: () => onChanged(!value),
-            radius: NeuRadii.sm,
-            flat: !value,
-            alwaysInset: value,
-            padding: EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n7),
-            child: Text(
-              value ? I18n.t('ui.8493205602') : I18n.t('ui.d58a55bcee'),
-              style: TextStyle(
-                fontSize: NeuFonts.sub,
-                color: value ? t.accentInk : t.muted,
-                fontWeight: value ? FontWeight.w600 : FontWeight.w400,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   /// 卡住阈值自定义：直接输入秒数（同时验证「默认值界面可见」之外的灵活性）
   Future<void> _pickStuckSeconds(BuildContext context, NeuTokens t) async {
     final controller = TextEditingController(
@@ -1114,79 +1044,6 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
       context,
       message: ok ? I18n.t('ui.a3549f9b28') : I18n.t('ui.5e0e5bf05d'),
       icon: ok ? IconId.check : IconId.warn,
-    );
-  }
-
-  Widget _prefChips(
-    NeuTokens t,
-    List<(String, double)> options, {
-    required double current,
-    required ValueChanged<double> onPick,
-  }) {
-    return NeuRaised(
-      radius: NeuRadii.sm,
-      padding: const EdgeInsets.all(NeuSpace.n4),
-      child: Row(
-        children: [
-          for (final option in options)
-            Expanded(
-              child: NeuPressable(
-                onTap: () => onPick(option.$2),
-                flat: (current - option.$2).abs() > 0.001,
-                alwaysInset: (current - option.$2).abs() <= 0.001,
-                radius: NeuRadii.sm,
-                padding: const EdgeInsets.symmetric(vertical: NeuSpace.n9),
-                child: Center(
-                  child: Text(
-                    option.$1,
-                    style: TextStyle(
-                      fontSize: NeuFonts.sub,
-                      color: (current - option.$2).abs() <= 0.001
-                          ? t.accentInk
-                          : t.muted,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  /// 一行「当前值 + 一个动作按钮」
-  Widget _prefRow(
-    NeuTokens t,
-    String value, {
-    required String actionLabel,
-    required VoidCallback onAction,
-  }) {
-    return NeuRaised(
-      radius: NeuRadii.sm,
-      padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n10, vertical: NeuSpace.n6),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              value,
-              maxLines: 2,
-              // 值可能很长（例如聚合后的模型列表），硬切等于把信息藏起来
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: NeuFonts.small, color: t.fg),
-            ),
-          ),
-          NeuPressable(
-            onTap: onAction,
-            radius: 8,
-            flat: true,
-            padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n10, vertical: NeuSpace.n5),
-            child: Text(
-              actionLabel,
-              style: TextStyle(fontSize: NeuFonts.sub, color: t.accentInk),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
