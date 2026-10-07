@@ -463,30 +463,6 @@ class _ServerChatPageState extends State<ServerChatPage> {
     );
   }
 
-  Widget _buildUndoBar(NeuTokens t) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n4, NeuSpace.n18, 0),
-      child: NeuPressable(
-        onTap: _undoLastSend,
-        radius: 10,
-        flat: true,
-        padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
-        child: Row(
-          children: [
-            NeuIcon(IconId.check, size: 14, color: t.accentInk),
-            SizedBox(width: NeuSpace.n8),
-            Expanded(
-              child: Text(I18n.t('ui.93d159228b'), style: TextStyle(fontSize: NeuFonts.sub, color: t.fg)),
-            ),
-            Text(I18n.t('ui.2305051ed0'), style: TextStyle(fontSize: NeuFonts.sub, color: t.accentInk)),
-            const SizedBox(width: NeuSpace.n4),
-            NeuIcon(IconId.close, size: 13, color: t.accentInk),
-          ],
-        ),
-      ),
-    );
-  }
-
   // ==================== 按键条的动作 ====================
 
   void _toggleKeyBar() {
@@ -890,7 +866,7 @@ class _ServerChatPageState extends State<ServerChatPage> {
               // 既不遮挡输入框，也不遮消息
               if (_pendingImages.isNotEmpty) _buildPendingImages(t),
               // 误发保护：发送后的几秒里给一条看得见、点得到的「撤回」
-              if (_undoText != null) _buildUndoBar(t),
+              if (_undoText != null) UndoBar(onUndo: _undoLastSend),
               if (_keyBarVisible)
                 NeuKeyBar(
                   visible: _keyBarVisible,

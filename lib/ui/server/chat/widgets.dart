@@ -280,3 +280,36 @@ class LiveSpeed extends StatelessWidget {
       );
   }
 }
+
+/// _buildUndoBar 的组件化版本。
+class UndoBar extends StatelessWidget {
+  const UndoBar({super.key, required this.onUndo});
+
+  final VoidCallback onUndo;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.neu;
+    return Padding(
+        padding: const EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n4, NeuSpace.n18, 0),
+        child: NeuPressable(
+          onTap: onUndo,
+          radius: 10,
+          flat: true,
+          padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
+          child: Row(
+            children: [
+              NeuIcon(IconId.check, size: 14, color: t.accentInk),
+              SizedBox(width: NeuSpace.n8),
+              Expanded(
+                child: Text(I18n.t('ui.93d159228b'), style: TextStyle(fontSize: NeuFonts.sub, color: t.fg)),
+              ),
+              Text(I18n.t('ui.2305051ed0'), style: TextStyle(fontSize: NeuFonts.sub, color: t.accentInk)),
+              const SizedBox(width: NeuSpace.n4),
+              NeuIcon(IconId.close, size: 13, color: t.accentInk),
+            ],
+          ),
+        ),
+      );
+  }
+}
