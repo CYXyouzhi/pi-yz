@@ -33,21 +33,30 @@ export default function mobileServer(pi: ExtensionAPI) {
     default: false,
   });
 
+  // 不做「pi 启动就自动拉起服务」—— 启动/停止一律手动，/mobile start 与 /mobile stop，
+  // 这样服务什么时候在跑完全由你决定，不会在你不知情时躺着一个进程。
   pi.on('session_start', async (_event, ctx) => {
-    if (pi.getFlag('mobile-status') === true) {
-      const mod = await ctl();
-      const info = mod.status();
-      const lines = [
-        '[pi-mobile-server]',
-        `  运行中 : ${info.running ? `是（pid ${info.pid}）` : '否'}`,
-        `  监听   : ${info.hostAddress}:${info.port}`,
-        `  配置   : ${info.configPath}`,
-        `  日志   : ${info.logPath}`,
-      ];
-      // print/json 模式下没有 UI，只能往 stdout 打；交互模式顺带给个通知
-      console.log(lines.join('\n'));
-      ctx.ui.notify(`pi-mobile-server：${info.running ? '运行中' : '未运行'}（${info.hostAddress}:${info.port}）`, 'info');
-    }
+    if (pi.getFlag('mobile-status') !== true) return;
+
+    const mod = await ctl();
+    const info = await mod.resolveStatus();
+    const label = {
+      self: '运行中（本插件拉起）',
+      foreign: '运行中（别的进程拉起）',
+      zombie: '僵死（进程在、端口没服务）',
+      down: '未运行（用 /mobile start 启动）',
+    }[info.kind] ?? info.kind;
+
+    const lines = [
+      '[pi-mobile-server]',
+      `  状态 : ${label}`,
+      `  监听 : ${info.hostAddress}:${info.port}`,
+      `  配置 : ${info.configPath}`,
+      `  日志 : ${info.logPath}`,
+    ];
+    // print/json 模式下没有 UI，只能往 stdout 打；交互模式顺带给个通知
+    console.log(lines.join('\n'));
+    ctx.ui.notify(`pi-mobile-server：${label}（${info.hostAddress}:${info.port}）`, 'info');
   });
 
   pi.registerCommand('mobile', {
@@ -62,12 +71,25 @@ export default function mobileServer(pi: ExtensionAPI) {
         try {
           const port = parts[1] ? Number(parts[1]) : undefined;
           const info = await mod.start({ port });
-          if (!info.healthy) {
-            ctx.ui.notify(`已拉起但探活没通，看日志：${info.logPath}`, 'warning');
+
+          // 端口上有服务但不是插件起的 —— 如实说，不能报成「启动成功」
+          if (info.foreign) {
+            ctx.ui.notify(info.hint ?? `端口 ${info.port} 上已有别的服务`, 'warning');
             return;
           }
+
+          if (!info.healthy) {
+            ctx.ui.notify(
+              `启动未成功：${info.reason ?? '健康检查未通过'}\n日志：${info.logPath}`,
+              'error',
+            );
+            return;
+          }
+
           ctx.ui.notify(
-            `服务已启动（pid ${info.pid}）\n手机端填：\n${mod.connectInfo(info)}`,
+            info.alreadyRunning
+              ? `服务已在运行（pid ${info.pid}）\n手机端填：\n${mod.connectInfo(info)}`
+              : `服务已启动（pid ${info.pid}）\n手机端填：\n${mod.connectInfo(info)}`,
             'info',
           );
         } catch (error) {
@@ -77,18 +99,21 @@ export default function mobileServer(pi: ExtensionAPI) {
       }
 
       if (action === 'stop') {
-        const result = mod.stop();
-        ctx.ui.notify(
-          result.stopped ? `已停止（pid ${result.pid}）` : `没停：${result.reason}`,
-          result.stopped ? 'info' : 'warning',
-        );
+        const result = await mod.stop();
+        if (result.stopped) {
+          ctx.ui.notify(`已停止（pid ${result.pid}）`, 'info');
+        } else {
+          ctx.ui.notify(`没停：${result.reason}`, 'warning');
+        }
         return;
       }
 
       if (action === 'doctor') {
         const info = await mod.doctor();
+        const kindLabel = { self: '本插件拉起', foreign: '别的进程拉起', zombie: '僵死表', down: '没在跑' }[info.kind as string]
+          ?? (info.running ? '在跑' : '没在跑');
         const lines = [
-          `进程   : ${info.running ? `在跑（pid ${info.pid}）` : '没在跑'}`,
+          `状态   : ${kindLabel}${info.pid ? `（pid ${info.pid}）` : ''}`,
           `探活   : ${info.healthy ? '通过' : (info.hint ?? '失败')}`,
           `版本   : ${info.health?.piVersion ? `pi ${info.health.piVersion}` : '—'}`,
           `会话数 : ${info.sessions ?? '—'}`,
@@ -115,9 +140,11 @@ export default function mobileServer(pi: ExtensionAPI) {
       }
 
       // default: status
-      const info = mod.status();
+      const info = await mod.resolveStatus();
+      const kindLabel = { self: '运行中（本插件拉起）', foreign: '运行中（别的进程拉起）', zombie: '僵死：进程在但端口没服务', down: '未运行' }[info.kind as string]
+        ?? (info.running ? '运行中' : '未运行');
       const lines = [
-        `状态   : ${info.running ? `运行中（pid ${info.pid}，${info.startedAt ?? ''}）` : '未运行'}`,
+        `状态   : ${kindLabel}${info.pid ? `（pid ${info.pid}，${info.startedAt ?? ''}）` : ''}`,
         `监听   : ${info.hostAddress}:${info.port}`,
         `入口   : ${info.entry}${existsSync(info.entry) ? '' : '（不存在！用 PI_MOBILE_SERVER_ENTRY 指定）'}`,
         `配置   : ${info.configPath}`,
@@ -126,7 +153,7 @@ export default function mobileServer(pi: ExtensionAPI) {
         '手机端连接信息：',
         mod.connectInfo(info),
       ];
-      ctx.ui.notify(lines.join('\n'), info.running ? 'info' : 'warning');
+      ctx.ui.notify(lines.join('\n'), info.kind === 'down' || info.kind === 'zombie' ? 'warning' : 'info');
     },
   });
 }
