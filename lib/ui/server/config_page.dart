@@ -6,7 +6,6 @@
 // MCP 走服务端的只读接口。
 
 import 'package:flutter/material.dart';
-import '../collapsible_text.dart';
 
 import '../../server/chat_models.dart';
 import '../../server/i18n.dart';
@@ -15,7 +14,8 @@ import '../../server/server_types.dart';
 import '../neu_section.dart';
 import 'config/model_section.dart';
 import 'config/thinking_section.dart';
-import 'config/rows.dart';
+import 'config/credential_section.dart';
+import 'config/skill_section.dart';
 import 'config/widgets.dart';
 import '../../theme/design_tokens.dart';
 import '../../theme/neu.dart';
@@ -456,247 +456,38 @@ class _ConfigPageState extends State<ConfigPage> {
                   _expanded.contains(k) ? _expanded.remove(k) : _expanded.add(k);
                 }),
               ),
-                _section(t, I18n.t('ui.c4d89641a1'), icon: IconId.lock),
-                if (_expanded.contains(I18n.t('ui.c4d89641a1'))) ...[
-                NeuRaised(
-                  radius: NeuRadii.md,
-                  level: NeuLevel.small,
-                  padding: const EdgeInsets.all(NeuSpace.n6),
-                  child: Column(
-                    children: [
-                      if (_credentials.isEmpty)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: NeuSpace.n12),
-                          child: Text(I18n.t('ui.3a61229d9e'),
-                              style: TextStyle(fontSize: NeuFonts.small, color: t.muted)),
-                        )
-                      else
-                        for (var i = 0; i < _credentials.length; i++) ...[
-                          if (i > 0) Container(height: 1, color: t.border),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n10, vertical: NeuSpace.n6),
-                            child: Row(
-                              children: [
-                                NeuIcon(IconId.lock, size: 15, color: t.accentInk),
-                                const SizedBox(width: NeuSpace.n10),
-                                Expanded(
-                                  child: Text(
-                                    _credentials[i].provider,
-                                    style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.fg),
-                                  ),
-                                ),
-                                Text(
-                                  _credentials[i].type,
-                                  style: TextStyle(fontSize: NeuFonts.micro, color: t.muted),
-                                ),
-                                const SizedBox(width: NeuSpace.n8),
-                                NeuPressable(
-                                  onTap: () => _removeCredential(_credentials[i].provider),
-                                  radius: 10,
-                                  padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
-                                  child: NeuIcon(IconId.trash, size: 14, color: t.danger),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      Container(height: 1, color: t.border),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: NeuPressable(
-                              onTap: _loginProvider,
-                              flat: true,
-                              padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  NeuIcon(IconId.lock, size: 15, color: t.accentInk),
-                                  SizedBox(width: NeuSpace.n8),
-                                  Text(I18n.t('ui.4be9b33847'),
-                                      style: TextStyle(fontSize: NeuFonts.bodyMid, color: t.accentInk)),
-                                ],
-                              ),
-                            ),
-                          ),
-                          Container(width: 1, height: 22, color: t.border),
-                          Expanded(
-                            child: NeuPressable(
-                              onTap: _addCredential,
-                              flat: true,
-                              padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  NeuIcon(IconId.plus, size: 15, color: t.accentInk),
-                                  SizedBox(width: NeuSpace.n8),
-                                  Text(I18n.t('ui.8a31d0428f'),
-                                      style: TextStyle(fontSize: NeuFonts.bodyMid, color: t.accentInk)),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                ],
-
-                // 分组内容默认收起：AI 配置页分组多、每组都长，全展开看不出层次
-                _section(t, I18n.t('ui.a9cec18e05'), icon: IconId.cmd),
-                if (_expanded.contains(I18n.t('ui.a9cec18e05'))) ...[
-                NeuRaised(
-                  radius: NeuRadii.md,
-                  level: NeuLevel.small,
-                  padding: EdgeInsets.all(NeuSpace.n6),
-                  child: Column(
-                    children: [
-                      CommandGroup(isOpen: _isOpen, onOpen: _openGroup, title: I18n.t('ui.699143b15a'),
-                        items: _store.commandsBySource('skill'),
-                        // 技能点开就能看 SKILL.md 全文 —— pi-web 里技能也是可查看的
-                        onTapItem: _viewSkill,
-                        tapHint: I18n.t('ui.9822a4f972'),
-                      ),
-                      CommandGroup(isOpen: _isOpen, onOpen: _openGroup, title: I18n.t('ui.aecb607774'),
-                        items: _store.commandsBySource('extension'),
-                        // 扩展命令必须由会话启动时注册，没会话就取不到 ——
-                        // 这里说清楚原因，别让人以为一个扩展都没装
-                        emptyHint: _store.extensionCommandsAvailable ? I18n.t('ui.d81bb206a8') : I18n.t('ui.4d4a4242b1'),
-                      ),
-                      CommandGroup(isOpen: _isOpen, onOpen: _openGroup, title: I18n.t('ui.f96de32b76'), items: _store.commandsBySource('builtin')),
-                    ],
-                  ),
-                ),
-                ],
-
-                // 插件组同样默认收起（10 个插件展开就是一屏）
-                _section(
-          t,
-          I18n.tp('ui.9d3c5fe8d6', {
-            'count': _packages.isEmpty ? '' : '（${_packages.length}）',
-          }),
-          icon: IconId.serverPlus,
-          // 标题带计数，展开状态必须挂在不随计数变的键上（见 _section 的说明）
-          stateKey: 'plugins',
-        ),
-                if (_expanded.contains('plugins')) ...[
-                NeuRaised(
-                  radius: NeuRadii.md,
-                  level: NeuLevel.small,
-                  padding: const EdgeInsets.all(NeuSpace.n6),
-                  child: Column(
-                    children: [
-                      if (_packages.isEmpty)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: NeuSpace.n10),
-                          child: Text(I18n.t('ui.606276afd3'), style: TextStyle(fontSize: NeuFonts.sub, color: t.muted)),
-                        )
-                      else
-                        for (var i = 0; i < _packages.length; i++) ...[
-                          if (i > 0) Container(height: 1, color: t.border),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n10, vertical: NeuSpace.n8),
-                            child: Row(
-                              children: [
-                                NeuIcon(IconId.download, size: 15, color: t.accentInk),
-                                const SizedBox(width: NeuSpace.n10),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        _packages[i].source.replaceFirst('npm:', ''),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.fg),
-                                      ),
-                                      CollapsibleText(
-                                        text: _packages[i].installedPath ??
-                                            I18n.tp('ui.dfe094795b', {'scope': _packages[i].scope}),
-                                        // 安装路径是关键信息（截断等于没给），
-                                        // 但它常占 2–3 行 —— 默认收一行、点开看全。
-                                        style: TextStyle(fontSize: NeuFonts.micro, color: t.muted),
-                                      ),
-                                      // 中文注释：这个包在电脑端被汉化了多少处
-                                      // （数据来自 ~/.pi/agent/hanhua-auto.json，不是我们另编的）
-                                      if (_packages[i].zhCount > 0)
-                                        Padding(
-                                          padding: const EdgeInsets.only(top: NeuSpace.n2),
-                                          child: Text(
-                                            I18n.tp('ui.ebd66f8a1f', {'n': _packages[i].zhCount}),
-                                            style: TextStyle(fontSize: NeuFonts.micro, color: t.accentInk),
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                                if (_updates.any((u) => u.source == _packages[i].source))
-                                  Text(I18n.t('ui.b48cca48ed'), style: TextStyle(fontSize: NeuFonts.tiny, color: t.warn)),
-                                NeuPressable(
-                                  onTap: _packagesBusy ? null : () => _removePackage(_packages[i]),
-                                  radius: 10,
-                                  padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
-                                  child: NeuIcon(IconId.trash, size: 14, color: t.danger),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      Container(height: 1, color: t.border),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: NeuPressable(
-                              onTap: _packagesBusy ? null : _installPackageDialog,
-                              flat: true,
-                              padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  NeuIcon(IconId.plus, size: 15, color: t.accentInk),
-                                  SizedBox(width: NeuSpace.n8),
-                                  Text(I18n.t('ui.49c24aafc0'),
-                                      style: TextStyle(fontSize: NeuFonts.bodyMid, color: t.accentInk)),
-                                ],
-                              ),
-                            ),
-                          ),
-                          Container(width: 1, height: 22, color: t.border),
-                          Expanded(
-                            child: NeuPressable(
-                              onTap: _packagesBusy ? null : _updatePackages,
-                              flat: true,
-                              padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  NeuIcon(IconId.sync, size: 15, color: t.accentInk),
-                                  SizedBox(width: NeuSpace.n8),
-                                  Text(
-                                    _packagesBusy
-                                        ? I18n.t('ui.cf978c0252')
-                                        : (_updates.isEmpty ? I18n.t('ui.7f28d733a5') : I18n.tp('ui.800e3b5963', {'n': _updates.length})),
-                                    style: TextStyle(fontSize: NeuFonts.bodyMid, color: t.accentInk),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      if (_packageUpdateError != null)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: NeuSpace.n8),
-                          child: Text(I18n.tp('ui.bc346bf8af', {'e': _packageUpdateError}),
-                              style: TextStyle(fontSize: NeuFonts.micro, color: t.muted)),
-                        ),
-                    ],
-                  ),
-                ),
-                ],
-
-                // 分组内容默认收起：AI 配置页分组多、每组都长，全展开看不出层次
+              CredentialSection(
+                credentials: _credentials,
+                // 增删凭据与登录 provider 要动服务端，留在页面侧
+                onRemoveCredential: _removeCredential,
+                onLoginProvider: _loginProvider,
+                onAddCredential: _addCredential,
+                open: _expanded.contains(I18n.t('ui.c4d89641a1')),
+                onToggle: () => setState(() {
+                  const k = 'ui.c4d89641a1';
+                  _expanded.contains(k) ? _expanded.remove(k) : _expanded.add(k);
+                }),
+              ),
+              SkillSection(
+                isSectionOpen: _isOpen,
+                onToggleSection: _openGroup,
+                onRemovePackage: _removePackage,
+                onInstallPackage: _installPackageDialog,
+                onUpdatePackages: _updatePackages,
+                isOpen: _isOpen,
+                onOpenGroup: _openGroup,
+                onViewSkill: _viewSkill,
+                packageUpdateError: _packageUpdateError,
+                packages: _packages,
+                packagesBusy: _packagesBusy,
+                updates: _updates,
+                store: _store,
+                open: _expanded.contains(I18n.t('ui.a9cec18e05')),
+                onToggle: () => setState(() {
+                  const k = 'ui.a9cec18e05';
+                  _expanded.contains(k) ? _expanded.remove(k) : _expanded.add(k);
+                }),
+              ),
                 _section(t, I18n.t('ui.d7911f414c'), icon: IconId.server),
                 if (_expanded.contains(I18n.t('ui.d7911f414c'))) ...[
                 NeuRaised(
