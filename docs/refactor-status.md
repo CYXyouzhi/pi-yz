@@ -30,7 +30,7 @@
 | `lib/ui/server/settings_page.dart` | 1472 | ✅ 875 行（8 个分组抽了 7 个；「外观」未能抽出，原因见「踩过的坑⑤」）|
 | `lib/ui/server/config_page.dart` | 1307 | ✅ 811 行（6 个分组抽了 5 个；MCP 分组未抽）|
 | `lib/ui/server/files_page.dart` | 1059 | ✅ 645 行（6 个组件 + 2 个工具函数 + 2 个底部面板）|
-| `lib/ui/server/sessions_page.dart` | 1316 | ⚠️ 试了五次未成，回退到原状（原因见踩坑⑦）|
+| `lib/ui/server/sessions_page.dart` | 1316 | ✅ 1103 行（5 个组件已抽；`_buildSessionRow`/`_buildGroup` 是雷区，不抽）|
 | `lib/ui/server/conn_page.dart` | 1300 | ⬜ 未开始 |
 | `lib/ui/server/chat_page.dart` | 3374 | ⬜ 未开始（最痛也最难，放最后）|
 | `lib/server/server_store.dart` | 1814 | 🚫 **不动**（「唯一状态源」是架构决策的载体，拆它等于动地基）|
@@ -261,6 +261,31 @@ analyze 干净之前都不算完成。
 
 **下一轮的建议**：把 `_buildRow`（约 56 行、9 个 switch 分支）**跳过不抽** ——
 少减 56 行，但避开这个雷区。其余独立方法继续用「脚本提取 + edit 改调用点」的做法。
+
+**⑦ 补充三：第 8 次 —— 新方法一次成功抽出 5 个，但 `_buildSessionRow` 是雷区**
+
+第 7 次换的方法（**提取用脚本，改调用点用 edit 工具**）确实有效：
+**一次成功抽出 5 个组件**，1316 → 1103 行，analyze 零问题，已提交（`9e040f9`）。
+
+```
+sessions/widgets.dart（新建）
+  EmptyStateView / ConnCard / ArchiveEntryRow / NewSessionRow / SessionSearchBar
+```
+
+但抽 `_buildSessionRow` **两次都撞上同一个错**：
+`sessions_page.dart:691 - Expected to find ';'`，级联 37 个错误。
+
+**查不出来**：691 行本身完全正常（`_EmptyRow() => EmptyStateView(store: _store),`），
+`SessionRow` 与 `EmptyStateView` 的定义也都正常，`_buildSessionRow` 也没有残留引用。
+像是**误报位置**，真病灶在别处 —— 两轮都没定位到。
+
+**结论：`_buildSessionRow` 与依赖它的 `_buildGroup` 一起列为雷区，不抽。**
+少减约 121 行，但避开两次都栽的地方。
+
+**sessions_page 的现状**：1316 → **1103 行**（减 213），5 个组件已抽出并提交。
+未达 800，差的就是那两个雷区方法 —— 但它已经比原状好，不值得再耗轮次。
+
+**下一轮直接从步骤 5（conn_page）开始。**
 
 **结果**：`settings_page.dart` 停在 **875 行**（原 1472，减 597 行 / 40%），未达 800 目标。
 差的就是「外观」这 367 行。它仍作为整体留在页面里 —— 至少是**自洽**的
