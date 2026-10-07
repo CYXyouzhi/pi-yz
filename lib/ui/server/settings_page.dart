@@ -22,6 +22,7 @@ import 'config_page.dart';
 import 'files_page.dart';
 import 'log_page.dart';
 import 'pool_view.dart';
+import 'settings/widgets.dart';
 
 /// 清空离线缓存后自增，让缓存区重读一次（设置页本身是无状态的）
 final ValueNotifier<int> cacheTick = ValueNotifier<int>(0);
@@ -992,10 +993,10 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _infoRow(t, 'App', 'pi-yz · pi-yz'),
-                  _infoRow(t, I18n.t('ui.1de0cfbc46'), store.health?.piVersion ?? '—'),
-                  _infoRow(t, I18n.t('ui.b08caf56ca'), '${store.health?.activeSessions ?? 0}'),
-                  _infoRow(t, I18n.t('ui.f98077685a'), '${store.sessions.length}'),
+                  InfoRow(label: 'App', value: 'pi-yz · pi-yz'),
+                  InfoRow(label: I18n.t('ui.1de0cfbc46'), value: store.health?.piVersion ?? '—'),
+                  InfoRow(label: I18n.t('ui.b08caf56ca'), value: '${store.health?.activeSessions ?? 0}'),
+                  InfoRow(label: I18n.t('ui.f98077685a'), value: '${store.sessions.length}'),
                   SizedBox(height: NeuSpace.n6),
                   CollapsibleText(
                     // ignore: prefer_interpolation_to_compose_strings
@@ -1434,6 +1435,9 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
   ///
   /// 这里保留一层包装而不是让 8 处调用各自组装 NeuSection —— 那些调用点
   /// 关心的只是「标题 + 图标 + 摘要」，不该每次都写一遍 open/onToggle。
+  /// 保留这层薄包装：8 个分组的调用点都写 `_section(t, I18n.t(...), ...)`，
+  /// 让它继续读 `_expanded` 并调 setState，就不用改那 8 处。
+  /// 真正的壳已经搬到 `settings/widgets.dart`，分组抽出去时直接用那个。
   Widget _section(
     NeuTokens t,
     String title, {
@@ -1441,7 +1445,7 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
     String? summary,
   }) {
     final open = _expanded.contains(title);
-    return NeuSection(
+    return SettingsSection(
       title: title,
       icon: icon,
       summary: summary,
@@ -1455,18 +1459,4 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
       }),
     );
   }
-
-  Widget _infoRow(NeuTokens t, String label, String value) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: NeuSpace.n4),
-    child: Row(
-      children: [
-        Text(label, style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.muted)),
-        const Spacer(),
-        Text(
-          value,
-          style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.fg, fontFamily: 'monospace'),
-        ),
-      ],
-    ),
-  );
 }
