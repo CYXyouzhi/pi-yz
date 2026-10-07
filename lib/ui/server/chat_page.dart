@@ -12,7 +12,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../server/activity_feed.dart';
 import '../../server/chat_models.dart';
 import '../../server/chat_reducer.dart';
 import '../../server/elapsed_index.dart';
@@ -30,6 +29,7 @@ import '../neu_toast.dart';
 import 'activity_view.dart';
 import 'export_page.dart';
 import 'files_page.dart';
+import 'chat/widgets.dart';
 import 'message_view.dart';
 import 'usage_page.dart';
 
@@ -1076,9 +1076,9 @@ class _ServerChatPageState extends State<ServerChatPage> {
               // 空闲时它显示「你好 · 空闲 · 本轮 N 次工具调用」，信息量低却照样
               // 吃掉约 37 逻辑高。入口没丢 —— 点标题栏的会话名就能打开活动视图。
               if (chat.isRunning || _store.uiRequests.any((r) => r.needsResponse))
-                _buildActivityBar(t, chat),
+                ChatActivityBar(store: _store, chat: chat),
               // 离线缓存提示：有缓存时界面不空，但必须说清楚「你看到的是旧的」
-              if (_store.cacheShownAt != null) _buildOfflineBanner(t),
+              if (_store.cacheShownAt != null) OfflineBanner(store: _store),
               Expanded(
                 child: Stack(
                   children: [
@@ -1088,7 +1088,7 @@ class _ServerChatPageState extends State<ServerChatPage> {
                       // 会话没拉起来：说清楚 + 给一条重试的路
                       _buildLoadFailed(t)
                     else if (chat.messages.isEmpty)
-                      _buildEmpty(t)
+                      ChatEmptyState(store: _store)
                     else
                       Builder(
                         builder: (context) {
@@ -1116,7 +1116,7 @@ class _ServerChatPageState extends State<ServerChatPage> {
                                 visible.length + (chat.historyHasMore ? 1 : 0),
                             itemBuilder: (context, index) {
                               if (chat.historyHasMore && index == 0) {
-                                return _buildLoadMore(t, chat);
+                                return LoadMoreRow(store: _store, chat: chat);
                               }
                               final message =
                                   visible[chat.historyHasMore
@@ -1293,34 +1293,6 @@ class _ServerChatPageState extends State<ServerChatPage> {
   ///
   /// 空会话且没在跑时不占地方；其余情况都显示 —— 「结束态」本身也是信息
   /// （合同④：空态与结束态都要明确）。
-  Widget _buildActivityBar(NeuTokens t, ChatReducer chat) {
-    // 「等你确认」要进时间线：contract① 要求它能被看见
-    final pending = _store.uiRequests
-        .where((r) => r.needsResponse)
-        .map((r) => r.title ?? r.message ?? r.method)
-        .toList();
-    final snap = buildActivity(
-      chat,
-      runStartedAt: chat.runStartedAt,
-      pending: pending,
-    );
-    // 没打开会话才隐藏；空会话照样显示 —— 「还没有活动」本身就是要说清楚的状态，
-    // 而且它是进实时活动视图的唯一入口（合同④）。
-    if (_store.currentSessionId == null) return const SizedBox.shrink();
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(NeuSpace.n14, 0, NeuSpace.n14, NeuSpace.n6),
-      child: ActivityBar(
-        snap: snap,
-        sessionName: _store.currentSessionTitle,
-        runStartedAt: chat.runStartedAt,
-        // 空闲且没有待确认时收成细条：会话页最贵的是竖向空间，
-        // 空闲态没必要占和运行态一样的高度（入口仍在，点一下照样打开活动视图）
-        compact: !chat.isRunning && pending.isEmpty,
-        onTap: () => showActivitySheet(context, _store),
-      ),
-    );
-  }
-
   Widget _buildHeader(NeuTokens t, ChatReducer chat) {
     final connected = _store.isConnected;
     return Padding(
@@ -2119,82 +2091,8 @@ class _ServerChatPageState extends State<ServerChatPage> {
   ///
   /// 快照只带最近几十条（实测一个大会话有 523 条上下文消息），
   /// 更早的用 get_history 往上翻。
-  Widget _buildLoadMore(NeuTokens t, ChatReducer chat) {
-    final loading = _store.loadingHistory;
-    return Center(
-      child: NeuPressable(
-        onTap: loading ? null : () => _store.loadMoreHistory(),
-        radius: 14,
-        padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n14, vertical: NeuSpace.n14),
-        margin: const EdgeInsets.only(bottom: NeuSpace.n10),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            NeuIcon(
-              loading ? IconId.spinner : IconId.chevronDown,
-              size: 13,
-              color: loading ? t.muted : t.accentInk,
-            ),
-            SizedBox(width: NeuSpace.n6),
-            Text(
-              loading
-                  ? I18n.t('ui.fb4ca1cf1b')
-                  : I18n.tp('ui.54507a5944', {'shown': chat.messages.length, 'total': chat.historyTotal}),
-              style: TextStyle(
-                fontSize: NeuFonts.small,
-                color: loading ? t.muted : t.accentInk,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   /// 离线提示条：说清楚三件事 —— 现在没连上、看到的是几点的缓存、怎么重试。
   /// 「更早的 N 条未缓存」也要写出来，否则用户会以为消息被弄丢了。
-  Widget _buildOfflineBanner(NeuTokens t) {
-    final at = _store.cacheShownAt!;
-    final hhmm =
-        '${at.hour.toString().padLeft(2, '0')}:${at.minute.toString().padLeft(2, '0')}';
-    final dropped = _store.cacheDropped > 0
-        ? I18n.tp('ui.acb19e42a6', {'n': _store.cacheDropped})
-        : '';
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(NeuSpace.n14, NeuSpace.n6, NeuSpace.n14, 0),
-      child: NeuRaised(
-        radius: NeuRadii.sm,
-        padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n9),
-        child: Row(
-          children: [
-            NeuIcon(IconId.warn, size: 14, color: t.danger),
-            SizedBox(width: NeuSpace.n8),
-            Expanded(
-              child: Text(
-                I18n.tp('ui.cb3f40c93e', {'time': hhmm, 'n': _store.cacheShownCount, 'dropped': dropped}),
-                style: TextStyle(fontSize: NeuFonts.label, height: 1.5, color: t.muted),
-              ),
-            ),
-            const SizedBox(width: NeuSpace.n6),
-            NeuPressable(
-              onTap: () async {
-                await _store.ensureConnected();
-                final id = _store.currentSessionId;
-                if (id != null) await _store.openSession(id);
-              },
-              radius: 8,
-              padding: EdgeInsets.symmetric(horizontal: NeuSpace.n8, vertical: NeuSpace.n5),
-              child: Text(
-                I18n.t('common.retry'),
-                style: TextStyle(fontSize: NeuFonts.small, color: t.accentInk),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   /// 会话没拉起来：错误文案 + 「重新载入」入口（复用加载态的失败样式）。
   /// 单独留一个方法，是为了让「失败」这个状态在代码里显式存在，不再被当成空会话。
   Widget _buildLoadFailed(NeuTokens t) => _buildLoading(t);
@@ -2796,41 +2694,6 @@ class _ServerChatPageState extends State<ServerChatPage> {
       }
     }
     return rows;
-  }
-
-  Widget _buildEmpty(NeuTokens t) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
-              gradient: NeuDecorations.raisedGradient(t),
-              boxShadow: NeuShadows.raise(t),
-            ),
-            alignment: Alignment.center,
-            child: NeuIcon(IconId.bubble, size: 24, color: t.accentInk),
-          ),
-          SizedBox(height: NeuSpace.n14),
-          Text(
-            _store.isConnected ? I18n.t('ui.bd3d0854a0') : I18n.t('ui.16ae3ae443'),
-            style: TextStyle(
-              fontSize: NeuFonts.bodyLg,
-              fontWeight: FontWeight.w700,
-              color: t.onBg,
-            ),
-          ),
-          SizedBox(height: NeuSpace.n6),
-          Text(
-            _store.isConnected ? I18n.t('ui.8f4e9d8dbf') : I18n.t('ui.3a27243926'),
-            style: TextStyle(fontSize: NeuFonts.sub, color: t.onBgDim),
-          ),
-        ],
-      ),
-    );
   }
 
   /// @ 引用候选列表（与命令面板同一套样式，只是数据源是工作区文件）
