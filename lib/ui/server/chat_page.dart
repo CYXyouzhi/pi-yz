@@ -462,82 +462,14 @@ class _ServerChatPageState extends State<ServerChatPage> {
       _showPicker(builtin);
     } else if (kind == 'data') {
       final title = builtin['title'] as String? ?? I18n.t('ui.0d83078816');
-      _showDataSheet(title, builtin['data']);
+      showDataSheet(context, title, builtin['data']);
     }
   }
 
   /// 内置命令返回的结构化数据（会话统计、分支树等）。
   ///
   /// 之前这里只弹一句「N 项」，等于没显示 —— /session 统计的内容全丢了。
-  void _showDataSheet(String title, dynamic payload) {
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (sheetContext) {
-        final t = sheetContext.neu;
-        return Container(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.7,
-          ),
-          decoration: BoxDecoration(
-            color: t.bg,
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(NeuRadii.lg),
-            ),
-          ),
-          padding: const EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n18, NeuSpace.n18, NeuSpace.n24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: NeuFonts.sectionTitle,
-                  fontWeight: FontWeight.w700,
-                  color: t.onBg,
-                ),
-              ),
-              const SizedBox(height: NeuSpace.n12),
-              Flexible(
-                child: SingleChildScrollView(
-                  child: SelectableText(
-                    _formatPayload(payload),
-                    style: TextStyle(
-                      fontSize: NeuFonts.sub,
-                      height: 1.7,
-                      fontFamily: 'monospace',
-                      color: t.fg,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   /// 把结构化数据排成可读的键值行
-  String _formatPayload(dynamic payload) {
-    if (payload is Map) {
-      final lines = <String>[];
-      payload.forEach((key, value) {
-        final rendered = (value is Map || value is List)
-            ? const JsonEncoder.withIndent('  ').convert(value)
-            : '$value';
-        lines.add('$key: $rendered');
-      });
-      return lines.join('\n');
-    }
-    if (payload is List) {
-      return payload.map((e) => '$e').join('\n');
-    }
-    return payload?.toString() ?? I18n.t('ui.756aadc26d');
-  }
-
   /// 草稿归属的会话 id：用来判断什么时候该把输入框换成另一条会话的草稿
   String? _draftSessionId;
 

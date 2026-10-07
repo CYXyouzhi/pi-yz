@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 // 会话页的弹层与提示。
 //
 // 与 chat/widgets.dart 的分工：那边是渲染块（返回 Widget），
@@ -119,4 +121,72 @@ void showTurnSummarySheet(BuildContext context, TurnSummary summary) {
       ),
     );
   
+}
+
+void showDataSheet(BuildContext context, String title, dynamic payload) {
+  showModalBottomSheet<void>(
+    context: context,
+    backgroundColor: Colors.transparent,
+    isScrollControlled: true,
+    builder: (sheetContext) {
+      final t = sheetContext.neu;
+      return Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.7,
+        ),
+        decoration: BoxDecoration(
+          color: t.bg,
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(NeuRadii.lg),
+          ),
+        ),
+        padding: const EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n18, NeuSpace.n18, NeuSpace.n24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: NeuFonts.sectionTitle,
+                fontWeight: FontWeight.w700,
+                color: t.onBg,
+              ),
+            ),
+            const SizedBox(height: NeuSpace.n12),
+            Flexible(
+              child: SingleChildScrollView(
+                child: SelectableText(
+                  formatPayload(payload),
+                  style: TextStyle(
+                    fontSize: NeuFonts.sub,
+                    height: 1.7,
+                    fontFamily: 'monospace',
+                    color: t.fg,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
+String formatPayload(dynamic payload) {
+  if (payload is Map) {
+    final lines = <String>[];
+    payload.forEach((key, value) {
+      final rendered = (value is Map || value is List)
+          ? const JsonEncoder.withIndent('  ').convert(value)
+          : '$value';
+      lines.add('$key: $rendered');
+    });
+    return lines.join('\n');
+  }
+  if (payload is List) {
+    return payload.map((e) => '$e').join('\n');
+  }
+  return payload?.toString() ?? I18n.t('ui.756aadc26d');
 }
