@@ -19,6 +19,7 @@ import '../../theme/neu.dart';
 import '../neu_icons.dart';
 import '../neu_toast.dart';
 import 'pool_view.dart';
+import 'sessions/widgets.dart';
 
 /// 列表里的一行（轻量描述，不持有 Widget）
 sealed class _Row {
@@ -520,27 +521,6 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
   }
 
   /// 已归档入口：默认列表不放它们，但得留一条能把它们捞回来的路。
-  Widget _buildArchiveEntry(NeuTokens t, int count) {
-    return NeuPressable(
-      onTap: () => _showArchiveSheet(),
-      radius: NeuRadii.md,
-      padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n14, vertical: NeuSpace.n14),
-      child: Row(
-        children: [
-          NeuIcon(IconId.folder, size: 16, color: t.muted),
-          SizedBox(width: NeuSpace.n10),
-          Expanded(
-            child: Text(I18n.tp('ui.5a04ac36ad', {'n': count}),
-                style: TextStyle(fontSize: NeuFonts.bodyMid, color: t.fg)),
-          ),
-          Text(I18n.t('ui.56fddae514'), style: TextStyle(fontSize: NeuFonts.small, color: t.muted)),
-          const SizedBox(width: NeuSpace.n6),
-          NeuIcon(IconId.chevronRight, size: 14, color: t.muted),
-        ],
-      ),
-    );
-  }
-
   Future<void> _showArchiveSheet() async {
     await showModalBottomSheet<void>(
       context: context,
@@ -648,7 +628,7 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
   }
 
   Widget _buildRow(NeuTokens t, _Row row) => switch (row) {
-        _ConnRow() => _buildConnCard(t),
+        _ConnRow() => ConnCard(store: _store, onOpenConn: widget.onOpenConn),
         _PoolRow() => Padding(
             padding: const EdgeInsets.only(top: NeuSpace.n14),
             child: RunningSessionsCard(
@@ -664,11 +644,15 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
           ),
         _ArchiveRow(:final count) => Padding(
             padding: const EdgeInsets.only(top: NeuSpace.n20),
-            child: _buildArchiveEntry(t, count),
+            child: ArchiveEntryRow(count: count, onOpen: _showArchiveSheet),
           ),
         _NewSessionRow() => Padding(
             padding: const EdgeInsets.only(top: NeuSpace.n14),
-            child: _buildNewSession(t),
+            child: NewSessionRow(
+              creating: _creating,
+              onCreate: _createSession,
+              onLongPress: _creating ? null : _showTemplateSheet,
+            ),
           ),
         _SectionRow(:final title) => Padding(
             padding: const EdgeInsets.only(top: NeuSpace.n20, bottom: NeuSpace.n10),
@@ -683,7 +667,11 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
           ),
         _SearchRow() => Padding(
             padding: const EdgeInsets.only(top: NeuSpace.n14),
-            child: _buildSearch(t),
+            child: SessionSearchBar(
+              query: _query,
+              controller: _searchController,
+              onQueryChanged: (value) => setState(() => _query = value),
+            ),
           ),
         _NoMatchRow() => Padding(
             padding: const EdgeInsets.symmetric(vertical: 32),
@@ -700,49 +688,10 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
           ),
         _GroupRow(:final cwd, :final name, :final sessions, :final expanded) =>
           _buildGroup(t, cwd, name, sessions, expanded),
-        _EmptyRow() => _buildEmptyState(t),
+        _EmptyRow() => EmptyStateView(store: _store),
       };
 
   /// 搜索框。244 条会话全在内存，本地过滤就够，不必加服务端接口。
-  Widget _buildSearch(NeuTokens t) {
-    return NeuInset(
-      radius: NeuRadii.sm,
-      padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n12),
-      child: Row(
-        children: [
-          NeuIcon(IconId.bubble, size: 14, color: t.muted),
-          const SizedBox(width: NeuSpace.n8),
-          Expanded(
-            child: TextField(
-              controller: _searchController,
-              style: TextStyle(fontSize: NeuFonts.bodyMid, color: t.fg),
-              decoration: InputDecoration(
-                isDense: true,
-                border: InputBorder.none,
-                hintText: I18n.t('ui.c9651ff139'),
-                hintStyle: TextStyle(fontSize: NeuFonts.bodySmall, color: t.muted),
-                contentPadding: const EdgeInsets.symmetric(vertical: NeuSpace.n12),
-              ),
-              onChanged: (value) => setState(() => _query = value),
-            ),
-          ),
-          if (_query.isNotEmpty)
-            GestureDetector(
-              onTap: () {
-                _searchController.clear();
-                setState(() => _query = '');
-              },
-              behavior: HitTestBehavior.opaque,
-              child: Padding(
-                padding: const EdgeInsets.all(NeuSpace.n6),
-                child: NeuIcon(IconId.close, size: 14, color: t.muted),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
   /// 会话操作菜单：重命名 / 删除。
   ///
   /// 之前直接把垃圾桶画在每一行上，一屏十几个删除键，视觉噪点很大；
@@ -930,129 +879,6 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
     } finally {
       controller.dispose();
     }
-  }
-
-  Widget _buildConnCard(NeuTokens t) {
-    final target = _store.target;
-    final connected = _store.isConnected;
-    return NeuRaised(
-      radius: NeuRadii.lg,
-      level: NeuLevel.standard,
-      padding: const EdgeInsets.all(NeuSpace.n16),
-      child: Column(
-        children: [
-          NeuPressable(
-            onTap: widget.onOpenConn,
-            flat: true,
-            padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n11, vertical: NeuSpace.n11),
-            child: Row(
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(NeuRadii.chip),
-                    gradient: NeuDecorations.raisedGradient(t),
-                    boxShadow: NeuShadows.raiseSm(t),
-                  ),
-                  alignment: Alignment.center,
-                  child: NeuIcon(IconId.server, size: 18, color: t.accentInk),
-                ),
-                SizedBox(width: NeuSpace.n12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        I18n.t('settings.conn'),
-                        style: TextStyle(
-                          fontSize: NeuFonts.bodyLg,
-                          fontWeight: FontWeight.w700,
-                          color: t.fg,
-                        ),
-                      ),
-                      Text(
-                        target == null
-                            ? I18n.t('ui.47840e3fb4')
-                            : '${target.label}${connected ? I18n.t('ui.836349be8d') : ''}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: NeuFonts.sub, color: t.muted),
-                      ),
-                    ],
-                  ),
-                ),
-                NeuIcon(IconId.chevronRight, size: 16, color: t.muted),
-              ],
-            ),
-          ),
-          const SizedBox(height: NeuSpace.n10),
-          Row(
-            children: [
-              Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: connected
-                      ? t.success
-                      : (_store.state == ServerConnectionState.connecting
-                          ? t.warn
-                          : t.muted),
-                ),
-              ),
-              SizedBox(width: NeuSpace.n7),
-              Expanded(
-                child: Text(
-                  switch (_store.state) {
-                    ServerConnectionState.connected =>
-                      I18n.tp('ui.33716d0005', {'v': _store.health?.piVersion ?? '', 'n': _store.sessions.length}),
-                    ServerConnectionState.connecting => I18n.t('common.connecting'),
-                    ServerConnectionState.error => _store.errorMessage ?? I18n.t('common.connFailed'),
-                    ServerConnectionState.disconnected => I18n.t('common.disconnected'),
-                  },
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: NeuFonts.sub, color: t.muted),
-                ),
-              ),
-              // 这里原本还有个「手动刷新会话」的圆按钮，已去掉：
-              // 会话列表在下拉刷新、进页、重连时都会自己刷新，
-              // 再放一个按钮只是重复，而且占着连接卡右下角（用户点名它是多余的）。
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNewSession(NeuTokens t) {
-    return NeuPressable(
-      onTap: _createSession,
-      // 长按 = 带模板新建（空会话还是点一下，老习惯不变）
-      onLongPress: _creating ? null : _showTemplateSheet,
-      radius: NeuRadii.md,
-      level: NeuLevel.standard,
-      padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n14, vertical: NeuSpace.n12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          if (_creating)
-            NeuIcon(IconId.spinner, size: 16, color: t.muted)
-          else
-            NeuIcon(IconId.plus, size: 16, color: t.accentInk),
-          SizedBox(width: NeuSpace.n8),
-          Text(
-            _creating ? I18n.t('ui.d156b373ad') : I18n.t('ui.42ddad2439'),
-            style: TextStyle(
-              fontSize: NeuFonts.body,
-              color: _creating ? t.muted : t.accentInk,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   /// 长按「新会话」：选一个常用语模板当开场白，或者就开个空会话。
@@ -1260,45 +1086,6 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyState(NeuTokens t) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 40),
-      child: Column(
-        children: [
-          NeuIcon(IconId.bubble, size: 26, color: t.muted),
-          SizedBox(height: NeuSpace.n10),
-          Text(
-            _store.isConnected
-                ? (_store.loadingSessions
-                    ? I18n.t('ui.fb4ca1cf1b')
-                    : I18n.t('start.noSession', context: context))
-                : I18n.t('start.connectFirst', context: context),
-            style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.onBgDim),
-          ),
-          if (_store.sessionsError != null) ...[
-            const SizedBox(height: NeuSpace.n8),
-            Text(
-              _store.sessionsError!,
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: NeuFonts.small, color: t.danger),
-            ),
-            const SizedBox(height: NeuSpace.n10),
-            // 失败要给一条能走的路：先补连接，再重新拉列表
-            NeuPressable(
-              onTap: () async {
-                await _store.ensureConnected();
-                await _store.loadSessions(refresh: true);
-              },
-              radius: NeuRadii.sm,
-              padding: EdgeInsets.symmetric(horizontal: NeuSpace.n16, vertical: NeuSpace.n9),
-              child: Text(I18n.t('common.retry'), style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.accentInk)),
-            ),
-          ],
-        ],
       ),
     );
   }
