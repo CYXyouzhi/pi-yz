@@ -32,7 +32,7 @@
 | `lib/ui/server/files_page.dart` | 1059 | ✅ 645 行（6 个组件 + 2 个工具函数 + 2 个底部面板）|
 | `lib/ui/server/sessions_page.dart` | 1316 | ✅ 1103 行（5 个组件已抽；`_buildSessionRow`/`_buildGroup` 是雷区，不抽）|
 | `lib/ui/server/conn_page.dart` | 1300 | ✅ 1209 行（3 个组件已抽；`_remoteCard` 待手工加参数）|
-| `lib/ui/server/chat_page.dart` | 3374 | 🚧 3374 → 3237 行（4 个组件已抽；余下待续）|
+| `lib/ui/server/chat_page.dart` | 3374 | 🚧 3374 → 3158 行（6 个组件已抽；余下待续）|
 | `lib/server/server_store.dart` | 1814 | 🚫 **不动**（「唯一状态源」是架构决策的载体，拆它等于动地基）|
 
 相关提交：`6138d6d`（server_types）、`8424632`（设置页共用件）
@@ -346,6 +346,27 @@ saveOwnAddress / showThreat）与 3 处 setState，加参数时**又一次踩了
 **下一轮**：`ModelChip` 里 `model` → `chat.model` 的改动，用 edit 一次一处地做；
 之后继续 `_buildUndoBar` / `_buildPendingImages` / `_buildFileRefs` / `_buildSuggestions` /
 `_buildTurnFooter` / `_buildHeader` / `_buildComposer`。
+
+**⑪ chat_page 分批推进有效；抽顶层函数要用另一套边界**
+
+「一块一块做」的节奏确实有效：
+
+| 块 | 行数 | 结果 |
+|---|---|---|
+| `ChatLoading` | 58 | ✅ `b37943f` —— 两个调用点缩进不同，edit 正好唯一匹配，一次过 |
+| `LiveSpeed` | 21 | ✅ `3de70a7` —— 一次过 |
+| `ModelChip` | 48 | ✗ 失败（新原因，见下）|
+
+chat_page 3374 → **3158 行**。
+
+**`ModelChip` 这次的失败原因和之前不同**：`modelChipLabel` 是**顶层函数**（顶格写，
+无缩进），而我的边界正则 `^  (?://|…)` 要求 **2 空格缩进** —— 它匹配到了**类成员**，
+于是边界算到了错误的位置，校验拒绝。
+
+**教训：抽顶层函数要用另一套边界规则**（顶格声明 `^[A-Za-z]`），
+`tool/extract_render_method.py` 目前只为「State 里的方法」设计。
+
+**下一轮**：`ModelChip` 与 `modelChipLabel` **手工搬**（脚本的 cut 在这儿会算错边界）。
 
 **结果**：`settings_page.dart` 停在 **875 行**（原 1472，减 597 行 / 40%），未达 800 目标。
 差的就是「外观」这 367 行。它仍作为整体留在页面里 —— 至少是**自洽**的
