@@ -670,3 +670,34 @@ class PendingImages extends StatelessWidget {
       );
   }
 }
+
+/// _infoLine 的组件化版本。
+class InfoLine extends StatelessWidget {
+  const InfoLine(this.label, this.value, {super.key});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.neu;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: NeuSpace.n3),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 62,
+            child: Text(label, style: TextStyle(fontSize: NeuFonts.sub, color: t.muted)),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(fontSize: NeuFonts.sub, color: t.fg, height: 1.5),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

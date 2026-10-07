@@ -1730,22 +1730,18 @@ class _ServerChatPageState extends State<ServerChatPage> {
                   ),
                 ),
                 SizedBox(height: NeuSpace.n10),
-                _infoLine(
-                  t,
-                  I18n.t('common.model'),
+                InfoLine(I18n.t('common.model'),
                   chat.model == null
                       ? '—'
                       : '${chat.model!.name} (${chat.model!.provider})',
                 ),
-                _infoLine(t, I18n.t('ui.11eead2c33'), chat.thinkingLevel),
-                _infoLine(
-                  t,
-                  I18n.t('ui.ff692f04ac'),
+                InfoLine(I18n.t('ui.11eead2c33'), chat.thinkingLevel),
+                InfoLine(I18n.t('ui.ff692f04ac'),
                   I18n.tp('ui.7622b8adf0', {'n': chat.messages.length, 'total': chat.historyTotal}),
                 ),
-                _infoLine(t, I18n.t('settings.workspace'), chat.cwd),
+                InfoLine(I18n.t('settings.workspace'), chat.cwd),
                 if (chat.sessionName != null)
-                  _infoLine(t, I18n.t('ui.20c94429e5'), chat.sessionName!),
+                  InfoLine(I18n.t('ui.20c94429e5'), chat.sessionName!),
                 if (stats != null) ...[
                   SizedBox(height: NeuSpace.n6),
                   Text(
@@ -1757,32 +1753,22 @@ class _ServerChatPageState extends State<ServerChatPage> {
                     ),
                   ),
                   SizedBox(height: NeuSpace.n4),
-                  _infoLine(
-                    t,
-                    I18n.t('ui.50f198f07f'),
+                  InfoLine(I18n.t('ui.50f198f07f'),
                     stats.contextPercent != null
                         ? '${stats.contextPercent!.toStringAsFixed(1)}% · ${_tokens(stats.contextTokens)} / ${_tokens(stats.contextWindow)}'
                         : I18n.t('ui.4f23e4de2b'),
                   ),
-                  _infoLine(
-                    t,
-                    'tokens',
+                  InfoLine('tokens',
                     I18n.tp('ui.37e8f35792', {'total': _tokens(stats.totalTokens), 'input': _tokens(stats.inputTokens), 'output': _tokens(stats.outputTokens), 'cr': _tokens(stats.cacheReadTokens), 'cw': _tokens(stats.cacheWriteTokens)}),
                   ),
                   if (stats.costTotal > 0)
-                    _infoLine(
-                      t,
-                      I18n.t('ui.f970d0272c'),
+                    InfoLine(I18n.t('ui.f970d0272c'),
                       '\$${stats.costTotal.toStringAsFixed(4)}',
                     ),
-                  _infoLine(
-                    t,
-                    I18n.t('ui.8fd578b58a'),
+                  InfoLine(I18n.t('ui.8fd578b58a'),
                     I18n.tp('ui.d8deeeee4c', {'u': stats.userMessages, 'a': stats.assistantMessages, 'tc': stats.toolCalls, 'tr': stats.toolResults}),
                   ),
-                  _infoLine(
-                    t,
-                    I18n.t('ui.dc0f2e515f'),
+                  InfoLine(I18n.t('ui.dc0f2e515f'),
                     chat.autoCompactionEnabled ? I18n.t('ui.9db7a84fcd') : I18n.t('ui.9c58505de3'),
                   ),
                   const SizedBox(height: NeuSpace.n4),
@@ -2075,25 +2061,6 @@ class _ServerChatPageState extends State<ServerChatPage> {
     if (value >= 1000) return '${(value / 1000).toStringAsFixed(1)}k';
     return '$value';
   }
-
-  Widget _infoLine(NeuTokens t, String label, String value) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: NeuSpace.n3),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 62,
-          child: Text(label, style: TextStyle(fontSize: NeuFonts.sub, color: t.muted)),
-        ),
-        Expanded(
-          child: Text(
-            value,
-            style: TextStyle(fontSize: NeuFonts.sub, color: t.fg, height: 1.5),
-          ),
-        ),
-      ],
-    ),
-  );
 
   static int _countTree(List<dynamic> nodes) {
     var total = 0;
