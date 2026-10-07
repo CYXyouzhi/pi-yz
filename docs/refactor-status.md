@@ -241,6 +241,27 @@ analyze 干净之前都不算完成。
 这六轮的成本远超「一开始就手工搬」。下次遇到同类情况：
 同一个文件失败两次，立刻停手换方法。
 
+**⑦ 补充二：第七次（换新方法后，四次成功一次卡住）**
+
+第六次之后我换了方法：**提取用脚本、改调用点用 edit 工具**（edit 要求精确匹配，
+不匹配就拒绝 —— 不会像 `str.replace` 那样命中错的地方）。这个方法**先成功了四次**：
+
+  EmptyStateView → ConnCard → ArchiveEntryRow + NewSessionRow → SessionSearchBar
+
+`flutter analyze` 每次都是零问题，文件从 1316 降到 1099 行。**说明方法是有效的。**
+
+第五次抽 `_buildSessionRow` 时出现结构错误：
+`sessions_page.dart:691 - Expected to find ';'`，并级联出 36 个错误
+（其中 `Undefined name 'context' / '_store' / 'mounted'` 都是它的副作用 ——
+解析器把后面的方法当成了类外的东西）。
+
+**没定位成功**：691 行本身看着正常（`_EmptyRow() => EmptyStateView(store: _store),`），
+`EmptyStateView` 的定义也正常。怀疑与 `_buildRow` 那个 **switch 表达式**的分支结构有关
+（9 个分支、含 Dart 3 的 object pattern `_GroupRow(:final cwd, ...)`）。
+
+**下一轮的建议**：把 `_buildRow`（约 56 行、9 个 switch 分支）**跳过不抽** ——
+少减 56 行，但避开这个雷区。其余独立方法继续用「脚本提取 + edit 改调用点」的做法。
+
 **结果**：`settings_page.dart` 停在 **875 行**（原 1472，减 597 行 / 40%），未达 800 目标。
 差的就是「外观」这 367 行。它仍作为整体留在页面里 —— 至少是**自洽**的
 （三个子分组都在它内部），不是散落状态。
