@@ -29,7 +29,7 @@
 | `lib/server/server_types.dart` | 1268 | ✅ 完成 |
 | `lib/ui/server/settings_page.dart` | 1472 | ✅ 875 行（8 个分组抽了 7 个；「外观」未能抽出，原因见「踩过的坑⑤」）|
 | `lib/ui/server/config_page.dart` | 1307 | ✅ 811 行（6 个分组抽了 5 个；MCP 分组未抽）|
-| `lib/ui/server/files_page.dart` | 1059 | ⬜ 未开始 |
+| `lib/ui/server/files_page.dart` | 1059 | ✅ 645 行（6 个组件 + 2 个工具函数 + 2 个底部面板）|
 | `lib/ui/server/sessions_page.dart` | 1316 | ⬜ 未开始 |
 | `lib/ui/server/conn_page.dart` | 1300 | ⬜ 未开始 |
 | `lib/ui/server/chat_page.dart` | 3374 | ⬜ 未开始（最痛也最难，放最后）|

@@ -15,6 +15,7 @@ import '../../server/i18n.dart';
 import '../../server/server_types.dart';
 import '../../theme/design_tokens.dart';
 import '../../theme/neu.dart';
+import 'files/sheets.dart';
 import 'files/widgets.dart';
 import '../neu_icons.dart';
 import '../neu_toast.dart';
@@ -128,7 +129,8 @@ class _WorkspaceFilesPageState extends State<WorkspaceFilesPage> {
       await _previewUnsupported(entry.path, ext);
       return;
     }
-    await _preview(entry.path);
+    await showFilePreview(context, entry.path,
+        store: widget.store, cwd: widget.cwd, git: _git);
   }
 
   /// 图片预览：拉原始字节直接渲染（不能走文本接口，二进制会变乱码）
@@ -300,195 +302,7 @@ class _WorkspaceFilesPageState extends State<WorkspaceFilesPage> {
   }
 
   /// 文件预览：底部面板 + 等宽文本；git 仓库里额外给一个「看 diff」
-  Future<void> _preview(String filePath) async {
-    final file = await widget.store.readFile(filePath);
-    if (!mounted) return;
-    if (file == null) return;
-
-    await showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (sheetContext) {
-        final t = sheetContext.neu;
-        final tail = filePath.replaceAll('\\', '/').split('/').last;
-        return Container(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.85,
-          ),
-          decoration: BoxDecoration(
-            color: t.bg,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(NeuRadii.lg)),
-          ),
-          padding: const EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n10, NeuSpace.n18, NeuSpace.n20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: t.muted.withValues(alpha: 0.35),
-                    borderRadius: BorderRadius.circular(NeuRadii.hairline),
-                  ),
-                ),
-              ),
-              const SizedBox(height: NeuSpace.n12),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      tail,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: NeuFonts.sectionTitle,
-                        fontWeight: FontWeight.w700,
-                        color: t.onBg,
-                      ),
-                    ),
-                  ),
-                  if (_git?.isRepo == true)
-                    NeuPressable(
-                      onTap: () {
-                        Navigator.of(sheetContext).pop();
-                        _showDiff(filePath);
-                      },
-                      radius: 12,
-                      padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n7),
-                      child: Text(I18n.t('ui.30570a7afa'), style: TextStyle(fontSize: NeuFonts.sub, color: t.accentInk)),
-                    ),
-                ],
-              ),
-              SizedBox(height: NeuSpace.n2),
-              Text(
-                '${readableSize(file.size)}${file.truncated ? I18n.t('ui.70a59fefaa') : ''}',
-                style: TextStyle(fontSize: NeuFonts.label, color: t.muted),
-              ),
-              const SizedBox(height: NeuSpace.n12),
-              Flexible(
-                child: Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    gradient: NeuDecorations.wellGradient(t),
-                    borderRadius: BorderRadius.circular(NeuRadii.sm),
-                    boxShadow: NeuShadows.insetSm(t),
-                  ),
-                  padding: const EdgeInsets.all(NeuSpace.n10),
-                  child: SingleChildScrollView(
-                    child: SelectableText(
-                      file.text,
-                      style: TextStyle(
-                        fontSize: NeuFonts.label,
-                        height: 1.55,
-                        fontFamily: 'monospace',
-                        color: t.fg,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   /// diff 视图：按行着色（+ 绿 / - 红 / @@ 蓝）
-  Future<void> _showDiff(String? filePath) async {
-    final diff = await widget.store.gitDiff(widget.cwd, path: filePath);
-    if (!mounted || diff == null) return;
-
-    await showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (sheetContext) {
-        final t = sheetContext.neu;
-        final lines = diff.diff.split('\n');
-        return Container(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.85,
-          ),
-          decoration: BoxDecoration(
-            color: t.bg,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(NeuRadii.lg)),
-          ),
-          padding: const EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n10, NeuSpace.n18, NeuSpace.n20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: t.muted.withValues(alpha: 0.35),
-                    borderRadius: BorderRadius.circular(NeuRadii.hairline),
-                  ),
-                ),
-              ),
-              SizedBox(height: NeuSpace.n12),
-              Text(
-                filePath == null
-                    ? I18n.t('ui.d597968aea')
-                    : filePath.replaceAll('\\', '/').split('/').last,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: NeuFonts.sectionTitle,
-                  fontWeight: FontWeight.w700,
-                  color: t.onBg,
-                ),
-              ),
-              SizedBox(height: NeuSpace.n10),
-              Flexible(
-                child: diff.empty
-                    ? Text(I18n.t('ui.87afad55b5'), style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.muted))
-                    : Container(
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          gradient: NeuDecorations.wellGradient(t),
-                          borderRadius: BorderRadius.circular(NeuRadii.sm),
-                          boxShadow: NeuShadows.insetSm(t),
-                        ),
-                        padding: const EdgeInsets.all(NeuSpace.n10),
-                        child: SingleChildScrollView(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              for (final line in lines)
-                                Text(
-                                  line.isEmpty ? ' ' : line,
-                                  style: TextStyle(
-                                    fontSize: NeuFonts.badge,
-                                    height: 1.5,
-                                    fontFamily: 'monospace',
-                                    color: line.startsWith('+')
-                                        ? t.success
-                                        : line.startsWith('-')
-                                            ? t.danger
-                                            : line.startsWith('@@')
-                                                ? t.accentInk
-                                                : t.fg,
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                      ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     // 物理返回键（Android 三键/手势）：还能上一级就上一级，到顶了才退出页面。
@@ -637,7 +451,9 @@ class _WorkspaceFilesPageState extends State<WorkspaceFilesPage> {
                                 else ...[
                                   for (var i = 0; i < _git!.files.length && i < 40; i++) ...[
                                     if (i > 0) Container(height: 1, color: t.border),
-                                    GitRow(_git!.files[i], _showDiff),
+                                    GitRow(_git!.files[i],
+                                    (p) => showDiffSheet(context, p,
+                                        store: widget.store, cwd: widget.cwd)),
                                   ],
                                   if (_git!.files.length > 40)
                                     Padding(
