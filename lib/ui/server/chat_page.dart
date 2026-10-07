@@ -1901,7 +1901,7 @@ class _ServerChatPageState extends State<ServerChatPage> {
                 Text(
                   nodes == null
                       ? I18n.t('ui.dd55c97800')
-                      : I18n.tp('ui.d7320b9231', {'n': _countTree(nodes)}),
+                      : I18n.tp('ui.d7320b9231', {'n': countTree(nodes)}),
                   style: TextStyle(fontSize: NeuFonts.label, color: t.muted),
                 ),
                 const SizedBox(height: NeuSpace.n10),
@@ -2060,17 +2060,6 @@ class _ServerChatPageState extends State<ServerChatPage> {
     if (value >= 1000000) return '${(value / 1000000).toStringAsFixed(2)}M';
     if (value >= 1000) return '${(value / 1000).toStringAsFixed(1)}k';
     return '$value';
-  }
-
-  static int _countTree(List<dynamic> nodes) {
-    var total = 0;
-    for (final node in nodes) {
-      if (node is! Map) continue;
-      total += 1;
-      final children = node['children'];
-      if (children is List) total += _countTree(children);
-    }
-    return total;
   }
 
   /// 把树压成带缩进的列表（深度优先）

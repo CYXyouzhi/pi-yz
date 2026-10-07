@@ -701,3 +701,14 @@ class InfoLine extends StatelessWidget {
     );
   }
 }
+
+int countTree(List<dynamic> nodes) {
+  var total = 0;
+  for (final node in nodes) {
+    if (node is! Map) continue;
+    total += 1;
+    final children = node['children'];
+    if (children is List) total += countTree(children);
+  }
+  return total;
+}
