@@ -1157,6 +1157,8 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
             child: Text(
               value,
               maxLines: 2,
+              // 值可能很长（例如聚合后的模型列表），硬切等于把信息藏起来
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(fontSize: NeuFonts.small, color: t.fg),
             ),
           ),

@@ -100,29 +100,52 @@ class NeuSection extends StatelessWidget {
 
     // trailing 存在时整行不可点（否则点「+ 新增」会连带切换折叠状态）；
     // 那种场景下折叠由 trailing 里的控件自己或外层负责。
-    final body = trailing == null
-        ? GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: onToggle,
-            child: header,
-          )
-        : header;
+    final tappable = trailing == null;
 
-    return open
-        ? Padding(
-            padding: const EdgeInsets.only(bottom: NeuSpace.n8),
-            child: body,
-          )
-        : Padding(
-            padding: const EdgeInsets.only(bottom: NeuSpace.n10),
-            child: NeuRaised(
-              radius: NeuRadii.lg,
-              padding: const EdgeInsets.symmetric(
-                horizontal: NeuSpace.n14,
-                vertical: NeuSpace.n12,
+    if (open) {
+      // 展开态是普通标题行（没有卡片底色、也没有卡片那圈内边距），
+      // header 本身就只剩约 24dp 高 —— 所以这里补一个最小高度。
+      //
+      // 为什么不把点击区提到外层就行：展开态本来就没有内边距可提，
+      // 24dp 就是 24dp。而 24dp 远低于 48dp 的可点标准，
+      // 用户表现就是「点了没反应」（尤其是分组标题这种要紧的入口）。
+      final content = tappable
+          ? GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: onToggle,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 48),
+                child: header,
               ),
-              child: body,
-            ),
-          );
+            )
+          : header;
+      return Padding(
+        padding: const EdgeInsets.only(bottom: NeuSpace.n8),
+        child: content,
+      );
+    }
+
+    // 收起态：点击区必须盖住**整张卡片**（含 12dp 上下内边距）。
+    //
+    // 原先 GestureDetector 写在卡片内侧、只包 header —— 卡片看上去很高，
+    // 但点上下那圈内边距不会触发折叠。实测可点高度只有 24dp。
+    final card = NeuRaised(
+      radius: NeuRadii.lg,
+      padding: const EdgeInsets.symmetric(
+        horizontal: NeuSpace.n14,
+        vertical: NeuSpace.n12,
+      ),
+      child: header,
+    );
+    return Padding(
+      padding: const EdgeInsets.only(bottom: NeuSpace.n10),
+      child: tappable
+          ? GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: onToggle,
+              child: card,
+            )
+          : card,
+    );
   }
 }

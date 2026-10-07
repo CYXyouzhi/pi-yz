@@ -739,6 +739,7 @@ class _ConfigPageState extends State<ConfigPage> {
                                       Text(
                                         _packages[i].source.replaceFirst('npm:', ''),
                                         maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
                                         style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.fg),
                                       ),
                                       CollapsibleText(
@@ -868,6 +869,7 @@ class _ConfigPageState extends State<ConfigPage> {
                                             child: Text(
                                               _mcp[i].name,
                                               maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
                                               style: TextStyle(
                                                 fontSize: NeuFonts.bodySmall,
                                                 color: _mcp[i].enabled ? t.fg : t.muted,
@@ -979,6 +981,8 @@ class _ConfigPageState extends State<ConfigPage> {
                   model.name,
                   // 模型名很长（DeepSeek V4.1 Flash Vision Exp），一行装不下
                   maxLines: 2,
+                  // 注释里已经写了「模型名很长…一行装不下」，正是该给省略号的地方
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.fg),
                 ),
                 Text(
@@ -1083,6 +1087,8 @@ class _ConfigPageState extends State<ConfigPage> {
           child: Text(
             '/${item.name}',
             maxLines: 2,
+            // 原先靠把宽度从 140 加到 168 来避免截断 —— 名字再长一样会截，加省略号才是治本
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(fontSize: NeuFonts.label, fontFamily: 'monospace', color: t.fg),
           ),
         ),

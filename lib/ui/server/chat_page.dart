@@ -3234,6 +3234,8 @@ class _ServerChatPageState extends State<ServerChatPage> {
                         Text(
                           file.path,
                           maxLines: 2,
+                          // 文件路径可以很长，截断后没有省略号用户会以为路径就这么短
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(fontSize: NeuFonts.sub, color: t.fg),
                         ),
                         SizedBox(height: NeuSpace.n2),
