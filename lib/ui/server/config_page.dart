@@ -13,6 +13,8 @@ import '../../server/i18n.dart';
 import '../../server/server_store.dart';
 import '../../server/server_types.dart';
 import '../neu_section.dart';
+import 'config/model_section.dart';
+import 'config/thinking_section.dart';
 import 'config/rows.dart';
 import 'config/widgets.dart';
 import '../../theme/design_tokens.dart';
@@ -432,117 +434,28 @@ class _ConfigPageState extends State<ConfigPage> {
                   ),
 
                 // 分组内容默认收起：AI 配置页分组多、每组都长，全展开看不出层次
-                _section(t, I18n.t('common.model'), icon: IconId.gear),
-                if (_expanded.contains(I18n.t('common.model'))) ...[
-                NeuRaised(
-                  radius: NeuRadii.md,
-                  level: NeuLevel.small,
-                  padding: const EdgeInsets.all(NeuSpace.n6),
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n10, vertical: NeuSpace.n8),
-                        child: Row(
-                          children: [
-                            NeuIcon(IconId.spinner, size: 14, color: t.accentInk),
-                            SizedBox(width: NeuSpace.n8),
-                            Expanded(
-                              child: Text(
-                                chat.model == null
-                                    ? I18n.t('ui.261ec4f0de')
-                                    : '${chat.model!.name} · ${chat.model!.provider}',
-                                // 不再截成一行：手机窄屏上「DeepSeek V4.1 Flash · opencode-go」
-                                // 会被截掉 provider，看不出用的是哪家
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.fg),
-                              ),
-                            ),
-                            Text(I18n.t('ui.48ac479789'), style: TextStyle(fontSize: NeuFonts.micro, color: t.accentInk)),
-                          ],
-                        ),
-                      ),
-                      if (_loading)
-                        Padding(
-                          padding: EdgeInsets.symmetric(vertical: NeuSpace.n12),
-                          child: Text(I18n.t('common.loading'), style: TextStyle(fontSize: NeuFonts.small, color: t.muted)),
-                        )
-                      else if (_models.isEmpty)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: NeuSpace.n12),
-                          child: Text(I18n.t('ui.039e58de36'), style: TextStyle(fontSize: NeuFonts.small, color: t.muted)),
-                        )
-                      else ...[
-                        for (final model in _models.take(40)) ...[
-                          Container(height: 1, color: t.border),
-                          ModelRow(model: model, chat: chat, store: _store),
-                        ],
-                        if (_models.length > 40)
-                          Padding(
-                            padding: const EdgeInsets.only(top: NeuSpace.n8),
-                            child: Text(
-                              I18n.tp('ui.edb9ab9fc0', {'n': _models.length}),
-                              style: TextStyle(fontSize: NeuFonts.badge, color: t.muted),
-                            ),
-                          ),
-                      ],
-                    ],
-                  ),
-                ),
-                ],
-
+              ModelSection(
+                chat: chat,
+                models: _models,
+                loading: _loading,
+                store: _store,
+                open: _expanded.contains(I18n.t('common.model')),
+                onToggle: () => setState(() {
+                  final k = I18n.t('common.model');
+                  _expanded.contains(k) ? _expanded.remove(k) : _expanded.add(k);
+                }),
+              ),
                 // 分组内容默认收起：AI 配置页分组多、每组都长，全展开看不出层次
-                _section(t, I18n.t('ui.11eead2c33'), icon: IconId.spinner),
-                if (_expanded.contains(I18n.t('ui.11eead2c33'))) ...[
-                NeuRaised(
-                  radius: NeuRadii.md,
-                  level: NeuLevel.small,
-                  padding: const EdgeInsets.all(NeuSpace.n6),
-                  child: _thinkingLevels.isEmpty
-                      ? Padding(
-                          padding: const EdgeInsets.symmetric(vertical: NeuSpace.n12),
-                          child: Center(
-                            child: Text('—', style: TextStyle(fontSize: NeuFonts.small, color: t.muted)),
-                          ),
-                        )
-                      : Wrap(
-                          spacing: 6,
-                          runSpacing: 6,
-                          children: [
-                            for (final level in _thinkingLevels)
-                              NeuPressable(
-                                onTap: () {
-                                  // 改思考等级要经会话命令下发，没会话先说清楚，
-                                  // 不要点了没反应（以前就是静默失败）
-                                  if (_store.currentSessionId == null) {
-                                    NeuToast.show(context,
-                                        message: I18n.t('ui.ce27b6f56c'),
-                                        icon: IconId.warn);
-                                    return;
-                                  }
-                                  _store.setThinkingLevel(level);
-                                },
-                                flat: chat.thinkingLevel != level,
-                                alwaysInset: chat.thinkingLevel == level,
-                                radius: NeuRadii.sm,
-                                padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n14, vertical: NeuSpace.n9),
-                                child: Text(
-                                  level,
-                                  style: TextStyle(
-                                    fontSize: NeuFonts.sub,
-                                    color: chat.thinkingLevel == level ? t.accentInk : t.muted,
-                                    fontWeight: chat.thinkingLevel == level
-                                        ? FontWeight.w700
-                                        : FontWeight.w400,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                ),
-                ],
-
-                // 分组内容默认收起：AI 配置页分组多、每组都长，全展开看不出层次
+              ThinkingSection(
+                thinkingLevels: _thinkingLevels,
+                store: _store,
+                chat: chat,
+                open: _expanded.contains(I18n.t('ui.11eead2c33')),
+                onToggle: () => setState(() {
+                  const k = 'ui.11eead2c33';
+                  _expanded.contains(k) ? _expanded.remove(k) : _expanded.add(k);
+                }),
+              ),
                 _section(t, I18n.t('ui.c4d89641a1'), icon: IconId.lock),
                 if (_expanded.contains(I18n.t('ui.c4d89641a1'))) ...[
                 NeuRaised(
