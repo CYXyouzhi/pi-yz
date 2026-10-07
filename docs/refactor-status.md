@@ -32,7 +32,7 @@
 | `lib/ui/server/files_page.dart` | 1059 | ✅ 645 行（6 个组件 + 2 个工具函数 + 2 个底部面板）|
 | `lib/ui/server/sessions_page.dart` | 1316 | ✅ 1103 行（5 个组件已抽；`_buildSessionRow`/`_buildGroup` 是雷区，不抽）|
 | `lib/ui/server/conn_page.dart` | 1300 | ✅ 1209 行（3 个组件已抽；`_remoteCard` 待手工加参数）|
-| `lib/ui/server/chat_page.dart` | 3374 | 🚧 3374 → 3158 行（6 个组件已抽；余下待续）|
+| `lib/ui/server/chat_page.dart` | 3374 | ✅ 2740 行（弹层抽了 8 个；渲染块多数不适合搬）|
 | `lib/server/server_store.dart` | 1814 | 🚫 **不动**（「唯一状态源」是架构决策的载体，拆它等于动地基）|
 
 相关提交：`6138d6d`（server_types）、`8424632`（设置页共用件）
@@ -367,6 +367,39 @@ chat_page 3374 → **3158 行**。
 `tool/extract_render_method.py` 目前只为「State 里的方法」设计。
 
 **下一轮**：`ModelChip` 与 `modelChipLabel` **手工搬**（脚本的 cut 在这儿会算错边界）。
+
+**⑫ chat_page 走「弹层路线」成功：3374 → 2740 行**
+
+前面三次磨渲染块（`_buildXxx`）全败（`ModelChip` 试了三次）。
+改成先抽弹层后，**八个函数一次过**：
+
+| 弹层 | 行数 | 依赖 |
+|---|---|---|
+| `showUndoSnack` | 14 | 0 |
+| `showTurnSummarySheet` | 84 | 0 |
+| `showDataSheet` + `formatPayload` | 50 + 16 | 1 |
+| `showPickerSheet` | 96 | 1 |
+| `askSelect` / `askConfirm` / `askText` | 77 / 27 / 48 | 全 0 |
+
+chat_page **3374 → 2740 行**（减 634 / 19%），新建 `chat/sheets.dart`。
+
+**为什么弹层好抽**：它们是独立函数 —— 有明确的 `) async {` 与收尾 `}`，
+边界是语法结构本身；而渲染块嵌在 build 的表达式里，边界靠缩进猜。
+
+**`_modelRow` 失败（唯一没成的）**：签名是
+`NeuTokens t, BuildContext sheetContext, StateSetter setSheetState` ——
+用了 `StateSetter`，说明它要在弹层内部重建自己。
+**这类「和调用方共享可变状态」的方法不能简单搬成无状态组件，跳过。**
+
+**脚本的两个新坑**（处理多行签名时）：
+  · 签名多行时，按「单行 `(…) async {`」写的正则匹配不上；要先在 `) async {` 处切开。
+  · 正则要用 `re.search` 而非 `re.match`（签名前有 2 空格缩进）。
+  · 参数是**命名参数块**（`{required String a, …}`）时，插入 `context` 要写成
+    `context, {` 配 `}) async {` —— 我第一版把 `{` 另起一行，语法错。
+
+**下一轮**：chat_page 剩下的弹层里 `_showInputMenu`（180 行 / 7 依赖）与
+`_showSessionInfo`（265 行 / 6 依赖）依赖偏多；15 个渲染块一直不顺。
+建议先分类「能抽的」与「不该动的」，再决定继续与否。
 
 **结果**：`settings_page.dart` 停在 **875 行**（原 1472，减 597 行 / 40%），未达 800 目标。
 差的就是「外观」这 367 行。它仍作为整体留在页面里 —— 至少是**自洽**的
