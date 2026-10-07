@@ -895,7 +895,13 @@ class _ServerChatPageState extends State<ServerChatPage> {
               // 之前是「没在跑 + 有消息」就常驻，空闲时白占约 40 逻辑高 ——
               // 而「继续」这件事在输入框发一句话同样能做到，不值得常占一行。
               if (!chat.isRunning && _turnFooterWorthShowing(chat))
-                _buildTurnFooter(t, chat),
+                TurnFooter(
+                  store: _store,
+                  chat: chat,
+                  onContinue: _continueRun,
+                  onRedo: () => _redoLast(chat),
+                  onSummary: () => showTurnSummarySheet(context, _store.turnSummary!),
+                ),
               _buildComposer(t, chat),
             ],
           ),
@@ -2324,68 +2330,6 @@ class _ServerChatPageState extends State<ServerChatPage> {
     if (summary != null && !summary.isEmpty) return true;
     if (chat.messages.isEmpty) return false;
     return chat.messages.last.isError;
-  }
-
-  Widget _buildTurnFooter(NeuTokens t, ChatReducer chat) {
-    final summary = _store.turnSummary;
-    final hasChanges = summary != null && !summary.isEmpty;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(NeuSpace.n18, 0, NeuSpace.n18, NeuSpace.n4),
-      child: Row(
-        children: [
-          if (hasChanges)
-            Expanded(
-              child: NeuPressable(
-                onTap: () => showTurnSummarySheet(context, summary),
-                flat: true,
-                radius: NeuRadii.sm,
-                padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n14, vertical: NeuSpace.n14),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    NeuIcon(IconId.pen, size: 12, color: t.accentInk),
-                    SizedBox(width: NeuSpace.n5),
-                    Flexible(
-                      child: Text(
-                        I18n.tp('ui.9069e11411', {'files': summary.files.length, 'added': summary.added, 'removed': summary.removed}),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: NeuFonts.badge, color: t.accentInk),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          SizedBox(width: NeuSpace.n8),
-          _footerAction(t, IconId.send, I18n.t('ui.27ca568be2'), _continueRun),
-          SizedBox(width: NeuSpace.n6),
-          _footerAction(t, IconId.sync, I18n.t('ui.7f7c7dcf89'), () => _redoLast(chat)),
-        ],
-      ),
-    );
-  }
-
-  Widget _footerAction(
-    NeuTokens t,
-    IconId icon,
-    String label,
-    VoidCallback onTap,
-  ) {
-    return NeuPressable(
-      onTap: onTap,
-      flat: true,
-      radius: NeuRadii.sm,
-      padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n14, vertical: NeuSpace.n14),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          NeuIcon(icon, size: 12, color: t.muted),
-          const SizedBox(width: NeuSpace.n4),
-          Text(label, style: TextStyle(fontSize: NeuFonts.badge, color: t.muted)),
-        ],
-      ),
-    );
   }
 
   /// 本轮改动明细：逐文件 + 口径说明（口径必须显示，否则数字看起来像漏算）

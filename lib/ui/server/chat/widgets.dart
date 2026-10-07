@@ -10,6 +10,7 @@ import '../../../theme/design_tokens.dart';
 import '../../../theme/neu.dart';
 import '../../neu_icons.dart';
 import '../activity_view.dart';
+import 'sheets.dart';
 
 /// _buildActivityBar 的组件化版本。
 class ChatActivityBar extends StatelessWidget {
@@ -524,4 +525,88 @@ class Suggestions extends StatelessWidget {
 double slashPanelMaxHeight(MediaQueryData media) {
   final available = media.size.height - media.viewInsets.bottom;
   return (available * 0.45).clamp(160.0, 420.0);
+}
+
+/// _footerAction 的组件化版本。
+class FooterAction extends StatelessWidget {
+  const FooterAction({super.key, required this.icon, required this.label, required this.onTap});
+
+  final IconId icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.neu;
+    return NeuPressable(
+        onTap: onTap,
+        flat: true,
+        radius: NeuRadii.sm,
+        padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n14, vertical: NeuSpace.n14),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            NeuIcon(icon, size: 12, color: t.muted),
+            const SizedBox(width: NeuSpace.n4),
+            Text(label, style: TextStyle(fontSize: NeuFonts.badge, color: t.muted)),
+          ],
+        ),
+      );
+  }
+}
+
+/// _buildTurnFooter 的组件化版本。
+class TurnFooter extends StatelessWidget {
+  const TurnFooter({super.key, required this.store, required this.chat, required this.onContinue, required this.onRedo, required this.onSummary});
+
+  final ServerStore store;
+  final ChatReducer chat;
+  final VoidCallback onContinue;
+  final VoidCallback onRedo;
+  final VoidCallback onSummary;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.neu;
+    final summary = store.turnSummary;
+      final hasChanges = summary != null && !summary.isEmpty;
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(NeuSpace.n18, 0, NeuSpace.n18, NeuSpace.n4),
+        child: Row(
+          children: [
+            if (hasChanges)
+              Expanded(
+                child: NeuPressable(
+                  onTap: () => showTurnSummarySheet(context, summary),
+                  flat: true,
+                  radius: NeuRadii.sm,
+                  padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n14, vertical: NeuSpace.n14),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      NeuIcon(IconId.pen, size: 12, color: t.accentInk),
+                      SizedBox(width: NeuSpace.n5),
+                      Flexible(
+                        child: Text(
+                          I18n.tp('ui.9069e11411', {'files': summary.files.length, 'added': summary.added, 'removed': summary.removed}),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: NeuFonts.badge, color: t.accentInk),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            SizedBox(width: NeuSpace.n8),
+            FooterAction(icon: IconId.send, label: I18n.t('ui.27ca568be2'), onTap: onContinue),
+            SizedBox(width: NeuSpace.n6),
+            FooterAction(
+                icon: IconId.sync,
+                label: I18n.t('ui.7f7c7dcf89'),
+                onTap: () => onRedo()),
+          ],
+        ),
+      );
+  }
 }
