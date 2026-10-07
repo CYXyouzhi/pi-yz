@@ -29,6 +29,7 @@ import '../neu_toast.dart';
 import 'activity_view.dart';
 import 'export_page.dart';
 import 'files_page.dart';
+import 'chat/sheets.dart';
 import 'chat/widgets.dart';
 import 'message_view.dart';
 import 'usage_page.dart';
@@ -1719,7 +1720,7 @@ class _ServerChatPageState extends State<ServerChatPage> {
                 onTap: () {
                   final index = _pendingImages.indexOf(image);
                   setState(() => _pendingImages.remove(image));
-                  _showUndo(I18n.tp('ui.8dc0a54c3c', {'name': image.name}), () {
+                  showUndoSnack(context, I18n.tp('ui.8dc0a54c3c', {'name': image.name}), () {
                     if (!mounted) return;
                     setState(
                       () => _pendingImages.insert(
@@ -2868,20 +2869,6 @@ class _ServerChatPageState extends State<ServerChatPage> {
   ///
   /// 用 SnackBar 而不是自家的 NeuToast：撤销必须有**一个可点的按钮**，
   /// NeuToast 是纯展示的（之前踩过「toast 上的按钮点不到」的坑）。
-  void _showUndo(String message, VoidCallback onUndo) {
-    final messenger = ScaffoldMessenger.maybeOf(context);
-    if (messenger == null) return;
-    messenger.clearSnackBars();
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(message, style: const TextStyle(fontSize: NeuFonts.bodyMid)),
-        duration: Duration(seconds: 5),
-        behavior: SnackBarBehavior.floating,
-        action: SnackBarAction(label: I18n.t('ui.bd9fcf46b4'), onPressed: onUndo),
-      ),
-    );
-  }
-
   /// 本轮改动速览 + 继续 / 再来一次。
   ///
   /// 放在输入框正上方：这一条说的是「刚刚这一轮做了什么」，
