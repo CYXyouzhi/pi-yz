@@ -32,7 +32,7 @@
 | `lib/ui/server/files_page.dart` | 1059 | ✅ 645 行（6 个组件 + 2 个工具函数 + 2 个底部面板）|
 | `lib/ui/server/sessions_page.dart` | 1316 | ✅ 1103 行（5 个组件已抽；`_buildSessionRow`/`_buildGroup` 是雷区，不抽）|
 | `lib/ui/server/conn_page.dart` | 1300 | ✅ 1209 行（3 个组件已抽；`_remoteCard` 待手工加参数）|
-| `lib/ui/server/chat_page.dart` | 3374 | ✅ 2740 行（弹层抽了 8 个；渲染块多数不适合搬）|
+| `lib/ui/server/chat_page.dart` | 3374 | ✅ 2496 行（弹层 9 个 + 渲染块 4 个；余下待续）|
 | `lib/server/server_store.dart` | 1814 | 🚫 **不动**（「唯一状态源」是架构决策的载体，拆它等于动地基）|
 
 相关提交：`6138d6d`（server_types）、`8424632`（设置页共用件）
@@ -400,6 +400,35 @@ chat_page **3374 → 2740 行**（减 634 / 19%），新建 `chat/sheets.dart`�
 **下一轮**：chat_page 剩下的弹层里 `_showInputMenu`（180 行 / 7 依赖）与
 `_showSessionInfo`（265 行 / 6 依赖）依赖偏多；15 个渲染块一直不顺。
 建议先分类「能抽的」与「不该动的」，再决定继续与否。
+
+**⑬ chat_page 继续推进：3374 → 2496 行（减 26%）**
+
+本段又抽了四个：
+
+| 抽出的 | 行数 | 依赖 | 备注 |
+|---|---|---|---|
+| `showUiDialog` | 39 | 1 | 原本依赖 4 个，底层抽走后只剩 1 |
+| `UndoBar` | 26 | 1 | 边界正则修好后一次过 |
+| `FileRefs` | 43 | 2 | 一次过 |
+| `Suggestions` + `slashPanelMaxHeight` | 140 + 4 | 2 | 大块但依赖少 |
+
+**两条新经验**：
+
+**1. 分步抽有复利 —— 先抽底层，再抽上层。**
+`showUiDialog` 一开始依赖 4 个（三个 `_askXxx` + `_store`）。等那三个 `_askXxx`
+先抽出去之后，它自己只剩 1 个依赖，一次就过。若一上来就带着四个依赖搬，风险大得多。
+
+**2. 搬家时用 re-export 保持外部引用有效。**
+`slashPanelMaxHeight`（4 行纯函数）被两个测试引用
+（`slash_panel_height_test` / `slash_panel_golden_test`）。我把它搬进 `chat/widgets.dart`
+后，在 `chat_page.dart` 里加了一行
+`export 'chat/widgets.dart' show slashPanelMaxHeight;`
+把它 re-export 回去 —— **两个测试一行都不用改**。
+比「追着改一堆引用点」稳，尤其是测试断言的正是这个函数的行为。
+
+**3. 行数多不等于难抽，依赖数才是关键。**
+`Suggestions` 有 140 行却一次过（只依赖 2 个）；
+`_modelRow` 只有 55 行却没成（用了 `StateSetter`，结构上不该搬）。
 
 **结果**：`settings_page.dart` 停在 **875 行**（原 1472，减 597 行 / 40%），未达 800 目标。
 差的就是「外观」这 367 行。它仍作为整体留在页面里 —— 至少是**自洽**的
