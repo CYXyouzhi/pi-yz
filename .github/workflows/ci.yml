@@ -1,0 +1,61 @@
+# 持续集成：push 到 main 与所有 PR 都跑一遍三条门禁。
+#
+# 为什么要它：项目有 166 个 Flutter 用例（另 3 个 golden 除外）与 27 个 Node 用例，
+# 在此之前全靠手动跑。纪律依赖人就会漏 —— 尤其是改动横跨 Dart / Node / 插件三块时。
+#
+# 三个 job 的分工与一个刻意的取舍见下面注释。
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  flutter:
+    name: Flutter（analyze + test）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: 装依赖
+        run: flutter pub get
+
+      - name: 静态分析
+        run: flutter analyze
+
+      # 跳过 golden：那三张基线是在 Windows 上生成的，Ubuntu 的字体与图形栈
+      # 不同，渲染出的像素必然有差异 —— 直接在 CI 上比对会「红得没有意义」。
+      # 本地（Windows）跑全量时它们照常执行，视觉回归仍能抓到。
+      # 详见 test/settings_golden_test.dart 的头部说明。
+      - name: 单元与组件测试（排除 Windows 生成的 golden 基线）
+        run: flutter test --exclude-tags golden
+
+  node:
+    name: Node（服务端 + pi 插件）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 刻意不跑 npm install：
+      #   · server/node_modules 在开发机上是**指向 pi 安装目录的软链接**
+      #     （复用已装的 pi，避免重复下载 427MB），CI 机器上并不存在；
+      #   · 而测试本身只 import node: 内置模块（node:test / node:assert /
+      #     node:fs …）与被测的本地模块，不依赖任何第三方包。
+      # 所以 install 那一步既不需要，跑起来反而会因缺少 pi 而失败。
+      - name: 服务端测试
+        run: cd server && node --test test/*.test.mjs
+
+      - name: pi 插件测试
+        run: node --test pi-plugin/test/ctl-status.test.mjs
