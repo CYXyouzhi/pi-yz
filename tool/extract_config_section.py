@@ -25,7 +25,13 @@ lines = PAGE.read_text(encoding='utf-8').split('\n')
 # ---- 1) 边界：本分组的 _section 到下一个分组的 _section ----
 start = next(i for i, l in enumerate(lines) if f"I18n.t('{KEY}'" in l and '_section(' in l)
 nxt = [i for i in range(start + 1, len(lines)) if '_section(' in lines[i] and 'I18n.t(' in lines[i]]
-end = nxt[0] if nxt else next(i for i, l in enumerate(lines) if re.match(r'^  (?:Widget|Future|void|bool|String) ', l))
+if nxt:
+    end = nxt[0]
+else:
+    # 最后一个分组：后面没有 _section 了，改用 build 里 children 的收尾作边界。
+    # 注意别退回「找方法定义」—— 那会撞出负数区间（踩过）。
+    end = next(i for i in range(start + 1, len(lines))
+               if re.match(r'^\s{8,12}\],\s*$', lines[i]))
 body = lines[start:end]
 while body and body[-1].strip() == '':
     body.pop()

@@ -28,7 +28,7 @@
 |---|---|---|
 | `lib/server/server_types.dart` | 1268 | ✅ 完成 |
 | `lib/ui/server/settings_page.dart` | 1472 | ✅ 875 行（8 个分组抽了 7 个；「外观」未能抽出，原因见「踩过的坑⑤」）|
-| `lib/ui/server/config_page.dart` | 1307 | ⬜ 未开始 |
+| `lib/ui/server/config_page.dart` | 1307 | ✅ 811 行（6 个分组抽了 5 个；MCP 分组未抽）|
 | `lib/ui/server/files_page.dart` | 1059 | ⬜ 未开始 |
 | `lib/ui/server/sessions_page.dart` | 1316 | ⬜ 未开始 |
 | `lib/ui/server/conn_page.dart` | 1300 | ⬜ 未开始 |
@@ -166,6 +166,26 @@ bash heredoc 被吃掉转义 —— 都浪费了一轮。
 · **同一个操作失败两次以上就该换方法** —— 这次试了四次，浪费很多轮次。
 · 失败时及时 `git checkout` 回到干净点，比在现场修补更省事
   （我修补过两次，都越修越乱）。
+
+**⑥ 用脚本抽分组：能用，但要挑对象**
+
+为配置页写了 `tool/extract_config_section.py`（自动推导参数 + 替换调用点），
+确实省了打字 —— 5 个分组抽完，文件从 1307 降到 811 行。但它的失效边界很清楚：
+
+  · **最后一个分组**不能抽 —— 它后面没有下一个 `_section` 可作终点，
+    脚本的兜底逻辑撞出负数区间，产出空文件（第一次跑 MCP 分组就是这样）。
+  · 改成用「children 的收尾」兜底后能跑，但**含嵌套子分组或回调较多**时
+    又会把边界算偏，产出结构错误的文件（第二次跑 MCP，报 expected_class_member）。
+  · 方法**引用**（`onTap: _loginProvider,` 不带括号）不会被 `_foo(` 替换命中 ——
+    改了三轮才发现。
+  · 生成的字段声明**漏类型**，analyze 会报几十条 info 级问题
+    （strict_top_level_inference + 在 dynamic 上访问成员）。
+
+**结论**：这类脚本适合「单个、无嵌套、回调少」的分组；碰到嵌套或最后一个分组，
+**手工搬更快**。而且跑完必须逐项核对（实参名、回调、类型、import），
+analyze 干净之前都不算完成。
+
+**两次失败都及时 checkout 回退了** —— 这比在现场修补省事得多（修补过一次，越修越乱）。
 
 **结果**：`settings_page.dart` 停在 **875 行**（原 1472，减 597 行 / 40%），未达 800 目标。
 差的就是「外观」这 367 行。它仍作为整体留在页面里 —— 至少是**自洽**的
