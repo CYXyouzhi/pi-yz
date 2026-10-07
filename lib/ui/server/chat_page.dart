@@ -244,50 +244,10 @@ class _ServerChatPageState extends State<ServerChatPage> {
         _uiDialogOpen = false;
         return;
       }
-      await _showUiDialog(request);
+      await showUiDialog(context, _store, request);
       _uiDialogOpen = false;
       _maybeShowUiDialog(); // 可能还排着下一个
     });
-  }
-
-  Future<void> _showUiDialog(UiRequest request) async {
-    switch (request.method) {
-      case 'select':
-        final picked = await askSelect(context, request);
-        await _store.respondUi(
-          request.id,
-          picked == null ? {'cancelled': true} : {'value': picked},
-        );
-      case 'confirm':
-        final confirmed = await askConfirm(context, request);
-        await _store.respondUi(
-          request.id,
-          confirmed == null ? {'cancelled': true} : {'confirmed': confirmed},
-        );
-      case 'input':
-        final text = await askText(context, 
-          title: request.title ?? I18n.t('common.input'),
-          placeholder: request.placeholder,
-          multiline: false,
-        );
-        await _store.respondUi(
-          request.id,
-          text == null ? {'cancelled': true} : {'value': text},
-        );
-      case 'editor':
-        final text = await askText(context, 
-          title: request.title ?? I18n.t('ui.95b351c862'),
-          prefill: request.prefill,
-          multiline: true,
-        );
-        await _store.respondUi(
-          request.id,
-          text == null ? {'cancelled': true} : {'value': text},
-        );
-      default:
-        // 未知类型直接取消：宁可扩展提前退出，也不要它干等
-        await _store.respondUi(request.id, {'cancelled': true});
-    }
   }
 
   /// 选择：底部面板列表（手机上比中间弹窗好点）
