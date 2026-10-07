@@ -1,35 +1,118 @@
 # pi-yz
 
-把电脑上 [pi](https://github.com/earendil-works/pi) 的能力搬到手机。
+在手机上用你电脑上的 pi。
 
-手机端是**显示器 + 键盘**，pi 始终跑在你的电脑上 —— 所以 pi 的功能（斜杠命令、
-扩展、分支树、主题）**自动完整可用**，客户端不需要逐个适配。
+手机当显示器和键盘，pi 始终跑在电脑上。浏览器里能做的事它都能做——斜杠命令、
+扩展、分支树、主题——因为这些能力本来就在 pi 里，客户端不需要为每个功能单独适配。
 
 ```
-┌──────────────────┐   HTTP + SSE    ┌────────────────────┐
-│  Flutter 客户端   │ ──────────────▶ │  Node 服务端        │
-│  （显示器+键盘）   │ ◀────────────── │  把 pi SDK 包成 HTTP │
-└──────────────────┘                 └─────────┬──────────┘
-                                               │ 进程内调用
-                                        ┌──────▼──────┐
-                                        │  pi 的      │
-                                        │ AgentSession│
-                                        └─────────────┘
+   手机 App              电脑
+┌──────────────┐    HTTP    ┌─────────────────┐
+│ Flutter 客户端 │ ─────────▶ │ Node 服务端      │
+│ 约 2.5 万行    │ ◀───────── │ 约 5 千行        │
+└──────────────┘    SSE     └────────┬────────┘
+                                     │ 进程内调用
+                              ┌──────▼──────┐
+                              │ pi 的        │
+                              │ AgentSession │
+                              └─────────────┘
 ```
 
-## 组成
+## 目录
 
-| 目录 | 是什么 |
-|---|---|
-| `lib/` | Flutter 客户端（约 2.4 万行 Dart） |
-| `server/` | Node 服务端（约 5.8 千行 JS）：把 pi 的 SDK 包成 HTTP + SSE |
-| `pi-plugin/` | 配套的 pi 扩展 |
-| `docs/verify/` | 每一处改动的验证证据（截图、量测脚本、门禁输出） |
-| `tool/` | 开发脚本（设备交互、门禁、i18n 审计） |
+```
+lib/          Flutter 客户端。ui/ 是界面，server/ 是通信与状态
+server/       Node 服务端。把 pi 的 SDK 包成 HTTP + SSE
+pi-plugin/    两个 pi 扩展：/yz（起服务端）、额度兜底
+docs/         verify/ 是每轮改动的验证证据，audit/ 是质量体检清单
+tool/         开发脚本（模拟器、截图、i18n 审计、门禁）
+test/         Flutter 测试
+```
+
+## 跑起来
+
+需要电脑上已经装了 pi。
+
+最省事的办法是在 pi 里敲：
+
+```
+/yz
+```
+
+它会拉起服务端，并把手机上要填的三样东西打在屏幕上。
+
+不想开 pi 也可以，有个独立的命令行入口：
+
+```bash
+pi-yz              # 后台起服务，同样打印地址和 token
+pi-yz status       # 看状态
+pi-yz stop         # 停
+pi-yz doctor       # 自检
+```
+
+`pi-yz` 是个转发脚本，实现在 `pi-plugin/bin/pi-yz.mjs`，跟 `/yz` 共用同一份
+进程控制逻辑（`pi-plugin/lib/ctl.mjs`）——两边各写一套的话，"命令行说在跑、
+pi 里说没跑"这类分歧迟早会出现。
+
+再不行就手动起：
+
+```bash
+cd server && node index.mjs --host 0.0.0.0
+```
+
+服务端会打印一个脱敏的 token，完整值在 `server/.token`（自动生成，重启复用，
+已在 `.gitignore` 里）。手机 App 里填地址、端口、token 就能连。
+
+装 App：
+
+```bash
+flutter build apk --release
+```
+
+## 关于安全
+
+得说清楚：这个服务端能在你电脑上执行命令、读写文件。**它等同于一把你电脑的钥匙。**
+
+默认配置是保守的：
+
+- 服务端默认只监听 `127.0.0.1`。要局域网访问必须显式加 `--host 0.0.0.0`
+- token 是首次启动生成的 192 位随机值，存在 `.token` 里，重启不变（否则手机每次都要重配）
+- token 不进局域网广播——广播整个局域网都能收到，那等于公开
+- 配对码 6 位、只开 5 分钟、用过即废。单 IP 失败 5 次冷却 60 秒，全局失败 20 次直接关窗
+- 不信任 `X-Forwarded-For`（这个头客户端能随便写，信它等于给爆破的人一把换 IP 的钥匙）
+
+局域网直连是**明文 HTTP**，所以：
+
+- 别把这个端口暴露到公网
+- 出门在外建议用 VPN（Tailscale 这类，WireGuard 端到端加密、地址固定、自动重连），
+  而不是开公共隧道——公共隧道的 TLS 在第三方边缘就终止了，内容对它可见
+- 客户端支持备用地址：主地址填局域网 IP、备用填 VPN IP，出门自动切
+
+## 开发
+
+```bash
+flutter analyze                            # 期望 0 issue
+flutter test                               # 169 个用例（含 3 个 golden 基线）
+flutter test --exclude-tags golden         # 166 个，跳过 golden
+cd server && node --test test/*.test.mjs   # 20 个
+node --test pi-plugin/test/ctl-status.test.mjs  # 7 个
+```
+
+推送到 `main` 或发 PR 时，GitHub Actions 会自动跑上面这几条（见
+`.github/workflows/ci.yml`）。CI 跳过 golden——那三张基线是在 Windows 上生成的，
+Ubuntu 的字体和图形栈不同，比出来的差异没有意义。golden 在本地跑。
+
+golden 和普通断言测试分工不同：断言回答"布局有没有爆"（溢出会抛异常），
+golden 回答"样子变了没有"（颜色、间距、层级）。两者都要有——把一个卡片
+提到顶层后它在 360dp 下摘要换行、比旁边高出一截，那属于"没溢出但变了"，
+断言全绿，是看图才发现的。
+
+`docs/verify/` 里每轮改动都留了截图、量测脚本、门禁原始输出，以及**没解决的问题**
+（比如没定位成功的 ANR、没被证伪的手势冲突——都写在文档里，不藏）。
 
 ## 服务端怎么用上 pi
 
-服务端**不是 pi 的一部分**，而是一个独立进程，把 pi 当**库**来用：
+服务端不是 pi 的一部分，它把 pi 当库调用：
 
 ```js
 import { createAgentSession, SessionManager } from '@earendil-works/pi-coding-agent';
@@ -39,65 +122,18 @@ const { session } = await createAgentSession({ sessionManager, cwd });
 session.subscribe((event) => { /* 裁剪后经 SSE 推给手机 */ });
 ```
 
-依赖通过 `server/node_modules` 软链接指向你本机已装的 pi，**不重复下载**。
-详见 [`docs/verify/remote-access/`](docs/verify/remote-access/)（连同 token 与隧道的说明）。
+`server/node_modules` 是指向本机 pi 安装目录的软链接，不重复下载。
 
-## 快速开始
+pi 的事件流很大——一次 `ls` 对话原始 296 KB，裁剪后约 30 KB。裁剪在服务端做
+（`server/lib/wire.mjs`，六条规则，每条都有实测数字），客户端不用管。
 
-**1. 启动服务端**（需要本机已装 pi）
+## 状态
 
-```bash
-cd server
-node index.mjs --host 0.0.0.0
-```
+能用。但有几处已知不够好：
 
-首次启动会打印监听地址与一个**脱敏**的 token；完整值在 `server/.token`
-（自动生成、重启复用，已在 `.gitignore` 里）。想看完整值：`type .token`（Windows）。
-
-**2. 装客户端**
-
-```bash
-flutter build apk --release     # 或 flutter run
-```
-
-**3. 在 App 里连**：填「地址 + 端口 + token」。局域网直接填电脑的局域网 IP。
-
-## 安全
-
-这个服务端能执行命令、读写文件 —— **它就是你电脑上 pi 的一把钥匙**。默认配置是保守的：
-
-| 机制 | 说明 |
-|---|---|
-| 默认只监听 `127.0.0.1` | 要局域网访问必须显式加 `--host 0.0.0.0` |
-| token 强随机 | 首次启动生成 192 bit 随机值，存在 `.token`，**不随重启变化** |
-| token 校验 | 常量时间比较；日志只打脱敏值 |
-| 配对码 | 6 位码 + 5 分钟窗口 + 一次性；**单 IP 失败 5 次冷却 60 秒，全局失败 20 次立即关窗** |
-| 不做反向代理信任 | 不读 `X-Forwarded-For`（那个头客户端能随便写，信它等于给爆破者一把换 IP 的钥匙）|
-
-**传输注意**：局域网直连是**明文 HTTP**。所以：
-
-- **不要把这个端口暴露到公网**；
-- 出门在外建议用 **VPN**（如 Tailscale —— WireGuard 端到端加密、地址固定、自动重连），
-  而不是开公共隧道（公共隧道的 TLS 在第三方边缘终止，内容对它可见）；
-- 客户端支持**备用地址回落**：主地址填局域网 IP、备用填 VPN IP，出门自动切换。
-
-## 开发
-
-```bash
-flutter test                       # 132 个用例
-flutter analyze                    # 期望 0 issue
-cd server && node --test test/*.test.mjs   # 20 个用例
-```
-
-两道脚本门禁（放在 `tool/`）：
-
-| 脚本 | 作用 |
-|---|---|
-| `evidence_freshness.py` | 截图必须晚于 APK、APK 必须晚于源码 —— 防止拿旧构建的截图当新改动的证据 |
-| `touch_targets.py` | 带图标的可点控件不得小于 40dp |
-
-`docs/verify/` 里每一轮改动都留下了：截图、量测脚本、门禁原始输出、以及**已知问题与未解决项**
-（包括没有定位成功的 ANR、没有被证伪的手势冲突 —— 都写在文档里，不藏）。
+- `chat_page.dart` 还有 3374 行，是最大的一块
+- `docs/verify/` 里的记录改过名，早先的原始证据已不存在
+- 平板、横屏、320dp 老机型没验证过，只覆盖 360~450dp 竖屏
 
 ## 许可
 
