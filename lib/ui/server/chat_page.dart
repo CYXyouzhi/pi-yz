@@ -1363,7 +1363,7 @@ class _ServerChatPageState extends State<ServerChatPage> {
                     _buildModelChip(t, chat),
                     if (chat.isRunning) ...[
                       const SizedBox(width: NeuSpace.n6),
-                      _buildLiveSpeed(t),
+                      LiveSpeed(store: _store, runStartedAt: _runStartedAt),
                     ],
                   ],
                 ),
@@ -1436,27 +1436,6 @@ class _ServerChatPageState extends State<ServerChatPage> {
   ///
   /// 明确标「落盘」：流式途中还没落盘时，这里显示的是**上一轮**的值，
   /// 不假装它是实时的字符级速度。
-  Widget _buildLiveSpeed(NeuTokens t) {
-    final totals = _store.sessionUsage?.totals;
-    final speed = totals?.tokensPerSec;
-    final started = _runStartedAt;
-    final seconds = started == null
-        ? null
-        : DateTime.now().difference(started).inSeconds;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        NeuIcon(IconId.spinner, size: 11, color: t.accentInk),
-        const SizedBox(width: NeuSpace.n4),
-        Text(
-          '${speed == null ? '—' : '$speed'} tok/s'
-          '${seconds == null ? '' : ' · ${seconds}s'}',
-          style: TextStyle(fontSize: NeuFonts.micro, color: t.accentInk),
-        ),
-      ],
-    );
-  }
-
   /// 顶部的模型胶囊：一眼看出现在用的是哪个模型、属于哪个 provider，
   /// 点一下就能换（不必打 /model，也不用离开会话）。
   Widget _buildModelChip(NeuTokens t, ChatReducer chat) {

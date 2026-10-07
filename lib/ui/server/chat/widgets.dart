@@ -249,3 +249,34 @@ class ChatLoading extends StatelessWidget {
       );
   }
 }
+
+/// _buildLiveSpeed 的组件化版本。
+class LiveSpeed extends StatelessWidget {
+  const LiveSpeed({super.key, required this.store, required this.runStartedAt});
+
+  final ServerStore store;
+  final DateTime? runStartedAt;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.neu;
+    final totals = store.sessionUsage?.totals;
+      final speed = totals?.tokensPerSec;
+      final started = runStartedAt;
+      final seconds = started == null
+          ? null
+          : DateTime.now().difference(started).inSeconds;
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          NeuIcon(IconId.spinner, size: 11, color: t.accentInk),
+          const SizedBox(width: NeuSpace.n4),
+          Text(
+            '${speed == null ? '—' : '$speed'} tok/s'
+            '${seconds == null ? '' : ' · ${seconds}s'}',
+            style: TextStyle(fontSize: NeuFonts.micro, color: t.accentInk),
+          ),
+        ],
+      );
+  }
+}
