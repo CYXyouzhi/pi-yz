@@ -32,7 +32,7 @@
 | `lib/ui/server/files_page.dart` | 1059 | ✅ 645 行（6 个组件 + 2 个工具函数 + 2 个底部面板）|
 | `lib/ui/server/sessions_page.dart` | 1316 | ✅ 1103 行（5 个组件已抽；`_buildSessionRow`/`_buildGroup` 是雷区，不抽）|
 | `lib/ui/server/conn_page.dart` | 1300 | ✅ 1209 行（3 个组件已抽；`_remoteCard` 待手工加参数）|
-| `lib/ui/server/chat_page.dart` | 3374 | ✅ 2496 行（弹层 9 个 + 渲染块 4 个；余下待续）|
+| `lib/ui/server/chat_page.dart` | 3374 | ✅ 2395 行（减 29%；余下见文档）|
 | `lib/server/server_store.dart` | 1814 | 🚫 **不动**（「唯一状态源」是架构决策的载体，拆它等于动地基）|
 
 相关提交：`6138d6d`（server_types）、`8424632`（设置页共用件）
@@ -456,6 +456,30 @@ chat_page **3374 → 2740 行**（减 634 / 19%），新建 `chat/sheets.dart`�
 > 要么用 edit 工具（它不匹配就拒绝，不会静默改错）。
 
 五次里有四次都是「本可以避免」的 —— 名字在生成时取对就行，根本不用回头替换。
+
+**⑮ 关键突破：用脚本的 rename 代替全文件 replace**
+
+第 5 次「批量替换误伤」的**正解**找到了。
+
+**做法**：不做事后全文件 `replace`，改用**脚本自带的 rename 参数**。它有两个好处：
+
+1. **只作用于方法体** —— 根本不碰 import 行，所以 `server_store.dart` 不会被误伤；
+2. 用 `re.escape(a) + ` 词边界 —— `_store` 不会匹配到 `server_store` 里的那截。
+
+用这个做法，两个之前失败的目标**一次就过**：
+
+| 目标 | 行数 | 上一轮为什么失败 |
+|---|---|---|
+| `TurnFooter` + `FooterAction` | 40 + 21 | `replace('_store','store')` 把 import 路径 `server_store.dart` 改成了 `serverstore.dart`（16 个错）|
+| `PendingImages` | 52 | 内部两处 `setState` 要转成回调 |
+
+**内部逻辑的改动一律用 edit** —— 它要求精确匹配、不匹配就拒绝，不会静默改错地方。
+
+**本轮 chat_page**：2496 → **2395 行**（累计 3374 → 2395，减 979 / 29%）。
+
+**还有一条**：`chat.model` 这类**字段路径**不要用 `model` 去改（会命中 `chat.model`）
+—— 正确做法是**在生成组件时就把参数名设计对**（收 `chat` 而不是 `model`），
+压根不给事后替换的机会。
 
 **结果**：`settings_page.dart` 停在 **875 行**（原 1472，减 597 行 / 40%），未达 800 目标。
 差的就是「外观」这 367 行。它仍作为整体留在页面里 —— 至少是**自洽**的
