@@ -16,6 +16,7 @@ import '../../theme/design_tokens.dart';
 import '../../theme/neu.dart';
 import '../neu_icons.dart';
 import '../neu_toast.dart';
+import 'conn/widgets.dart';
 import 'diagnose_page.dart';
 import 'conn_edit_page.dart';
 
@@ -797,14 +798,22 @@ class _ServerConnPageState extends State<ServerConnPage> {
                     style: TextStyle(fontSize: NeuFonts.label, height: 1.7, color: t.onBgDim),
                   ),
                   SizedBox(height: NeuSpace.n6),
-                  _cmdRow(t, _cmdViaPi, I18n.t('common.command')),
+                  CmdRow(
+                    command: _cmdViaPi,
+                    label: I18n.t('common.command'),
+                    onCopy: _copy,
+                  ),
                   SizedBox(height: NeuSpace.n10),
                   Text(
                     I18n.t('ui.282652e49f'),
                     style: TextStyle(fontSize: NeuFonts.label, height: 1.7, color: t.onBgDim),
                   ),
                   SizedBox(height: NeuSpace.n6),
-                  _cmdRow(t, _cmdViaNode, I18n.t('common.command')),
+                  CmdRow(
+                    command: _cmdViaNode,
+                    label: I18n.t('common.command'),
+                    onCopy: _copy,
+                  ),
                   SizedBox(height: NeuSpace.n10),
                   Text(
                     // ignore: prefer_interpolation_to_compose_strings
@@ -856,26 +865,6 @@ class _ServerConnPageState extends State<ServerConnPage> {
   /// 下一帧再滚：`setState` 刚把折叠区展开，它的 `RenderObject` 要到下一帧
   /// 才布局完成，此时 `ensureVisible` 才能算出正确位置（立即调用会滚不到位）。
   /// 一行可复制的命令：整行都能点，免得手指戳不准那个小图标
-  Widget _cmdRow(NeuTokens t, String command, String label) {
-    return NeuPressable(
-      onTap: () => _copy(command, label),
-      radius: NeuRadii.sm,
-      padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              command,
-              style: TextStyle(fontSize: NeuFonts.sub, color: t.accentInk),
-            ),
-          ),
-          const SizedBox(width: NeuSpace.n8),
-          NeuIcon(IconId.copy, size: 14, color: t.muted),
-        ],
-      ),
-    );
-  }
-
   /// 把地址存成一条配置。
   ///
   /// [switchTo] = true 时存完立刻连过去（隧道那条路的语义 —— 用户开隧道
@@ -1092,9 +1081,17 @@ class _ServerConnPageState extends State<ServerConnPage> {
                 Text(I18n.t('remote.managedHint'),
                     style: TextStyle(fontSize: NeuFonts.label, color: t.muted)),
                 const SizedBox(height: NeuSpace.n6),
-                _tunnelOption(t, 'cloudflare'),
+                TunnelOption(
+                  value: 'cloudflare',
+                  current: _tunnelPref,
+                  onPick: (v) => setState(() => _tunnelPref = v),
+                ),
                 const SizedBox(height: NeuSpace.n4),
-                _tunnelOption(t, 'ssh'),
+                TunnelOption(
+                  value: 'ssh',
+                  current: _tunnelPref,
+                  onPick: (v) => setState(() => _tunnelPref = v),
+                ),
                 const SizedBox(height: NeuSpace.n10),
                 NeuPressable(
                   onTap: starting
@@ -1123,7 +1120,7 @@ class _ServerConnPageState extends State<ServerConnPage> {
               const SizedBox(height: NeuSpace.n12),
               Divider(height: 1, color: t.border),
               const SizedBox(height: NeuSpace.n10),
-              _ownToolSection(t),
+              OwnToolSection(ownRemote: _ownRemote, onSave: _saveOwnAddress),
               const SizedBox(height: NeuSpace.n10),
               GestureDetector(
                 onTap: () => setState(() => _showThreat = !_showThreat),
@@ -1166,100 +1163,12 @@ class _ServerConnPageState extends State<ServerConnPage> {
   ///
   /// 点整行就选中，而不是只让小圆点可点：圆点只有 14dp，手指够不着，
   /// 而这一行本来就该整行是目标。
-  Widget _tunnelOption(NeuTokens t, String value) {
-    final selected = _tunnelPref == value;
-    final isCf = value == 'cloudflare';
-    final label = I18n.t(isCf ? 'remote.optCloudflare' : 'remote.optSsh');
-    final hint = I18n.t(isCf ? 'remote.optCloudflareHint' : 'remote.optSshHint');
-    return NeuPressable(
-      onTap: () => setState(() => _tunnelPref = value),
-      radius: NeuRadii.sm,
-      // 选中 = 按进去（设计稿 .wsg-item.active 的那套语义）
-      flat: !selected,
-      alwaysInset: selected,
-      padding:
-          const EdgeInsets.symmetric(horizontal: NeuSpace.n10, vertical: NeuSpace.n10),
-      child: Row(
-        children: [
-          Container(
-            width: 14,
-            height: 14,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: selected ? t.accentInk : t.muted, width: 2),
-            ),
-            child: selected
-                ? Center(
-                    child: Container(
-                      width: 6,
-                      height: 6,
-                      decoration:
-                          BoxDecoration(shape: BoxShape.circle, color: t.accentInk),
-                    ),
-                  )
-                : null,
-          ),
-          const SizedBox(width: NeuSpace.n8),
-          // 名称不允许被压掉（它是选项的主信息），说明文字才让位
-          Text(label,
-              maxLines: 1,
-              style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.fg)),
-          const SizedBox(width: NeuSpace.n8),
-          Expanded(
-            child: Text(hint,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: NeuFonts.label, color: t.muted)),
-          ),
-        ],
-      ),
-    );
-  }
-
   /// 「用你自己的工具」：说明 + 地址输入 + 存成连接。
   ///
   /// 为何 App 不代管这类工具：Tailscale 是系统级 VPN，必须在电脑**和**手机
   /// 上各装一个、登录同一账号，App 装不了也点不了。所以这里只做两件事：
   /// 把「先装工具、再拿地址」的顺序讲清楚，以及把地址收下来 —— 地址又长又
   /// 随机，手拄进表单是常态性的失败来源。
-  Widget _ownToolSection(NeuTokens t) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(I18n.t('remote.ownTitle'),
-            style: TextStyle(
-                fontSize: NeuFonts.bodySmall,
-                fontWeight: FontWeight.w700,
-                color: t.fg)),
-        const SizedBox(height: NeuSpace.n2),
-        Text(I18n.t('remote.ownHint'),
-            style: TextStyle(fontSize: NeuFonts.label, height: 1.5, color: t.muted)),
-        const SizedBox(height: NeuSpace.n8),
-        TextField(
-          controller: _ownRemote,
-          style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.fg),
-          decoration: InputDecoration(
-            hintText: I18n.t('remote.ownPlaceholder'),
-            hintStyle: TextStyle(fontSize: NeuFonts.label, color: t.muted),
-            isDense: true,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(NeuRadii.sm)),
-          ),
-          onSubmitted: _saveOwnAddress,
-        ),
-        const SizedBox(height: NeuSpace.n8),
-        NeuPressable(
-          onTap: () => _saveOwnAddress(_ownRemote.text),
-          radius: NeuRadii.sm,
-          padding: EdgeInsets.symmetric(vertical: NeuSpace.n10),
-          child: Center(
-            child: Text(I18n.t('remote.ownSave'),
-                style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.accentInk)),
-          ),
-        ),
-      ],
-    );
-  }
-
   Future<void> _saveOwnAddress(String raw) async {
     final value = raw.trim();
     if (value.isEmpty) return;
