@@ -9,11 +9,12 @@ import 'package:flutter/material.dart';
 import '../collapsible_text.dart';
 
 import '../../server/chat_models.dart';
-import '../../server/chat_reducer.dart';
 import '../../server/i18n.dart';
 import '../../server/server_store.dart';
 import '../../server/server_types.dart';
 import '../neu_section.dart';
+import 'config/rows.dart';
+import 'config/widgets.dart';
 import '../../theme/design_tokens.dart';
 import '../../theme/neu.dart';
 import '../neu_icons.dart';
@@ -190,11 +191,11 @@ class _ConfigPageState extends State<ConfigPage> {
                 children: [
                   _dialogField(t, nameController, I18n.t('ui.5a47c238fb')),
                   SizedBox(height: NeuSpace.n12),
-                  _choiceRow(t, I18n.t('ui.4705b88497'), ['user', 'project'], scope, (value) {
+                  ChoiceRow(I18n.t('ui.4705b88497'), ['user', 'project'], scope, (value) {
                     setDialogState(() => scope = value);
                   }, labels: {'user': I18n.t('ui.7b79313922'), 'project': I18n.t('ui.98a5faeeaf')}),
                   SizedBox(height: NeuSpace.n12),
-                  _choiceRow(t, I18n.t('ui.226b091218'), ['stdio', 'http'], kind, (value) {
+                  ChoiceRow(I18n.t('ui.226b091218'), ['stdio', 'http'], kind, (value) {
                     setDialogState(() => kind = value);
                   }, labels: {'stdio': I18n.t('ui.904333d474'), 'http': I18n.t('ui.f40bb45c68')}),
                   SizedBox(height: NeuSpace.n12),
@@ -288,47 +289,6 @@ class _ConfigPageState extends State<ConfigPage> {
   }
 
   /// 一排二选一的 chips（作用域 / 类型）
-  Widget _choiceRow(
-    NeuTokens t,
-    String label,
-    List<String> values,
-    String current,
-    ValueChanged<String> onPick, {
-    Map<String, String> labels = const {},
-  }) {
-    return Row(
-      children: [
-        SizedBox(
-          width: 62,
-          child: Text(label, style: TextStyle(fontSize: NeuFonts.sub, color: t.muted)),
-        ),
-        Expanded(
-          child: Wrap(
-            spacing: 6,
-            children: [
-              for (final value in values)
-                NeuPressable(
-                  onTap: () => onPick(value),
-                  flat: current != value,
-                  alwaysInset: current == value,
-                  radius: NeuRadii.sm,
-                  padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n7),
-                  child: Text(
-                    labels[value] ?? value,
-                    style: TextStyle(
-                      fontSize: NeuFonts.small,
-                      color: current == value ? t.accentInk : t.muted,
-                      fontWeight: current == value ? FontWeight.w700 : FontWeight.w400,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
   Future<void> _removeCredential(String provider) async {
     final t = context.neu;
     final confirmed = await showDialog<bool>(
@@ -515,7 +475,7 @@ class _ConfigPageState extends State<ConfigPage> {
                       else ...[
                         for (final model in _models.take(40)) ...[
                           Container(height: 1, color: t.border),
-                          _modelRow(t, model, chat),
+                          ModelRow(model: model, chat: chat, store: _store),
                         ],
                         if (_models.length > 40)
                           Padding(
@@ -679,23 +639,19 @@ class _ConfigPageState extends State<ConfigPage> {
                   padding: EdgeInsets.all(NeuSpace.n6),
                   child: Column(
                     children: [
-                      _commandGroup(
-                        t,
-                        I18n.t('ui.699143b15a'),
-                        _store.commandsBySource('skill'),
+                      CommandGroup(isOpen: _isOpen, onOpen: _openGroup, title: I18n.t('ui.699143b15a'),
+                        items: _store.commandsBySource('skill'),
                         // 技能点开就能看 SKILL.md 全文 —— pi-web 里技能也是可查看的
                         onTapItem: _viewSkill,
                         tapHint: I18n.t('ui.9822a4f972'),
                       ),
-                      _commandGroup(
-                        t,
-                        I18n.t('ui.aecb607774'),
-                        _store.commandsBySource('extension'),
+                      CommandGroup(isOpen: _isOpen, onOpen: _openGroup, title: I18n.t('ui.aecb607774'),
+                        items: _store.commandsBySource('extension'),
                         // 扩展命令必须由会话启动时注册，没会话就取不到 ——
                         // 这里说清楚原因，别让人以为一个扩展都没装
                         emptyHint: _store.extensionCommandsAvailable ? I18n.t('ui.d81bb206a8') : I18n.t('ui.4d4a4242b1'),
                       ),
-                      _commandGroup(t, I18n.t('ui.f96de32b76'), _store.commandsBySource('builtin')),
+                      CommandGroup(isOpen: _isOpen, onOpen: _openGroup, title: I18n.t('ui.f96de32b76'), items: _store.commandsBySource('builtin')),
                     ],
                   ),
                 ),
@@ -951,171 +907,7 @@ class _ConfigPageState extends State<ConfigPage> {
     );
   }
 
-  Widget _modelRow(NeuTokens t, ModelInfo model, ChatReducer chat) {
-    final current = chat.model != null &&
-        chat.model!.provider == model.provider &&
-        chat.model!.id == model.id;
-    return NeuPressable(
-      flat: !current,
-      alwaysInset: current,
-      onTap: current
-          ? null
-          : () async {
-              if (_store.currentSessionId == null) {
-                NeuToast.show(context,
-                    message: I18n.t('ui.b35af26ccf'), icon: IconId.warn);
-                return;
-              }
-              await _store.setModel(model.provider, model.id);
-              if (!mounted) return;
-              NeuToast.show(context, message: I18n.tp('ui.8480b01bc7', {'name': model.name}), icon: IconId.check);
-            },
-      padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n10, vertical: NeuSpace.n10),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  model.name,
-                  // 模型名很长（DeepSeek V4.1 Flash Vision Exp），一行装不下
-                  maxLines: 2,
-                  // 注释里已经写了「模型名很长…一行装不下」，正是该给省略号的地方
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.fg),
-                ),
-                Text(
-                  '${I18n.tp('ui.b7077d029c', {
-                    'provider': model.provider,
-                    'window': model.contextWindow ?? '?',
-                  })}'
-                  '${model.reasoning ? I18n.t('ui.af181ac8b2') : ''}',
-                  style: TextStyle(fontSize: NeuFonts.micro, color: t.muted),
-                ),
-              ],
-            ),
-          ),
-          if (current) NeuIcon(IconId.check, size: 15, color: t.accentInk),
-        ],
-      ),
-    );
-  }
-
-  Widget _commandGroup(
-    NeuTokens t,
-    String title,
-    List<SlashCommand> items, {
-    // 默认参数值必须是常量，所以这里不能用 I18n.t；调用方传进来时再翻
-    String emptyHint = '', // 默认值必须是常量，空的在函数体内再翻（见 982 行）
-    void Function(SlashCommand item)? onTapItem,
-    String? tapHint,
-  }) {
-    // 子组也折叠：技能/扩展/内置三组各自都有几十条，全展开就是一屏垃圾
-    // （用户原话："技能与命令那里应该分类的一大堆在一起不美观"）。
-    final groupKey = title;
-    final groupOpen = _expanded.contains(groupKey);
-    if (items.isNotEmpty && !groupOpen) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n10, vertical: NeuSpace.n6),
-        child: NeuPressable(
-          flat: true,
-          onTap: () => setState(() => _expanded.add(groupKey)),
-          padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n10, vertical: NeuSpace.n10),
-          child: Row(
-            children: [
-              NeuIcon(IconId.chevronRight, size: 13, color: t.muted),
-              SizedBox(width: NeuSpace.n6),
-              Text('$title（${items.length}）',
-                  style: TextStyle(fontSize: NeuFonts.sub, color: t.accentInk)),
-            ],
-          ),
-        ),
-      );
-    }
-
-    if (items.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n10, vertical: NeuSpace.n10),
-        child: Row(
-          children: [
-            Text(title, style: TextStyle(fontSize: NeuFonts.sub, color: t.muted)),
-            Spacer(),
-            Text(emptyHint.isEmpty ? I18n.t('ui.b7612b71c0') : emptyHint,
-                style: TextStyle(fontSize: NeuFonts.badge, color: t.muted)),
-          ],
-        ),
-      );
-    }
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n10, vertical: NeuSpace.n8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text('$title（${items.length}）',
-                  style: TextStyle(fontSize: NeuFonts.sub, color: t.accentInk)),
-              if (tapHint != null) ...[
-                const Spacer(),
-                Text(tapHint, style: TextStyle(fontSize: NeuFonts.tiny, color: t.muted)),
-              ],
-            ],
-          ),
-          const SizedBox(height: NeuSpace.n6),
-          for (final item in items.take(12))
-            Padding(
-              padding: const EdgeInsets.only(bottom: NeuSpace.n3),
-              child: _commandRow(t, item, onTapItem),
-            ),
-          if (items.length > 12)
-            Text(I18n.tp('ui.9030449893', {'n': items.length - 12}),
-                style: TextStyle(fontSize: NeuFonts.micro, color: t.muted)),
-        ],
-      ),
-    );
-  }
-
   /// 一行命令/技能；可点时整行可点（技能就是靠这个点开 SKILL.md）
-  Widget _commandRow(NeuTokens t, SlashCommand item, void Function(SlashCommand)? onTap) {
-    final row = Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          // 140 太窄：/skill:impeccable-design-polish-… 这类长命令名会被截
-          width: 168,
-          child: Text(
-            '/${item.name}',
-            maxLines: 2,
-            // 原先靠把宽度从 140 加到 168 来避免截断 —— 名字再长一样会截，加省略号才是治本
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: NeuFonts.label, fontFamily: 'monospace', color: t.fg),
-          ),
-        ),
-        Expanded(
-          child: Text(
-            item.description ?? '',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: NeuFonts.badge, color: t.muted),
-          ),
-        ),
-        if (onTap != null) ...[
-          const SizedBox(width: NeuSpace.n6),
-          NeuIcon(IconId.chevronRight, size: 12, color: t.muted),
-        ],
-      ],
-    );
-    if (onTap == null) return row;
-    return NeuPressable(
-      onTap: () => onTap(item),
-      flat: true,
-      radius: NeuRadii.sm,
-      padding: const EdgeInsets.symmetric(vertical: NeuSpace.n2),
-      child: row,
-    );
-  }
-
   /// 看一个技能的内容：直接读它的 SKILL.md（路径由服务端在命令列表里给出）
   Future<void> _viewSkill(SlashCommand item) async {
     final path = item.sourcePath;
@@ -1196,7 +988,7 @@ class _ConfigPageState extends State<ConfigPage> {
               children: [
                 _dialogField(t, sourceController, I18n.t('ui.ae38520cd9')),
                 SizedBox(height: NeuSpace.n12),
-                _choiceRow(t, I18n.t('ui.df011658c3'), ['user', 'project'], local ? 'project' : 'user',
+                ChoiceRow(I18n.t('ui.df011658c3'), ['user', 'project'], local ? 'project' : 'user',
                     (value) => setDialogState(() => local = value == 'project'),
                     labels: {'user': I18n.t('ui.7b79313922'), 'project': I18n.t('ui.98a5faeeaf')}),
                 SizedBox(height: NeuSpace.n8),
@@ -1281,6 +1073,14 @@ class _ConfigPageState extends State<ConfigPage> {
   ///「pi 插件（10）」的计数一变标题就变，用标题当键会让展开状态凭空丢失；
   ///更糟的是内容判定若还按固定串写（原来是 `'plugins'`），两边永远对不上 ——
   ///点了箭头会翻转，但内容一个都不显示。
+  /// 某个分组是否展开 / 展开它 —— 给抽出去的组件用。
+  ///
+  /// 为什么只有「开」没有「关」：命令子组（技能/扩展/内置）点标题就是展开，
+  /// 收起由外层分组整体控制，所以只需要 add。
+  bool _isOpen(String key) => _expanded.contains(key);
+
+  void _openGroup(String key) => setState(() => _expanded.add(key));
+
   Widget _section(
     NeuTokens t,
     String title, {
@@ -1290,7 +1090,7 @@ class _ConfigPageState extends State<ConfigPage> {
   }) {
     final key = stateKey ?? title;
     final open = _expanded.contains(key);
-    return NeuSection(
+    return ConfigSection(
       title: title,
       icon: icon,
       summary: summary,
