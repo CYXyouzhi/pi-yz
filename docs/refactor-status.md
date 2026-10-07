@@ -32,7 +32,7 @@
 | `lib/ui/server/files_page.dart` | 1059 | ✅ 645 行（6 个组件 + 2 个工具函数 + 2 个底部面板）|
 | `lib/ui/server/sessions_page.dart` | 1316 | ✅ 1103 行（5 个组件已抽；`_buildSessionRow`/`_buildGroup` 是雷区，不抽）|
 | `lib/ui/server/conn_page.dart` | 1300 | ✅ 1209 行（3 个组件已抽；`_remoteCard` 待手工加参数）|
-| `lib/ui/server/chat_page.dart` | 3374 | 🚧 未开始（第一轮撞重名，已回退）|
+| `lib/ui/server/chat_page.dart` | 3374 | 🚧 3374 → 3237 行（4 个组件已抽；余下待续）|
 | `lib/server/server_store.dart` | 1814 | 🚫 **不动**（「唯一状态源」是架构决策的载体，拆它等于动地基）|
 
 相关提交：`6138d6d`（server_types）、`8424632`（设置页共用件）
@@ -322,6 +322,30 @@ saveOwnAddress / showThreat）与 3 处 setState，加参数时**又一次踩了
   · 抽之前 `grep -n "^class " lib/ui/server/*.dart | grep -i <组件名>` 确认不重名，
     重名的加前缀（如 `ChatActivityBar`）；
   · 参数不要猜：先按最小集生成，让 analyze 报「缺哪个」再补 —— 比先猜一组再改快。
+
+**⑩ chat_page 分批推进；批量替换第 4 次改错地方**
+
+**第一批成功**（已提交 `ea9f79a`）：`ChatActivityBar` / `LoadMoreRow` / `OfflineBanner` /
+`ChatEmptyState`，3374 → 3237 行。
+
+上一轮记的两条教训都奏效：
+  · **先查重名** —— grep 出所有 class 名，发现 `ActivityBar` 被 `activity_view.dart` 占用，
+    于是加 `Chat` 前缀。上一轮就是栽在这里。
+  · **参数按最小集** —— 只给 `store`（需要 `chat` 的两个再补），让 analyze 报缺什么再补。
+    上一轮猜一组来回三轮，这轮一次到位。
+
+**第二批失败**：`ChatLoading` / `LiveSpeed` / `ModelChip` 提取成功（降到 3111 行），
+但修 `ModelChip` 时用 `re.sub(r'model(?!Chip)', 'chat.model', ...)` 改引用，
+**把不该改的地方也改了**（`chat.model` 被改成 `chat.chat.model`），报 10 个错误。已回退。
+
+**这是同类错误第 4 次**（前三次在 settings / sessions / conn）。规律已经确定：
+
+> **批量替换（`str.replace` / `re.sub`）在有歧义的文件里一定会改错地方。
+> 唯一可靠的是 edit 工具 —— 它要求精确匹配，不匹配就拒绝。**
+
+**下一轮**：`ModelChip` 里 `model` → `chat.model` 的改动，用 edit 一次一处地做；
+之后继续 `_buildUndoBar` / `_buildPendingImages` / `_buildFileRefs` / `_buildSuggestions` /
+`_buildTurnFooter` / `_buildHeader` / `_buildComposer`。
 
 **结果**：`settings_page.dart` 停在 **875 行**（原 1472，减 597 行 / 40%），未达 800 目标。
 差的就是「外观」这 367 行。它仍作为整体留在页面里 —— 至少是**自洽**的
