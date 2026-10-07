@@ -27,7 +27,7 @@ t = p.read_text(encoding='utf-8').replace('\r\n', '\n')   # 坑 1
 lines = t.split('\n')
 
 BOUND = re.compile(
-    r'^  (?:///|@override|Widget |Future<|void |String |bool |int |static |IconId |List<|Map<|\w+Function)')
+    r'^  (?://|@override|Widget |Future<|void |String |bool |int |static |IconId |List<|Map<|\w+Function)')
 
 i = next(k for k, l in enumerate(lines)
          if re.match(r'^  (?:Widget|Future|void|String|bool|int) ' + METHOD + r'\(', l))

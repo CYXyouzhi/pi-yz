@@ -1083,7 +1083,7 @@ class _ServerChatPageState extends State<ServerChatPage> {
                 child: Stack(
                   children: [
                     if (_store.loadingSession && chat.messages.isEmpty)
-                      _buildLoading(t)
+                      ChatLoading(store: _store)
                     else if (_store.lastError != null && chat.messages.isEmpty)
                       // 会话没拉起来：说清楚 + 给一条重试的路
                       _buildLoadFailed(t)
@@ -2095,65 +2095,7 @@ class _ServerChatPageState extends State<ServerChatPage> {
   /// 「更早的 N 条未缓存」也要写出来，否则用户会以为消息被弄丢了。
   /// 会话没拉起来：错误文案 + 「重新载入」入口（复用加载态的失败样式）。
   /// 单独留一个方法，是为了让「失败」这个状态在代码里显式存在，不再被当成空会话。
-  Widget _buildLoadFailed(NeuTokens t) => _buildLoading(t);
-
-  Widget _buildLoading(NeuTokens t) {
-    final error = _store.errorMessage;
-    final failed = error != null && error.isNotEmpty;
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            NeuIcon(
-              failed ? IconId.warn : IconId.spinner,
-              size: 24,
-              color: failed ? t.danger : t.accentInk,
-            ),
-            SizedBox(height: NeuSpace.n12),
-            Text(
-              failed ? error : I18n.t('ui.d8999cf874'),
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: NeuFonts.bodySmall,
-                height: 1.6,
-                color: failed ? t.danger : t.onBgDim,
-              ),
-            ),
-            if (failed) ...[
-              const SizedBox(height: NeuSpace.n14),
-              NeuPressable(
-                onTap: () async {
-                  // 先补连接：断线时 store 没客户端，直接重载只会再失败一次
-                  await _store.ensureConnected();
-                  final id = _store.currentSessionId;
-                  if (id != null) await _store.openSession(id);
-                },
-                radius: 14,
-                padding: const EdgeInsets.symmetric(
-                  // 触控目标：14 + 13×2 = 40dp（原来 vertical n9 只有 32dp）
-                  horizontal: NeuSpace.n18,
-                  vertical: NeuSpace.n13,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    NeuIcon(IconId.sync, size: 14, color: t.accentInk),
-                    SizedBox(width: NeuSpace.n6),
-                    Text(
-                      I18n.t('ui.421b536739'),
-                      style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.accentInk),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
+  Widget _buildLoadFailed(NeuTokens t) => ChatLoading(store: _store);
 
   /// 会话信息 + 分支树。
   ///
