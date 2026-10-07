@@ -38,7 +38,7 @@
 
 - **现状**：`verifyPairingCode` 没有"失败 N 次就锁定"。
 - **已具备的防护**：
-  - 配对窗口默认只开 **5 分钟**（`pi-mobile server pair` 或重启时自动开）；
+  - 配对窗口默认只开 **5 分钟**（`pi-yz server pair` 或重启时自动开）；
   - 比对用**常量时间**（`diff |= given.charCodeAt(i) ^ state.code.charCodeAt(i)`），不泄漏逐位信息；
   - 配对**成功后立即关窗**（`closePairingWindow()`），即一次配对码只能用一次；
   - 窗口关闭后直接拒绝并给出可操作提示。
@@ -66,7 +66,7 @@
 ## 四、复现命令
 
 ```bash
-cd pi-mobile
+cd pi-yz
 # 服务端测试（10 项）
 cd server && node --test test/*.test.mjs
 

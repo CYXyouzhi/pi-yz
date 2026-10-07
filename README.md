@@ -1,4 +1,4 @@
-# pi-mobile
+# pi-yz
 
 把电脑上 [pi](https://github.com/earendil-works/pi) 的能力搬到手机。
 

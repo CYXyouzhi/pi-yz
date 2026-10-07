@@ -40,7 +40,7 @@
  "扫到 ${list.length} 台，点一下就能配对": "Found {n} — tap to pair",
  "配对成功（pi ${server.piVersion}）": "Paired (pi {version})",
  "目标：${server.name}（${server.endpoint} · pi ${server.piVersion}）": "Target: {name} ({endpoint} · pi {version})",
- "填写 pi-mobile-server 的地址与 token": "Enter the pi-mobile-server address and token",
+ "填写 pi-yz-server 的地址与 token": "Enter the pi-yz-server address and token",
  "服务端启动时打印的 token": "The token printed when the server starts",
  "并在终端打印手机该填的地址与 token。": "and prints the address and token for your phone.",
  "终端里那行「配对码」填进去即可，不用手动复制 token。": "Just enter the “pairing code” from the terminal — no need to copy the token.",

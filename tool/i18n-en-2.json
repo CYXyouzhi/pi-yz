@@ -48,7 +48,7 @@
  "新会话默认模型": "Default model for new sessions",
  "新分支名（留空则 detached HEAD）": "New branch name (empty = detached HEAD)",
  "方式一（推荐）：在电脑的 pi 里输入下面这行 —— 服务在后台跑，": "Option 1 (recommended): type this in pi on your computer — the server runs in background,",
- "方式二：在 pi-mobile 目录里直接跑（前台运行，Ctrl+C 停止）": "Option 2: run it directly inside the pi-mobile directory (foreground, Ctrl+C to stop)",
+ "方式二：在 pi-yz 目录里直接跑（前台运行，Ctrl+C 停止）": "Option 2: run it directly inside the pi-yz directory (foreground, Ctrl+C to stop)",
  "有一步需要你拍板": "One step needs your call",
  "服务端上的会话与配置不受影响。": "Sessions and settings on the server are unaffected.",
  "服务端返回异常": "Server returned an error",

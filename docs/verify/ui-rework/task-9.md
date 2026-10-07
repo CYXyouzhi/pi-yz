@@ -12,7 +12,7 @@
 | ⑥ | 继续 / 再来一次 | ✅ | 输入框上方常驻两个按钮（截图中可见）；点「继续」后落盘新增一条 `user: 继续`（会话 JSONL 第 36 条，21:57:12） |
 | ⑦ | 新建会话模板 | ✅ | `new-session-template.png`（长按「新会话」→「用哪句开场？」列表，模板复用输入区 ＋ 菜单里存的那份）+ `workspace-picker.png`（选中模板后进入工作区选择） |
 | ⑧ | 本轮改动速览（哪些文件、增删多少行） | ✅ | `turn-changes.png`：`本轮改动 1 个文件 +10/-0` + 文件路径 + `+10/-0 · 整文件写入 1` + 口径说明。数字与落盘对得上：那次 `write` 的 content 正好 10 行，文件 `wc -l` = 10 |
-| ⑨ | 图片长按保存到相册 | ✅ | `save-image.png` + 机器证据：`/sdcard/Pictures/pi-mobile/pi-1791063626747.png`（用 `ls` 查到文件真的落盘） |
+| ⑨ | 图片长按保存到相册 | ✅ | `save-image.png` + 机器证据：`/sdcard/Pictures/pi-yz/pi-1791063626747.png`（用 `ls` 查到文件真的落盘） |
 | ⑩ | 会话片段分享（系统分享面板） | ✅ | `system-share.png`：Android 分享面板被拉起（显示「没有应用可执行此操作。」—— MuMu 里没装任何可接收分享的应用，是环境事实，不是 App 的问题）。另在消息菜单与聊天页头部各有一个分享入口 |
 
 ## 这轮加的代码
@@ -64,6 +64,6 @@ App     lib/server/native_bridge.dart     分享 / 存相册（自写 MethodChan
 ## 测试期间产生的东西
 
 - `docs/verify/ui-rework/task-9-notes.md`：验证 ⑧ 时让远端 agent 写的小文件，留作证据。
-- `/sdcard/Pictures/pi-mobile/` 下多了一张验证用的图（⑨ 的产物）。
+- `/sdcard/Pictures/pi-yz/` 下多了一张验证用的图（⑨ 的产物）。
 - 会话 `01a0fe1f` 里多了几条测试消息（「create docs/…」「继续」）。
 - 临时调试用的 `[access]` / turn-summary 日志已从 `server/index.mjs` 清掉，服务已重启。

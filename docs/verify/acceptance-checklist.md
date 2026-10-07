@@ -1,4 +1,4 @@
-# pi-mobile 验收清单（task-7 回归）
+# pi-yz 验收清单（task-7 回归）
 
 验收方式：MuMu 模拟器（Android 15 / 1080×1920 / density 480）+ ADB（逻辑 display id 输入、物理 token 截图）
 证据目录：`docs/verify/`（文件名对应下表「证据」列）
@@ -231,7 +231,7 @@ POST /api/sessions/:id/export                  → 落盘 HTML + JSONL 到会话
 | 项 | 结果 | 证据 |
 |---|---|---|
 | App 内导出页（预览 / 复制全文 / 存到手机 / 导出到服务端） | ✅ | t18-export-preview（Markdown 预览：会话 ID、工作区、模型、时间、消息数、tokens + 逐条消息带用量） |
-| 存到手机 | ✅ | t18-export-saved（提示路径）＋ `adb shell` 复核：`/data/user/0/com.youzhi.pimobile.pi_mobile/app_flutter/pi-exports/Reply with exactly_ alpha-01a1003c.md`，637 字节，内容正确 |
+| 存到手机 | ✅ | t18-export-saved（提示路径）＋ `adb shell` 复核：`/data/user/0/com.youzhi.piyz.pi_yz/app_flutter/pi-exports/Reply with exactly_ alpha-01a1003c.md`，637 字节，内容正确 |
 | 导出到服务端（HTML + JSONL） | ✅ | t18-export-server（两个路径都显示、可点复制）＋ 磁盘复核：425KB HTML、58KB JSONL 落在会话目录 |
 | 会话信息里显示用量 | ✅ | t18-usage：上下文 1.5% · 14.6k / 1.00M、tokens 合计 29.1k（输入/输出/缓存读/缓存写）、花费 $0.0001、条目统计、自动压缩开关 |
 
@@ -410,7 +410,7 @@ POST /api/logout             {provider} 退出登录
 
 | # | 审计意见 | 整改 | 证据 |
 |---|---|---|---|
-| 23.1 | **后台保活没实现**（用户点名的能力）：Manifest 只有 `POST_NOTIFICATIONS`，无前台服务，无 `startForeground`；文档自己写着"后台不保活" | 真的加了 Android **前台服务** `KeepAliveService`（常驻通知 IMPORTANCE_MIN + `PARTIAL_WAKE_LOCK` + `WifiLock(HIGH_PERF)`，`START_STICKY`），Manifest 补 3 个权限与 service 声明，MainActivity 加三个 channel 方法，App 侧 `NativeBridge` + AppPrefs 开关 + 连接后自动开 + 设置页「后台」分组 | `ui-rework/task-23/07-keepalive-and-cleanup.txt`：`isForeground=true foregroundId=9901`、常驻通知标题「pi-mobile 正在保持连接」；**按 HOME 退到后台后** ServiceRecord 与进程都仍在（状态 `S`） |
+| 23.1 | **后台保活没实现**（用户点名的能力）：Manifest 只有 `POST_NOTIFICATIONS`，无前台服务，无 `startForeground`；文档自己写着"后台不保活" | 真的加了 Android **前台服务** `KeepAliveService`（常驻通知 IMPORTANCE_MIN + `PARTIAL_WAKE_LOCK` + `WifiLock(HIGH_PERF)`，`START_STICKY`），Manifest 补 3 个权限与 service 声明，MainActivity 加三个 channel 方法，App 侧 `NativeBridge` + AppPrefs 开关 + 连接后自动开 + 设置页「后台」分组 | `ui-rework/task-23/07-keepalive-and-cleanup.txt`：`isForeground=true foregroundId=9901`、常驻通知标题「pi-yz 正在保持连接」；**按 HOME 退到后台后** ServiceRecord 与进程都仍在（状态 `S`） |
 | 23.2 | **「死代码 0」被矛盾**：`main.dart:317` 的 `_SessionTab` 从未被引用，通过它挂着 ~3194 行 SSH/RPC 时代子系统 | 删掉那 8 个文件 + `main.dart` 的 `_SessionTab`/`_SessionRow` + 3 个旧 import | `lib/` **25690 → 22496 行（−3194）**；复扫未引用顶层类 **0**；`// ignore: unused_element` **0** |
 | 23.3 | **文件页（五大界面之一）没有重做**，只写"本轮复核" | 面包屑改成可点分段；图标按类型（目录/文档/图片/代码）；行高 10→13 | `lib/ui/server/files_page.dart` 的 `_breadcrumb` / `_iconForEntry` |
 | 23.4 | **中英切换只覆盖主干**：16 个页面里 12 个无 i18n | **四批共 506 条**词条（135 高频 UI 词 + 109 短句元素 + 92 模板串/补漏 + 170 收尾），替换 **570 处**；新增覆盖率脚本；`I18n.tp(key, {...})` 支持带参数文案 | 覆盖率 **15.6% → 92.8%**（`task-23/06-i18n-coverage.txt`）；实机 `04-language-en.png`、`08-language-en-chat.png`、`09-language-en-usage.png`（`Total tokens / Cache read / Cache hit rate / Average generation speed`）、`10-language-en-chat.png`（`Call` / `No tool calls this turn`） |

@@ -44,7 +44,7 @@ App   lib/server/server_types.dart   RemoteState（status/url/error/provider/thr
 
 ## 复现步骤（MuMu 上自己再看一遍）
 
-1. 电脑：`cd pi-mobile/server && node index.mjs --host 0.0.0.0 --token <你的token> --tunnel`，等 5~20 秒，日志出现 `[tunnel] 远程入口已就绪(cloudflare): https://xxx.trycloudflare.com`。
+1. 电脑：`cd pi-yz/server && node index.mjs --host 0.0.0.0 --token <你的token> --tunnel`，等 5~20 秒，日志出现 `[tunnel] 远程入口已就绪(cloudflare): https://xxx.trycloudflare.com`。
 2. 手机：设置 → 连接 → 顶部「远程访问」卡片显示「已开启 · Cloudflare 隧道」+ 地址 → 点「用这个地址连」，toast 提示「已通过公网连上」。
 3. 回开始页：连接卡上是 `https://xxx.trycloudflare.com`、「已连接」、能看到会话列表。
 4. 随便进一条会话发一句话 —— 这次请求走的是公网（可在电脑上对照会话 JSONL 的时间戳）。

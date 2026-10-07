@@ -35,7 +35,7 @@
 | `lib/main_preview.dart` | 87 | 预览入口 |
 | `lib/services/storage_service.dart` | 48 | SSH 主机本地存储，只有 debug_page 在用 |
 
-删除前整包备份：`/tmp/pi-mobile-dead-code-20261003.tar.gz`（44KB）。
+删除前整包备份：`/tmp/pi-yz-dead-code-20261003.tar.gz`（44KB）。
 
 ### 保留了哪个（1 个，541 行）
 

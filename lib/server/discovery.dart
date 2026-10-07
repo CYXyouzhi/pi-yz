@@ -99,7 +99,7 @@ class LanDiscovery {
       InternetAddress('127.0.0.1'),
     ];
 
-    final payload = utf8.encode('PI_MOBILE_DISCOVER $discoveryPort');
+    final payload = utf8.encode('PI_YZ_DISCOVER $discoveryPort');
     for (final target in targets) {
       try {
         socket.send(payload, target, discoveryPort);

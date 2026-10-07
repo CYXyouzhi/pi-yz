@@ -4,7 +4,7 @@
 // 不需要启动一个模型就能验证「起得来、停得掉、状态读得到」。
 
 import { spawn } from 'node:child_process';
-import { existsSync, readFileSync, writeFileSync, mkdirSync, openSync, rmSync, renameSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync, mkdirSync, openSync, rmSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { homedir, networkInterfaces } from 'node:os';
 
@@ -16,36 +16,6 @@ export const STATE_PATH = process.env.PI_YZ_STATE_PATH
   ?? join(homedir(), '.pi', 'agent', 'pi-yz-server.pid');
 export const LOG_PATH = process.env.PI_YZ_LOG_PATH
   ?? join(homedir(), '.pi', 'agent', 'pi-yz-server.log');
-
-/**
- * 一次性把旧名（pi-mobile-server.*）迁到新名。
- *
- * 为什么不直接不管：这两个文件里有用户的 token 和历史日志。
- * 换个文件名就把 token 弄丢，用户得重新在手机上配一遍；日志没了也让「出问题先看日志」无从下手。
- *
- * 只在用默认路径时迁 —— 环境变量指定了路径（测试沙箱）就不该动人家的文件。
- */
-function migrateLegacyFiles() {
-  const overridden = process.env.PI_YZ_CONFIG_PATH || process.env.PI_YZ_STATE_PATH || process.env.PI_YZ_LOG_PATH;
-  if (overridden) return;
-
-  const dir = join(homedir(), '.pi', 'agent');
-  const pairs = [
-    ['pi-mobile-server.json', CONFIG_PATH],
-    ['pi-mobile-server.pid', STATE_PATH],
-    ['pi-mobile-server.log', LOG_PATH],
-  ];
-  for (const [oldName, newPath] of pairs) {
-    const oldPath = join(dir, oldName);
-    try {
-      if (existsSync(oldPath) && !existsSync(newPath)) renameSync(oldPath, newPath);
-    } catch {
-      // 迁不动不致命：后续会当作「文件不存在」处理（token 会重新生成，手机需重配）
-    }
-  }
-}
-
-migrateLegacyFiles();
 
 /** 本机局域网 IP（手机要连的那个）；找不到就退回回环地址 */
 export function lanAddress() {

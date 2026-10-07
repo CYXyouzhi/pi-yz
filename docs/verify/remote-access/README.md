@@ -52,7 +52,7 @@ $ node --test test/*.test.mjs
 
 `server/lib/token-store.mjs`。原来的两条路都不好用：
 
-- `start.cmd` 写死 `pimobile2026`（项目名 + 年份）—— 猜中成本几乎为零；
+- `start.cmd` 写死 `piyz2026`（项目名 + 年份）—— 猜中成本几乎为零；
 - 不给 `--token` 则每次启动随机 —— 很强，但**每次重启都变**，手机要重填。
 
 现在优先级：`--token` 参数 > `.token` 文件 > 首次生成并写入。**同时拿到「强」和「不变」**。

@@ -8,7 +8,7 @@
      diagnose.dart:53  域名解析不了（DNS 查不到这个名字）
      diagnose.dart:54  检查名字有没有打错；不确定就直接填电脑的局域网 IP（形如 192.168.x.x）
      diagnose.dart:61  端口通到主机了，但没人监听（连接被拒绝）
-     diagnose.dart:62  电脑上服务端可能没启动，或端口不对；在电脑上执行 pi-mobile server start 再试
+     diagnose.dart:62  电脑上服务端可能没启动，或端口不对；在电脑上执行 pi-yz server start 再试
      diagnose.dart:68  找不到这台主机（不在同一网络里）
      diagnose.dart:69  确认手机和电脑连的是同一个 Wi-Fi，且电脑没开防火墙隔离
      diagnose.dart:74  网络错误：$osMessage
@@ -19,7 +19,7 @@
      diagnose.dart:117  全部通过
      diagnose.dart:119  没有采集到结果
      diagnose.dart:119  ${failed.first.title} 有问题
-     diagnose.dart:125  pi-mobile 连接诊断
+     diagnose.dart:125  pi-yz 连接诊断
      …另有 101 处
 
 ② 定义了却没有调用点的 key：11 个（其中含中文的 11 个）

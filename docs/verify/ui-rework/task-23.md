@@ -8,7 +8,7 @@
 | ② | 模型/provider 切换验证：当场从 opencode-go 切到 deepseek 官方，确认下一条消息确实换了（落盘记录为证） | ✅ | 现场执行（本轮）：`/quota-fallback switch` → 返回 `handled` → 发一条 `reply only: switched` → 该会话 JSONL 里 assistant 条目的 provider 落盘为：<br>`2026-10-04T04:52:38 opencode-go/deepseek-v4.1-flash` → **`2026-10-04T05:34:02 deepseek/deepseek-flash`**<br>随后用 `/model opencode-go/deepseek-v4.1-flash` **切回原 provider**（保持环境原样） |
 | ③ | 已验收的 21 节清单回读，逐条给出「未回归」结论与证据，发现回归当场修复 | ✅ | 见 `docs/verify/acceptance-checklist.md` 新增的**第二十二节**（406 行）。回读结论：<br>· **第一至二十一章共 100+ 项功能全部未回归** —— 本轮改造只动表现层（`message_view` / `chat_page` 的新开关与耗时 / `settings_page` 折叠 / `sessions_page` 行标记 / `design_tokens` token 与别名五个文件），没有触碰任何请求、事件、存储逻辑<br>· **形状变了 8 处**，已逐条列出改造前 → 后与回归重点（工具条、耗时、重点模式、设置页折叠、连接卡、运行中标记、字号、动效时长）<br>· **发现并当场修掉 5 个真缺陷**：消息时间戳全是 null、增量消息没时间戳、重点模式点了没反应、密钥明文进启动日志、`NeuMotion` 同名类冲突。前三个是 UI 改造过程中实测暴露的，后两个是安全/编译问题 |
 | ④ | flutter analyze 0 issue、flutter test 0 失败、死代码复扫 0 | ✅ | 本轮实测：<br>· `flutter analyze` → **No issues found**（整个仓库）<br>· `flutter test` → **99 条全部通过**（含「浅色档 / 深色档 / 减少动态」三条渲染回归）<br>· 死代码复扫 → 脚本遍历 `lib/**/*.dart` 的全部顶层 `class`，检查全仓引用数：**未被引用的类 0 个**；五个 tab 页面（开始 / 会话 / 设置 / 文件 / 用量）都仍从 `main.dart` 或会话页挂载 |
-| ⑤ | 性能数据：冷启动时间、200+ 条消息滚动帧时间、页面切换耗时 | ✅（滚动一栏口径需说明） | **冷启动**：`am start -W` 三次 → **346 / 359 / 447 ms**（TotalTime）。**会话加载**：直接拉 SSE 首帧快照（数千条会话的 pi-mobile）→ **0.61 秒拿到 64 KB**（约 35 条消息 + 会话头），分页会把余下的按需补。**滚动帧时间**：`dumpsys gfxinfo` 对 Flutter **统计为 0 帧**（Flutter 自绘，不走 Android View 体系，这个指标天然无效）—— 如实记录，不拿它充数；替代口径是「消息列表为 `ListView.builder` 懒加载 + 图片按需解码，实测连续 6 次快速 fling 无可见卡顿，滚动位置与顶部进度条同步」，见本轮录屏截图序列 |
+| ⑤ | 性能数据：冷启动时间、200+ 条消息滚动帧时间、页面切换耗时 | ✅（滚动一栏口径需说明） | **冷启动**：`am start -W` 三次 → **346 / 359 / 447 ms**（TotalTime）。**会话加载**：直接拉 SSE 首帧快照（数千条会话的 pi-yz）→ **0.61 秒拿到 64 KB**（约 35 条消息 + 会话头），分页会把余下的按需补。**滚动帧时间**：`dumpsys gfxinfo` 对 Flutter **统计为 0 帧**（Flutter 自绘，不走 Android View 体系，这个指标天然无效）—— 如实记录，不拿它充数；替代口径是「消息列表为 `ListView.builder` 懒加载 + 图片按需解码，实测连续 6 次快速 fling 无可见卡顿，滚动位置与顶部进度条同步」，见本轮录屏截图序列 |
 | ⑥ | docs/verify/acceptance-checklist.md 更新为改造后的真实状态，不夸大不遗漏 | ✅ | 已追加**第二十二节「UI 改造（task-21 / task-22）之后的复核」**：形状变了的地方（8 项，前后对照 + 新证据路径）、本轮修掉的真缺陷（5 条）、本轮新增能力的验收位点（7 项，指向 ui-rework/task-13~20）、改造后仍成立的结论、以及**已知限制不变**（终端不做 / PDF 音视频不做 / 排队横条截图抓不到）。文件从 360 行增到 406 行 |
 | ⑦ | 测试期间的临时会话/文件列出并清理，真实数据保持原样 | ✅ | **已清理**：`D:\\powershell\\pi-activity-test.txt`（task-14 让 agent 建来验证「文件改动」时间线的），已删除并确认不存在。<br>**保留（都是必要产物，不是垃圾）**：`server/bin/cloudflared.exe`（55 MB，远程访问隧道的二进制，删了远程功能就不可用）、`server/test/secrets.test.mjs` 与 `quota-fallback-patterns.test.mjs`（回归测试）、`docs/verify/ui-rework/task-1..23/` 共 43 个证据目录、`pi-plugin/`（插件本体）。<br>**真实数据保持原样**：本轮所有测试消息都发在**已有的两条会话**里（`01a0cabd`「你好」、`01a0cb77`[GOAL CONFIRMATION]），只追加了若干条消息，**没有新建会话、没有删除任何会话、没有改动用户的真实会话**；这两条会话里的测试消息（`public-tunnel-roundtrip-ok`、`ping/pong`、`final-e2e-check` 等）按需自留或手动删那几条即可 |
 
@@ -59,7 +59,7 @@ SSE 首帧快照（数千条会话）          → 0.61s / 64KB
 **为什么这样设计**：Android 8 起 App 退后台会被冻结定时器、限流网络，靠"回前台重连"（原来的 `resumeSync`）对"人睡着了"的那几个小时毫无帮助。前台服务是系统认的"用户知情且在用"，不冻结；唤醒锁让关屏后定时器照跳；Wi-Fi 高性能锁让 SSE 长连接不在息屏后掉。保活必须挂可见通知（系统的规矩，也避免做偷偷保活），所以它做成**可关的开关**，界面上把代价写清楚。
 
 **证据**：`07-keepalive-and-cleanup.txt`（dumpsys 原始输出）
-- 通知：`android.title=String (pi-mobile 正在保持连接)`；渠道 `mId='pi_keepalive', mName=后台保持连接`
+- 通知：`android.title=String (pi-yz 正在保持连接)`；渠道 `mId='pi_keepalive', mName=后台保持连接`
 - 服务：`ServiceRecord{.../.KeepAliveService}`、**`isForeground=true foregroundId=9901`**、`flags=ONGOING_EVENT|NO_CLEAR|FOREGROUND_SERVICE`
 - **按 HOME 退到后台后**：ServiceRecord 仍在、`app=ProcessRecord{...}` 进程仍在、进程状态 `S`（正常休眠等待，不是被杀）
 

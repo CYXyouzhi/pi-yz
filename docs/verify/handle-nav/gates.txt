@@ -4,7 +4,7 @@
 
 --- 1) 静态检查 ---
 $ flutter analyze
-  Analyzing pi-mobile...
+  Analyzing pi-yz...
   No issues found! (ran in 2.7s)
 
 --- 2) 单元 / 组件测试 ---

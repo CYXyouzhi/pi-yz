@@ -2,8 +2,8 @@
 
 盘点时间：2026-10-03
 设备：MuMu 模拟器（Android 15，1080×1920，density 480）
-App：`com.youzhi.pimobile.pi_mobile`（release 51.4MB）
-服务端：`pi-mobile-server` @ 10.1.1.195:30142
+App：`com.youzhi.piyz.pi_yz`（release 51.4MB）
+服务端：`pi-yz-server` @ 10.1.1.195:30142
 
 截图证据都在本目录：`t1-*.png`
 

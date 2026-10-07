@@ -39,17 +39,17 @@ void main() {
     FlutterError.presentError(details);
   };
 
-  runApp(const PiMobileApp());
+  runApp(const PiYzApp());
 }
 
-class PiMobileApp extends StatefulWidget {
-  const PiMobileApp({super.key});
+class PiYzApp extends StatefulWidget {
+  const PiYzApp({super.key});
 
   @override
-  State<PiMobileApp> createState() => _PiMobileAppState();
+  State<PiYzApp> createState() => _PiYzAppState();
 }
 
-class _PiMobileAppState extends State<PiMobileApp> {
+class _PiYzAppState extends State<PiYzApp> {
   ThemeMode _mode = ThemeMode.system;
 
   @override

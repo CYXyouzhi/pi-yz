@@ -50,7 +50,7 @@
 仓库根目录的 `anr-tmp.txt`（694KB，未跟踪）是一份**真实 ANR**：
 
 ```
-Subject: Input dispatching timed out (com.youzhi.pimobile.pi_mobile/.MainActivity
+Subject: Input dispatching timed out (com.youzhi.piyz.pi_yz/.MainActivity
          is not responding. Waited 25001ms for MotionEvent).
 RssKb: 3099308      <- 约 2.96 GB
 RssAnonKb: 2974312  <- 匿名内存(堆) 约 2.84 GB

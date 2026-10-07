@@ -130,7 +130,7 @@ void main() {
 
     testWidgets('启动遮罩先盖住界面，之后自己退场', (tester) async {
       setPhoneSurface(tester);
-      await tester.pumpWidget(const PiMobileApp());
+      await tester.pumpWidget(const PiYzApp());
       await tester.pump();
       // 遮罩是树上唯一的 Image（App 里的图标都是 CustomPaint 画的）
       expect(find.byType(Image), findsOneWidget);
@@ -146,7 +146,7 @@ void main() {
 
     testWidgets('三个 Tab 都能打开，切来切去不抛异常', (tester) async {
       setPhoneSurface(tester);
-      await tester.pumpWidget(const PiMobileApp());
+      await tester.pumpWidget(const PiYzApp());
       await skipSplash(tester);
       await settle(tester);
 
@@ -173,7 +173,7 @@ void main() {
 
     testWidgets('设置页在未连接时如实显示状态与操作', (tester) async {
       setPhoneSurface(tester);
-      await tester.pumpWidget(const PiMobileApp());
+      await tester.pumpWidget(const PiYzApp());
       await skipSplash(tester);
       await settle(tester);
 
@@ -187,7 +187,7 @@ void main() {
 
     testWidgets('设置页的主题段控件会真的换掉整个外壳的配色', (tester) async {
       setPhoneSurface(tester);
-      await tester.pumpWidget(const PiMobileApp());
+      await tester.pumpWidget(const PiYzApp());
       await skipSplash(tester);
       await settle(tester);
 
@@ -217,7 +217,7 @@ void main() {
       SharedPreferences.setMockInitialValues({'app_lang': 'en'});
       await AppPrefs.instance.load();
       await AppPrefs.instance.setLang('en');
-      await tester.pumpWidget(const PiMobileApp());
+      await tester.pumpWidget(const PiYzApp());
       await tester.pump();
       await skipSplash(tester);
 
@@ -324,7 +324,7 @@ void main() {
           const FakeAccessibilityFeatures(disableAnimations: true);
       addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
 
-      await tester.pumpWidget(const PiMobileApp());
+      await tester.pumpWidget(const PiYzApp());
       await skipSplash(tester);
       await settle(tester);
 
@@ -340,7 +340,7 @@ void main() {
   group('深色档', () {
     testWidgets('切到深色后三个 Tab 都正常渲染', (tester) async {
       setPhoneSurface(tester);
-      await tester.pumpWidget(const PiMobileApp());
+      await tester.pumpWidget(const PiYzApp());
       await skipSplash(tester);
       await settle(tester);
 
@@ -363,7 +363,7 @@ void main() {
   group('底部导航把手（会话页全屏）', () {
     testWidgets('会话页默认收起导航栏，点把手唤出、选完 Tab 又收回', (tester) async {
       setPhoneSurface(tester);
-      await tester.pumpWidget(const PiMobileApp());
+      await tester.pumpWidget(const PiYzApp());
       await skipSplash(tester);
       await settle(tester);
 
@@ -394,7 +394,7 @@ void main() {
 
     testWidgets('从屏底把手上滑也能唤出；下滑收回', (tester) async {
       setPhoneSurface(tester);
-      await tester.pumpWidget(const PiMobileApp());
+      await tester.pumpWidget(const PiYzApp());
       await skipSplash(tester);
       await settle(tester);
 

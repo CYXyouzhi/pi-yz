@@ -3,7 +3,7 @@
 改造目标 `musdn4vd-oqgeny` 的第二项。本项**只保证行为正确**，观感统一留到 UI 阶段（任务㉑㉒）。
 
 证据目录：`docs/verify/ui-rework/task-2/`（修复前 2 张 + 修复后 6 张）。
-模拟器：MuMu，App `com.youzhi.pimobile.pi_mobile`，服务端 `10.1.1.195:30142`。
+模拟器：MuMu，App `com.youzhi.piyz.pi_yz`，服务端 `10.1.1.195:30142`。
 
 ---
 

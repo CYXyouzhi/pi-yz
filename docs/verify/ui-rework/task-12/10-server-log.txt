@@ -4,7 +4,7 @@
 # 其余内容（配对码、内网 IP、curl 的三种回答）一字未改。
 
 $ cat /tmp/pi-server.log
-pi-mobile-server 已启动
+pi-yz-server 已启动
   pi 版本   : 1.0.0
   监听      : http://0.0.0.0:30142
   手机访问  : http://<本机局域网IP>:30142
@@ -25,4 +25,4 @@ $ curl -X POST .../api/pair -d '{"code":"000000"}'
 $ curl -X POST .../api/pair -d '{"code":"368611"}'
 {"token":"pim****26","port":30142,"piVersion":"1.0.0","addresses":["10.1.1.195"]}
 $ curl -X POST .../api/pair -d '{"code":"368611"}'   # 再用一次
-{"error":"配对窗口没开（在电脑端执行 pi-mobile server pair，或重启服务端会自动开 5 分钟）"}
+{"error":"配对窗口没开（在电脑端执行 pi-yz server pair，或重启服务端会自动开 5 分钟）"}

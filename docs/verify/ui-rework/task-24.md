@@ -92,7 +92,7 @@
 ## 5. 复现命令
 
 ```bash
-cd pi-mobile
+cd pi-yz
 flutter analyze                        # 期望 No issues found!
 flutter test                           # 期望 All tests passed!（99）
 python tool/i18n_coverage.py           # 期望 ① 0 处、② 0 个、末尾 ✅

@@ -6,20 +6,20 @@
 ## ② 卡住提醒（修复后：不足 1 分钟说秒，不再说「0 分钟」）
 $ MuMuManager sh -c "dumpsys notification --noredact"
     when=1791070994249
-    android.title=String (pi-mobile · 好像卡住了)
+    android.title=String (pi-yz · 好像卡住了)
     android.text=String (已经 18 秒没有新输出（阈值 15 秒，可在设置里改）)
 
 ## ③ 同一停顿只提醒一次
   卡住通知 when=1791070994249 发出后，35 秒后再 dump：
-    when=1791071048978  android.title=String (pi-mobile · 跑完了)
+    when=1791071048978  android.title=String (pi-yz · 跑完了)
   when 只在「跑完」时才更新 —— 中间 54.7 秒里通知内容一直是「好像卡住了」，
   每个 5 秒 tick（tick 计数从 4 → 285 可见定时器一直在跑）都检查过，
   没有重发。
 
 ## ① 跑完提醒（含会话名 + 一句摘要）
-    android.title=String (pi-mobile · 跑完了)
+    android.title=String (pi-yz · 跑完了)
     android.text=String (跑完了。 ``` flutter test 44 passed, 1 failed（共 45） ``` …)
 
 ## ⑤⑥ 被压掉的提醒不静默丢（App 设置页自检区能看到）
-    · pi-mobile · 跑完了（看护模式：跑完不吵）
-    · pi-mobile · 跑完了（免打扰时段 23:00–8:00）
+    · pi-yz · 跑完了（看护模式：跑完不吵）
+    · pi-yz · 跑完了（免打扰时段 23:00–8:00）

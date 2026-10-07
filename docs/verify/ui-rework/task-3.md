@@ -1,7 +1,7 @@
 # task-3 · 我普查出的同类缺陷：截断、不可滚、editorText、草稿丢失（已完成）
 
 证据目录：`docs/verify/ui-rework/task-3/`（10 张实机截图）。
-真机环境：MuMu，App `com.youzhi.pimobile.pi_mobile`，服务端 `10.1.1.195:30142`。
+真机环境：MuMu，App `com.youzhi.piyz.pi_yz`，服务端 `10.1.1.195:30142`。
 
 ---
 

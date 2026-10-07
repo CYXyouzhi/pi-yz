@@ -1,18 +1,18 @@
 后台保活实证（dumpsys 原始输出片段）
 
 == 通知 ==
-android.title=String (pi-mobile 正在保持连接)
+android.title=String (pi-yz 正在保持连接)
 android.text=String (退到后台也能收到进度与提醒 · 在设置里可关闭)
 effectiveNotificationChannel=NotificationChannel{mId='pi_keepalive', mName=后台保持连接, mImportance=2 ...}
 
 == 前台服务（启动后）==
-ServiceRecord{477fb79 u0 com.youzhi.pimobile.pi_mobile/.KeepAliveService ...}
+ServiceRecord{477fb79 u0 com.youzhi.piyz.pi_yz/.KeepAliveService ...}
 isForeground=true foregroundId=9901 types=0x00000001 foregroundNoti=Notification(channel=pi_keepalive ... flags=ONGOING_EVENT|NO_CLEAR|FOREGROUND_SERVICE)
 
 == 按 HOME 退到后台之后 ==
 ServiceRecord{...KeepAliveService}  仍在
-app=ProcessRecord{c2a847a 27312:com.youzhi.pimobile.pi_mobile/u0a54}  进程仍在
-u0_a54 27312 ... S com.youzhi.pimobile.pi_mobile  （状态 S = 正常休眠等待，不是被杀）
+app=ProcessRecord{c2a847a 27312:com.youzhi.piyz.pi_yz/u0a54}  进程仍在
+u0_a54 27312 ... S com.youzhi.piyz.pi_yz  （状态 S = 正常休眠等待，不是被杀）
 
 == 死代码清理 ==
 lib/ 行数 25690 → 22496（少 3194 行）
