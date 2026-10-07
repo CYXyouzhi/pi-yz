@@ -873,7 +873,15 @@ class _ServerChatPageState extends State<ServerChatPage> {
               if (_showFileRefs) FileRefs(refs: _fileRefs, onApply: _applyFileRef),
               // 按键条放在输入框上方、参与布局（不是浮层）：
               // 既不遮挡输入框，也不遮消息
-              if (_pendingImages.isNotEmpty) _buildPendingImages(t),
+              if (_pendingImages.isNotEmpty)
+                PendingImages(
+                  images: _pendingImages,
+                  onShowUndo: (message, onUndo) => showUndoSnack(context, message, onUndo),
+                  onRemove: (img) => setState(() => _pendingImages.remove(img)),
+                  onInsert: (i, img) => setState(
+                    () => _pendingImages.insert(i.clamp(0, _pendingImages.length), img),
+                  ),
+                ),
               // 误发保护：发送后的几秒里给一条看得见、点得到的「撤回」
               if (_undoText != null) UndoBar(onUndo: _undoLastSend),
               if (_keyBarVisible)
@@ -1337,59 +1345,6 @@ class _ServerChatPageState extends State<ServerChatPage> {
   }
 
   /// 待发送图片的缩略行（在输入框上方）：让用户看清「这条消息带了什么」
-  Widget _buildPendingImages(NeuTokens t) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n4, NeuSpace.n18, 0),
-      child: Row(
-        children: [
-          for (final image in _pendingImages)
-            Padding(
-              padding: const EdgeInsets.only(right: NeuSpace.n6),
-              child: NeuPressable(
-                // 点缩略图就是移除，但给一条可撤销的提示 ——
-                // 手机上误触缩略图太容易了，直接没了会让人重新选一遍图
-                onTap: () {
-                  final index = _pendingImages.indexOf(image);
-                  setState(() => _pendingImages.remove(image));
-                  showUndoSnack(context, I18n.tp('ui.8dc0a54c3c', {'name': image.name}), () {
-                    if (!mounted) return;
-                    setState(
-                      () => _pendingImages.insert(
-                        index.clamp(0, _pendingImages.length),
-                        image,
-                      ),
-                    );
-                  });
-                },
-                radius: 8,
-                flat: true,
-                // 触控目标：图标 13 + 14×2 = 41dp（原来 vertical n5 只有 23dp）
-                padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n8, vertical: NeuSpace.n14),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    NeuIcon(IconId.download, size: 13, color: t.accentInk),
-                    const SizedBox(width: NeuSpace.n5),
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 120),
-                      child: Text(
-                        image.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: NeuFonts.label, color: t.fg),
-                      ),
-                    ),
-                    const SizedBox(width: NeuSpace.n5),
-                    NeuIcon(IconId.close, size: 12, color: t.muted),
-                  ],
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
   /// ＋ 菜单：素材（相册 / 文件 / 剪贴板）+ 常用语模板。
   ///
   /// 手机上没有文件管理器可用，「把东西给 agent」就这三条路，

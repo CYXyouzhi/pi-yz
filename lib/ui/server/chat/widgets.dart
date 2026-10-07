@@ -610,3 +610,63 @@ class TurnFooter extends StatelessWidget {
       );
   }
 }
+
+/// _buildPendingImages 的组件化版本。
+class PendingImages extends StatelessWidget {
+  const PendingImages({super.key, required this.images, required this.onShowUndo, required this.onRemove, required this.onInsert});
+
+  final List<({String name, String base64, String mime})> images;
+  final void Function(String message, VoidCallback onUndo) onShowUndo;
+  final void Function(({String name, String base64, String mime}) image) onRemove;
+  final void Function(int index, ({String name, String base64, String mime}) image) onInsert;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.neu;
+    return Padding(
+        padding: const EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n4, NeuSpace.n18, 0),
+        child: Row(
+          children: [
+            for (final image in images)
+              Padding(
+                padding: const EdgeInsets.only(right: NeuSpace.n6),
+                child: NeuPressable(
+                  // 点缩略图就是移除，但给一条可撤销的提示 ——
+                  // 手机上误触缩略图太容易了，直接没了会让人重新选一遍图
+                  onTap: () {
+                    final index = images.indexOf(image);
+                    onRemove(image);
+                    onShowUndo(
+                      I18n.tp('ui.8dc0a54c3c', {'name': image.name}),
+                      () => onInsert(index.clamp(0, images.length), image),
+                    );
+                  },
+                  radius: 8,
+                  flat: true,
+                  // 触控目标：图标 13 + 14×2 = 41dp（原来 vertical n5 只有 23dp）
+                  padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n8, vertical: NeuSpace.n14),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      NeuIcon(IconId.download, size: 13, color: t.accentInk),
+                      const SizedBox(width: NeuSpace.n5),
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 120),
+                        child: Text(
+                          image.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: NeuFonts.label, color: t.fg),
+                        ),
+                      ),
+                      const SizedBox(width: NeuSpace.n5),
+                      NeuIcon(IconId.close, size: 12, color: t.muted),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        ),
+      );
+  }
+}
