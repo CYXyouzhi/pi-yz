@@ -128,6 +128,10 @@ class _ConnEditPageState extends State<ConnEditPage> {
       port: profile.port,
       token: profile.token,
       secure: profile.secure,
+      // 与连接页共用同一个超时（kConnectTestTimeout）——
+      // 不传就会用 ServerClient 默认的 30 秒，这个按钮只探一次健康检查，
+      // 填错地址的人却要对着转圈干等 30 秒。
+      timeout: kConnectTestTimeout,
     );
     try {
       final health = await client.health();

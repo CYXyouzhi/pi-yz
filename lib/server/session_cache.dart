@@ -226,10 +226,13 @@ class SessionCache {
         final json = jsonDecode(raw);
         if (json is! Map) continue;
         final messages = (json['msgs'] as List? ?? const []);
-        final last = messages.isEmpty
-            ? null
-            : CachedMessage.fromJson(
-                (messages.last as Map).cast<String, dynamic>());
+        // 先 is Map 判断再读，不要直接 as Map：末尾元素可能是任何类型
+        // （缓存写坏、或旧版本格式不同），而断言失败会抛 TypeError，
+        // 那会打断整个会话列表的恢复。同文件 227 行对 json 也是这么做的。
+        final lastRaw = messages.isEmpty ? null : messages.last;
+        final last = lastRaw is Map
+            ? CachedMessage.fromJson(lastRaw.cast<String, dynamic>())
+            : null;
         out.add(CacheEntry(
           sessionId: id,
           name: json['name'] as String? ?? '',

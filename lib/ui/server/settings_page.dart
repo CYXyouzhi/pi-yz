@@ -1049,34 +1049,40 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
     final controller = TextEditingController(
       text: '${NotificationCenter.instance.stallSeconds}',
     );
-    final value = await showDialog<int>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: t.bg,
-        title: Text(I18n.t('ui.af3e668e71'), style: TextStyle(color: t.fg, fontSize: NeuFonts.heading)),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          style: TextStyle(color: t.fg),
-          decoration: InputDecoration(hintText: I18n.t('ui.ef78e4268a')),
+    // 用 try/finally 包住：下面有「用户取消」与「值不合法」两条提前 return 的路径，
+    // 只靠函数末尾清理会漏掉它们。同项目的 config_page / files_page 也是这个写法。
+    try {
+      final value = await showDialog<int>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          backgroundColor: t.bg,
+          title: Text(I18n.t('ui.af3e668e71'), style: TextStyle(color: t.fg, fontSize: NeuFonts.heading)),
+          content: TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            style: TextStyle(color: t.fg),
+            decoration: InputDecoration(hintText: I18n.t('ui.ef78e4268a')),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(I18n.t('common.cancel'), style: TextStyle(color: t.muted)),
+            ),
+            TextButton(
+              onPressed: () {
+                final parsed = int.tryParse(controller.text.trim());
+                Navigator.of(dialogContext).pop(parsed);
+              },
+              child: Text(I18n.t('common.save'), style: TextStyle(color: t.accentInk)),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: Text(I18n.t('common.cancel'), style: TextStyle(color: t.muted)),
-          ),
-          TextButton(
-            onPressed: () {
-              final parsed = int.tryParse(controller.text.trim());
-              Navigator.of(dialogContext).pop(parsed);
-            },
-            child: Text(I18n.t('common.save'), style: TextStyle(color: t.accentInk)),
-          ),
-        ],
-      ),
-    );
-    if (value == null || value < 10) return;
-    await NotificationCenter.instance.setStallSeconds(value);
+      );
+      if (value == null || value < 10) return;
+      await NotificationCenter.instance.setStallSeconds(value);
+    } finally {
+      controller.dispose();
+    }
   }
 
   /// 发一条测试通知：用户自己能确认「通知这条路是通的」

@@ -223,21 +223,25 @@ ActivitySnapshot buildActivity(
   }
 
   // 等你确认：放在最上面（时间线是新的在上）—— 这是最该被看见的一条
+  //
+  // 顺手记下最后一条：下面的「当前动作」要用它。
+  // 原先那里写的是 items.last，依赖「pending 的元素都被 append 到 items 末尾」
+  // 这个隐式不变量 —— 谁把 add 改成 insert(0, …) 就会取错甚至越界。
+  ActivityItem? lastPending;
   for (final p in pending) {
-    items.add(ActivityItem(
+    final item = ActivityItem(
       at: 0,
       kind: ActivityKind.wait,
       title: I18n.t('ui.493b7bc5ff'),
       detail: oneLine(p, 90),
       running: true,
-    ));
+    );
+    items.add(item);
+    lastPending = item;
   }
 
   // 当前动作：最后一个还在跑的工具优先；有等确认的则直接说等确认
-  ActivityItem? current;
-  if (pending.isNotEmpty) {
-    current = items.last;
-  }
+  ActivityItem? current = lastPending;
   for (final it in items.reversed) {
     if (it.kind == ActivityKind.tool && it.running) {
       current = it;

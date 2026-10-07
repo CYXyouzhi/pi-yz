@@ -23,6 +23,17 @@ class ServerException implements Exception {
   String toString() => message;
 }
 
+/// 「测试连接」按钮专用的超时。
+///
+/// 为什么不直接用 [ServerClient] 的默认值：这个按钮只探一次 `/api/health`，
+/// 而默认是 30 秒 —— 地址填错的人要对着转圈干等。
+///
+/// 为什么抽成常量：新增连接页（`conn_edit_page.dart`）与连接页（`conn_page.dart`）
+/// 各有一份「测试」，原先一处传了 8 秒、一处没传（两份实现走偏了，
+/// 见 `docs/audit/bug-audit-2026-10-08.md` 的 E1）。共享同一个值，
+/// 以后再改也是改一处。
+const Duration kConnectTestTimeout = Duration(seconds: 8);
+
 class ServerClient {
   ServerClient({
     required this.host,

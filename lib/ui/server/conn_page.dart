@@ -187,7 +187,7 @@ class _ServerConnPageState extends State<ServerConnPage> {
       host: profile.host,
       port: profile.port,
       token: profile.token,
-      timeout: const Duration(seconds: 8),
+      timeout: kConnectTestTimeout,
     );
     String message;
     var ok = false;
