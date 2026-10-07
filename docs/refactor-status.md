@@ -430,6 +430,33 @@ chat_page **3374 → 2740 行**（减 634 / 19%），新建 `chat/sheets.dart`�
 `Suggestions` 有 140 行却一次过（只依赖 2 个）；
 `_modelRow` 只有 55 行却没成（用了 `StateSetter`，结构上不该搬）。
 
+**⑭ 批量替换命中「不该改的地方」—— 第 5 次，而且每次表现都不同**
+
+抽 `_buildTurnFooter` + `_footerAction` 时又栽在同一类坑上：
+用 `t.replace('_store', 'store')` 把组件里的 `_store` 改成参数名，
+**结果连 import 路径里的 `server_store.dart` 也改了**（`_store` 是 `server_store` 的子串），
+变成 `serverstore.dart`，analyze 报 16 个错。修好 import 后又冒出 4 个
+（字段声明没加上、`FooterAction` 的调用形式是位置参数而组件收的是命名参数）。已回退。
+
+**这是同类错误的第 5 次**，前四次分别在 settings / sessions / conn / chat：
+
+| 次数 | 表现 | 文件 |
+|---|---|---|
+| 1 | `str.replace` 命中同文件另一个结构相似的 class | settings_page |
+| 2 | 同上（`SessionRow` / `SessionGroup` 构造签名相同）| sessions_page |
+| 3 | 同上（`RemoteCard` 的字段加到了 `CmdRow` 上）| conn_page |
+| 4 | `re.sub(r'model')` 过度替换，`chat.model` → `chat.chat.model` | chat_page |
+| 5 | `replace('_store', 'store')` 误伤 import 路径 `server_store.dart` | chat_page |
+
+**结论（第 3 次记）**：
+
+> **不做事后批量替换。**
+> 要么生成组件时就把名字取对（最省事）；
+> 要么把替换限定在**明确的行区间 / class 范围**内；
+> 要么用 edit 工具（它不匹配就拒绝，不会静默改错）。
+
+五次里有四次都是「本可以避免」的 —— 名字在生成时取对就行，根本不用回头替换。
+
 **结果**：`settings_page.dart` 停在 **875 行**（原 1472，减 597 行 / 40%），未达 800 目标。
 差的就是「外观」这 367 行。它仍作为整体留在页面里 —— 至少是**自洽**的
 （三个子分组都在它内部），不是散落状态。
