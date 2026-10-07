@@ -459,7 +459,7 @@ class _ServerChatPageState extends State<ServerChatPage> {
         icon: IconId.info,
       );
     } else if (kind == 'picker') {
-      _showPicker(builtin);
+      showPickerSheet(context, _store, builtin);
     } else if (kind == 'data') {
       final title = builtin['title'] as String? ?? I18n.t('ui.0d83078816');
       showDataSheet(context, title, builtin['data']);
@@ -867,103 +867,6 @@ class _ServerChatPageState extends State<ServerChatPage> {
   }
 
   /// 内置命令返回的选择器（模型、思考等级）
-  Future<void> _showPicker(Map<String, dynamic> builtin) async {
-    final picker = builtin['picker'] as String?;
-    final title = builtin['title'] as String? ?? I18n.t('common.select');
-    final options =
-        (builtin['options'] as List?)?.whereType<Map>().toList() ?? const [];
-
-    final picked = await showModalBottomSheet<String>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      // 不打开这个开关，弹层最高只有半屏，小屏手机上内容会被切掉
-      isScrollControlled: true,
-      builder: (sheetContext) {
-        final t = sheetContext.neu;
-        return Container(
-          decoration: BoxDecoration(
-            color: t.bg,
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(NeuRadii.lg),
-            ),
-          ),
-          padding: const EdgeInsets.all(NeuSpace.n18),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: NeuFonts.sectionTitle,
-                  color: t.onBg,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: NeuSpace.n12),
-              Flexible(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: options.length,
-                  itemBuilder: (_, index) {
-                    final option = options[index].cast<String, dynamic>();
-                    final value = option['value'] as String? ?? '';
-                    final label = option['label'] as String? ?? value;
-                    final group = option['group'] as String?;
-                    final current = option['current'] == true;
-                    return NeuPressable(
-                      onTap: () => Navigator.of(sheetContext).pop(value),
-                      flat: !current,
-                      alwaysInset: current,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: NeuSpace.n12,
-                        vertical: NeuSpace.n10,
-                      ),
-                      margin: const EdgeInsets.only(bottom: NeuSpace.n6),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  label,
-                                  style: TextStyle(fontSize: NeuFonts.bodyTight, color: t.fg),
-                                ),
-                                if (group != null)
-                                  Text(
-                                    group,
-                                    style: TextStyle(
-                                      fontSize: NeuFonts.label,
-                                      color: t.muted,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                          if (current)
-                            NeuIcon(IconId.check, size: 16, color: t.accentInk),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-
-    if (picked == null) return;
-    if (picker == 'model') {
-      final parts = picked.split('/');
-      if (parts.length == 2) await _store.setModel(parts[0], parts[1]);
-    } else if (picker == 'thinking') {
-      await _store.setThinkingLevel(picked);
-    }
-  }
-
   /// 输入框内容匹配到的命令
   ///
   /// 不再 take(12)：命令总数是几十条（内置 + 扩展 + 技能 + 模板），

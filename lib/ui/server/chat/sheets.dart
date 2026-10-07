@@ -13,7 +13,9 @@ import 'package:flutter/material.dart';
 import '../../../server/i18n.dart';
 import '../../../theme/neu.dart';
 import '../../../server/chat_models.dart';
+import '../../../server/server_store.dart';
 import '../../../theme/design_tokens.dart';
+import '../../neu_icons.dart';
 
 /// 「已删除，撤销」提示（5 秒，带撤销按钮）。
 ///
@@ -189,4 +191,105 @@ String formatPayload(dynamic payload) {
     return payload.map((e) => '$e').join('\n');
   }
   return payload?.toString() ?? I18n.t('ui.756aadc26d');
+}
+
+Future<void> showPickerSheet(
+BuildContext context,
+ServerStore store,
+Map<String, dynamic> builtin,
+) async {
+  final picker = builtin['picker'] as String?;
+  final title = builtin['title'] as String? ?? I18n.t('common.select');
+  final options =
+      (builtin['options'] as List?)?.whereType<Map>().toList() ?? const [];
+
+  final picked = await showModalBottomSheet<String>(
+    context: context,
+    backgroundColor: Colors.transparent,
+    // 不打开这个开关，弹层最高只有半屏，小屏手机上内容会被切掉
+    isScrollControlled: true,
+    builder: (sheetContext) {
+      final t = sheetContext.neu;
+      return Container(
+        decoration: BoxDecoration(
+          color: t.bg,
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(NeuRadii.lg),
+          ),
+        ),
+        padding: const EdgeInsets.all(NeuSpace.n18),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: NeuFonts.sectionTitle,
+                color: t.onBg,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: NeuSpace.n12),
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: options.length,
+                itemBuilder: (_, index) {
+                  final option = options[index].cast<String, dynamic>();
+                  final value = option['value'] as String? ?? '';
+                  final label = option['label'] as String? ?? value;
+                  final group = option['group'] as String?;
+                  final current = option['current'] == true;
+                  return NeuPressable(
+                    onTap: () => Navigator.of(sheetContext).pop(value),
+                    flat: !current,
+                    alwaysInset: current,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: NeuSpace.n12,
+                      vertical: NeuSpace.n10,
+                    ),
+                    margin: const EdgeInsets.only(bottom: NeuSpace.n6),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                label,
+                                style: TextStyle(fontSize: NeuFonts.bodyTight, color: t.fg),
+                              ),
+                              if (group != null)
+                                Text(
+                                  group,
+                                  style: TextStyle(
+                                    fontSize: NeuFonts.label,
+                                    color: t.muted,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        if (current)
+                          NeuIcon(IconId.check, size: 16, color: t.accentInk),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+
+  if (picked == null) return;
+  if (picker == 'model') {
+    final parts = picked.split('/');
+    if (parts.length == 2) await store.setModel(parts[0], parts[1]);
+  } else if (picker == 'thinking') {
+    await store.setThinkingLevel(picked);
+  }
 }
