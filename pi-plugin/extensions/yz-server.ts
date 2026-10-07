@@ -1,9 +1,9 @@
 /**
- * pi-mobile-server —— 把「电脑端服务」做成 pi 插件。
+ * pi-yz-server —— 把「电脑端服务」做成 pi 插件。
  *
  * 装了它以后不用再记「cd 到某个目录再 node index.mjs」：
  *   /yz            看状态（起没起、端口、手机该填什么、日志在哪）
- *   /yz start      起服务（后台跑，日志落到 ~/.pi/agent/pi-mobile-server.log）
+ *   /yz start      起服务（后台跑，日志落到 ~/.pi/agent/pi-yz-server.log）
  *   /yz stop       停服务
  *   /yz doctor     自检：进程、端口、/api/health、当前会话数
  *   /yz token <t>  设置/更换 token（手机端要填同一个）
@@ -25,10 +25,10 @@ async function ctl(): Promise<any> {
   return await import(ctlPath);
 }
 
-export default function mobileServer(pi: ExtensionAPI) {
+export default function yzServer(pi: ExtensionAPI) {
   // 这个 flag 只是为了让 `pi --help` 里能看到这个插件确实被加载了（无副作用）
-  pi.registerFlag('mobile-status', {
-    description: 'pi-mobile-server：启动时打印一次服务状态（不启动服务）',
+  pi.registerFlag('yz-status', {
+    description: 'pi-yz-server：启动时打印一次服务状态（不启动服务）',
     type: 'boolean',
     default: false,
   });
@@ -36,7 +36,7 @@ export default function mobileServer(pi: ExtensionAPI) {
   // 不做「pi 启动就自动拉起服务」—— 启动/停止一律手动，/yz start 与 /yz stop，
   // 这样服务什么时候在跑完全由你决定，不会在你不知情时躺着一个进程。
   pi.on('session_start', async (_event, ctx) => {
-    if (pi.getFlag('mobile-status') !== true) return;
+    if (pi.getFlag('yz-status') !== true) return;
 
     const mod = await ctl();
     const info = await mod.resolveStatus();
@@ -48,7 +48,7 @@ export default function mobileServer(pi: ExtensionAPI) {
     }[info.kind] ?? info.kind;
 
     const lines = [
-      '[pi-mobile-server]',
+      '[pi-yz-server]',
       `  状态 : ${label}`,
       `  监听 : ${info.hostAddress}:${info.port}`,
       `  配置 : ${info.configPath}`,
@@ -56,7 +56,7 @@ export default function mobileServer(pi: ExtensionAPI) {
     ];
     // print/json 模式下没有 UI，只能往 stdout 打；交互模式顺带给个通知
     console.log(lines.join('\n'));
-    ctx.ui.notify(`pi-mobile-server：${label}（${info.hostAddress}:${info.port}）`, 'info');
+    ctx.ui.notify(`pi-yz-server：${label}（${info.hostAddress}:${info.port}）`, 'info');
   });
 
   pi.registerCommand('yz', {
@@ -67,7 +67,7 @@ export default function mobileServer(pi: ExtensionAPI) {
       const action = (parts[0] ?? 'status').toLowerCase();
 
       if (action === 'start') {
-        ctx.ui.notify('正在启动 pi-mobile-server…', 'info');
+        ctx.ui.notify('正在启动 pi-yz-server…', 'info');
         try {
           const port = parts[1] ? Number(parts[1]) : undefined;
           const info = await mod.start({ port });
@@ -146,7 +146,7 @@ export default function mobileServer(pi: ExtensionAPI) {
       const lines = [
         `状态   : ${kindLabel}${info.pid ? `（pid ${info.pid}，${info.startedAt ?? ''}）` : ''}`,
         `监听   : ${info.hostAddress}:${info.port}`,
-        `入口   : ${info.entry}${existsSync(info.entry) ? '' : '（不存在！用 PI_MOBILE_SERVER_ENTRY 指定）'}`,
+        `入口   : ${info.entry}${existsSync(info.entry) ? '' : '（不存在！用 PI_YZ_SERVER_ENTRY 指定）'}`,
         `配置   : ${info.configPath}`,
         `日志   : ${info.logPath}`,
         '',

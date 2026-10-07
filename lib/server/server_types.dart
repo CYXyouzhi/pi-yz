@@ -1,6 +1,6 @@
 // 与服务端通信的协议类型。
 //
-// 对应 pi-mobile-server 的接口：
+// 对应 pi-yz-server 的接口：
 //   GET  /api/sessions                  会话列表
 //   POST /api/sessions                  新建会话
 //   GET  /api/sessions/:id/events       SSE 事件流

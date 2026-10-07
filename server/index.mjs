@@ -1,4 +1,4 @@
-// pi-mobile-server 入口
+// pi-yz-server 入口
 //
 // 职责：把 pi 的 SDK 包成 HTTP + SSE，供手机端访问。
 // 设计原则：零依赖（只用 Node 内置模块 + 本机已装的 pi SDK）。
@@ -149,7 +149,7 @@ const server = createServer(async (req, res) => {
   if (path === '/api/health') {
     return json(res, 200, {
       ok: true,
-      server: 'pi-mobile-server',
+      server: 'pi-yz-server',
       version: '0.1.0',
       piVersion: VERSION,
       activeSessions: pool.list().length,
@@ -618,7 +618,7 @@ const server = createServer(async (req, res) => {
 
 server.listen(args.port, args.host, () => {
   const shown = args.host === '0.0.0.0' ? '<本机局域网IP>' : args.host;
-  console.log('pi-mobile-server 已启动');
+  console.log('pi-yz-server 已启动');
   console.log(`  pi 版本   : ${VERSION}`);
   console.log(`  监听      : http://${args.host}:${args.port}`);
   console.log(`  手机访问  : http://${shown}:${args.port}`);

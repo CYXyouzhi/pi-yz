@@ -11,15 +11,15 @@
 //    `tap` 会**静默落空**（只打一条 warning），于是断言看到「校验没生效」的假象。
 //    所以先设成手机尺寸，再点之前 `ensureVisible`。
 import 'package:flutter/material.dart';
-import 'package:pi_mobile/ui/nav_bar_visibility.dart';
+import 'package:pi_yz/ui/nav_bar_visibility.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pi_mobile/main.dart';
-import 'package:pi_mobile/server/app_prefs.dart';
-import 'package:pi_mobile/services/key_encoder.dart';
-import 'package:pi_mobile/theme/design_tokens.dart';
-import 'package:pi_mobile/theme/neu_theme.dart';
-import 'package:pi_mobile/ui/key_bar.dart';
-import 'package:pi_mobile/ui/neu_toast.dart';
+import 'package:pi_yz/main.dart';
+import 'package:pi_yz/server/app_prefs.dart';
+import 'package:pi_yz/services/key_encoder.dart';
+import 'package:pi_yz/theme/design_tokens.dart';
+import 'package:pi_yz/theme/neu_theme.dart';
+import 'package:pi_yz/ui/key_bar.dart';
+import 'package:pi_yz/ui/neu_toast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// 把测试窗口设成手机尺寸（默认 800×600 会让长页面的按钮落到屏幕外）。

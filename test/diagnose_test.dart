@@ -7,7 +7,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pi_mobile/server/diagnose.dart';
+import 'package:pi_yz/server/diagnose.dart';
 
 void main() {
   group('explainFailure：把异常翻译成能动手的原因', () {

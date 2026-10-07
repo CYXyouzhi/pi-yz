@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pi_mobile/ui/server/chat_page.dart';
+import 'package:pi_yz/ui/server/chat_page.dart';
 
 /// 渲染证据（**不是实机截图**）：把「无键盘 / 有键盘」两种 MediaQuery 下的
 /// 命令面板高度渲染成图，直观看出键盘占位把面板压矮了。

@@ -5,7 +5,7 @@
 // 之所以用 print 而不是日志框架，正是因为它要的就是一份可直接 diff 的纯文本。
 import 'dart:ui';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pi_mobile/theme/design_tokens.dart';
+import 'package:pi_yz/theme/design_tokens.dart';
 
 String h6(Color c) {
   String f(int v) => v.toRadixString(16).padLeft(2, '0').toUpperCase();

@@ -8,13 +8,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pi_mobile/server/i18n.dart';
-import 'package:pi_mobile/server/chat_models.dart';
-import 'package:pi_mobile/server/native_bridge.dart';
-import 'package:pi_mobile/server/server_types.dart';
-import 'package:pi_mobile/theme/design_tokens.dart';
-import 'package:pi_mobile/theme/neu_theme.dart';
-import 'package:pi_mobile/ui/server/message_view.dart';
+import 'package:pi_yz/server/i18n.dart';
+import 'package:pi_yz/server/chat_models.dart';
+import 'package:pi_yz/server/native_bridge.dart';
+import 'package:pi_yz/server/server_types.dart';
+import 'package:pi_yz/theme/design_tokens.dart';
+import 'package:pi_yz/theme/neu_theme.dart';
+import 'package:pi_yz/ui/server/message_view.dart';
 
 /// 造一条带正文的消息
 ChatMessage textMessage({required String text, bool isUser = false}) {
@@ -68,7 +68,7 @@ void main() {
       return null;
     });
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(const MethodChannel('pi_mobile/native'), (call) async {
+        .setMockMethodCallHandler(const MethodChannel('pi_yz/native'), (call) async {
       nativeCalls.add(call);
       return call.method == 'saveImage' ? 'content://saved' : true;
     });
@@ -78,7 +78,7 @@ void main() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(SystemChannels.platform, null);
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(const MethodChannel('pi_mobile/native'), null);
+        .setMockMethodCallHandler(const MethodChannel('pi_yz/native'), null);
   });
 
   testWidgets('① 双击消息（留白处）把整条正文复制到剪贴板', (tester) async {
@@ -135,7 +135,7 @@ void main() {
   });
 
   // ⑨ 的「长按图片 → 存相册」这条链路在实机上有硬证据（相册里真的多了
-  // Pictures/pi-mobile/pi-*.png，见 docs/verify/ui-rework/task-9）。
+  // Pictures/pi-yz/pi-*.png，见 docs/verify/ui-rework/task-9）。
   // 这里只把最底下那层桥钉住：widget 测试里 Image.memory 解不出尺寸，
   // 长按落不到它身上 —— 与其写个永远点不中的测试，不如测桥本身。
   test('⑨ 原生桥：存相册与分享都把参数交给平台通道', () async {

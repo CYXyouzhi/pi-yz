@@ -1,4 +1,4 @@
-package com.youzhi.pimobile.pi_mobile
+package com.youzhi.piyz.pi_yz
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -27,9 +27,9 @@ import io.flutter.plugin.common.MethodChannel
  * 依赖越少，越不容易在 Flutter 升级后炸。
  */
 class MainActivity : FlutterActivity() {
-    private val channelName = "pi_mobile/native"
+    private val channelName = "pi_yz/native"
     private val channelId = "pi_agent_status"
-    private val replyAction = "com.youzhi.pimobile.pi_mobile.QUICK_REPLY"
+    private val replyAction = "com.youzhi.piyz.pi_yz.QUICK_REPLY"
     private val keyReplyText = "pi_reply_text"
     private var channel: MethodChannel? = null
 

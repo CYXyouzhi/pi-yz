@@ -1,21 +1,51 @@
-// pi-mobile-server 的进程控制（纯 Node，不依赖 pi 的 API）。
+// pi-yz-server 的进程控制（纯 Node，不依赖 pi 的 API）。
 //
 // 为什么抽出来：这样它可以被 pi 扩展调用，也能被命令行/测试直接调用 ——
 // 不需要启动一个模型就能验证「起得来、停得掉、状态读得到」。
 
 import { spawn } from 'node:child_process';
-import { existsSync, readFileSync, writeFileSync, mkdirSync, openSync, rmSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync, mkdirSync, openSync, rmSync, renameSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { homedir, networkInterfaces } from 'node:os';
 
 // 路径可以被环境变量覆盖 —— 测试时指到临时目录，就不会碰到真实的状态文件。
 // 生产用法不设这些变量，走默认的 ~/.pi/agent/。
-export const CONFIG_PATH = process.env.PI_MOBILE_CONFIG_PATH
-  ?? join(homedir(), '.pi', 'agent', 'pi-mobile-server.json');
-export const STATE_PATH = process.env.PI_MOBILE_STATE_PATH
-  ?? join(homedir(), '.pi', 'agent', 'pi-mobile-server.pid');
-export const LOG_PATH = process.env.PI_MOBILE_LOG_PATH
-  ?? join(homedir(), '.pi', 'agent', 'pi-mobile-server.log');
+export const CONFIG_PATH = process.env.PI_YZ_CONFIG_PATH
+  ?? join(homedir(), '.pi', 'agent', 'pi-yz-server.json');
+export const STATE_PATH = process.env.PI_YZ_STATE_PATH
+  ?? join(homedir(), '.pi', 'agent', 'pi-yz-server.pid');
+export const LOG_PATH = process.env.PI_YZ_LOG_PATH
+  ?? join(homedir(), '.pi', 'agent', 'pi-yz-server.log');
+
+/**
+ * 一次性把旧名（pi-mobile-server.*）迁到新名。
+ *
+ * 为什么不直接不管：这两个文件里有用户的 token 和历史日志。
+ * 换个文件名就把 token 弄丢，用户得重新在手机上配一遍；日志没了也让「出问题先看日志」无从下手。
+ *
+ * 只在用默认路径时迁 —— 环境变量指定了路径（测试沙箱）就不该动人家的文件。
+ */
+function migrateLegacyFiles() {
+  const overridden = process.env.PI_YZ_CONFIG_PATH || process.env.PI_YZ_STATE_PATH || process.env.PI_YZ_LOG_PATH;
+  if (overridden) return;
+
+  const dir = join(homedir(), '.pi', 'agent');
+  const pairs = [
+    ['pi-mobile-server.json', CONFIG_PATH],
+    ['pi-mobile-server.pid', STATE_PATH],
+    ['pi-mobile-server.log', LOG_PATH],
+  ];
+  for (const [oldName, newPath] of pairs) {
+    const oldPath = join(dir, oldName);
+    try {
+      if (existsSync(oldPath) && !existsSync(newPath)) renameSync(oldPath, newPath);
+    } catch {
+      // 迁不动不致命：后续会当作「文件不存在」处理（token 会重新生成，手机需重配）
+    }
+  }
+}
+
+migrateLegacyFiles();
 
 /** 本机局域网 IP（手机要连的那个）；找不到就退回回环地址 */
 export function lanAddress() {
@@ -46,7 +76,7 @@ export function writeConfig(next) {
 export function serverEntry() {
   const config = readConfig();
   if (config.serverEntry) return config.serverEntry;
-  if (process.env.PI_MOBILE_SERVER_ENTRY) return process.env.PI_MOBILE_SERVER_ENTRY;
+  if (process.env.PI_YZ_SERVER_ENTRY) return process.env.PI_YZ_SERVER_ENTRY;
   // pi-plugin/lib/ → ../../server/index.mjs
   return resolve(dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1')), '..', '..', 'server', 'index.mjs');
 }
@@ -101,7 +131,7 @@ export async function resolveStatus({ port, token } = {}) {
   else kind = 'down';
 
   // 进程没了、端口也没人应 —— pid 文件就是垃圾，顺手清掉。
-  // 不清的后果：/mobile stop 会对着一个不存在的号发信号，用户看到「已停止」但什么也没发生。
+  // 不清的后果：/yz stop 会对着一个不存在的号发信号，用户看到「已停止」但什么也没发生。
   if (kind === 'down' && existsSync(STATE_PATH)) {
     rmSync(STATE_PATH, { force: true });
   }
@@ -187,7 +217,7 @@ export async function start({ port, host = '0.0.0.0', token } = {}) {
 
   const entry = serverEntry();
   if (!existsSync(entry)) {
-    throw new Error(`找不到服务端入口：${entry}（可用 PI_MOBILE_SERVER_ENTRY 指定）`);
+    throw new Error(`找不到服务端入口：${entry}（可用 PI_YZ_SERVER_ENTRY 指定）`);
   }
 
   mkdirSync(dirname(LOG_PATH), { recursive: true });
@@ -221,7 +251,7 @@ export async function start({ port, host = '0.0.0.0', token } = {}) {
     const fresh = tailLog(1_000_000).slice(logMark);
     let reason = '进程已拉起但健康检查没通过，看日志确认原因';
     if (/EADDRINUSE/.test(fresh)) {
-      reason = `端口 ${finalPort} 已被占用（EADDRINUSE）—— 可能上个进程没停干净，或用 /mobile doctor 看是谁占的`;
+      reason = `端口 ${finalPort} 已被占用（EADDRINUSE）—— 可能上个进程没停干净，或用 /yz doctor 看是谁占的`;
     } else if (/EACCES/.test(fresh)) {
       reason = `端口 ${finalPort} 没权限监听（EACCES）—— 换个大于 1024 的端口试试`;
     } else if (!alive(child.pid)) {
@@ -240,7 +270,7 @@ async function probeHealth(port, token) {
   try {
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
     // 必须带超时：端口上可能有个「会 accept 但不应答 HTTP」的程序（别的 TCP 服务），
-    // 没超时的话这个 fetch 会永久挂着，/mobile start 就永远不返回。
+    // 没超时的话这个 fetch 会永久挂着，/yz start 就永远不返回。
     const response = await fetch(`http://127.0.0.1:${port}/api/health`, {
       headers,
       signal: AbortSignal.timeout(2000),
@@ -285,7 +315,7 @@ export async function stop({ force = false } = {}) {
     const serving = await probeHealth(state?.port ?? config.port ?? 30142, config.token ?? null);
     return {
       stopped: false,
-      reason: serving ? '没有本插件拉起的服务；端口上的服务是别的进程启的，不归 /mobile 管' : '没有在跑的服务端',
+      reason: serving ? '没有本插件拉起的服务；端口上的服务是别的进程启的，不归 /yz 管' : '没有在跑的服务端',
     };
   }
 
@@ -315,7 +345,7 @@ export async function doctor() {
   const info = await resolveStatus();
 
   // 进程表里没有，但端口上有服务在跑 —— 那多半是 start.cmd / 手动 nohup 起的。
-  // 这个区分很重要：不能把别人起的服务说成「没在跑」，也不能让 /mobile stop 去乱杀。
+  // 这个区分很重要：不能把别人起的服务说成「没在跑」，也不能让 /yz stop 去乱杀。
   if (info.kind === 'foreign') {
     return {
       ...info,
@@ -323,7 +353,7 @@ export async function doctor() {
       healthy: true,
       foreign: true,
       hint: `端口 ${info.port} 上有服务在跑，但不是本插件拉起的（可能是 start.cmd 或手动启动的）。`
-        + '/mobile start 不会重复拉起，/mobile stop 也不会去杀它。',
+        + '/yz start 不会重复拉起，/yz stop 也不会去杀它。',
     };
   }
 
@@ -332,12 +362,12 @@ export async function doctor() {
       ...info,
       healthy: false,
       hint: `进程 ${info.pid} 还在，但端口 ${info.port} 上没有服务应答（僵死）。`
-        + '用 /mobile start 会自动清掉它再重新拉起。',
+        + '用 /yz start 会自动清掉它再重新拉起。',
     };
   }
 
   if (info.kind === 'down') {
-    return { ...info, running: false, healthy: false, foreign: false, hint: '服务端没在跑：用 /mobile start 启动' };
+    return { ...info, running: false, healthy: false, foreign: false, hint: '服务端没在跑：用 /yz start 启动' };
   }
 
   let health = null;

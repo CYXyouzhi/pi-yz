@@ -5,8 +5,8 @@
 // 修法是剥掉名字里与型号重复的厂商词（宽度上限不能取消：旁边还有会话名、
 // 状态点和三个按钮）。这个剥法最容易在边界上出错，所以单独测。
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pi_mobile/server/server_types.dart';
-import 'package:pi_mobile/ui/server/chat_page.dart';
+import 'package:pi_yz/server/server_types.dart';
+import 'package:pi_yz/ui/server/chat_page.dart';
 
 ModelInfo _m(String provider, String id, String name) =>
     ModelInfo(provider: provider, id: id, name: name);

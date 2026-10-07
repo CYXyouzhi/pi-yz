@@ -2,7 +2,7 @@
 //
 // 解决的痛点是「不再手输 IP」：
 //   1. App 往局域网广播一个探测包（UDP 30143）
-//   2. 电脑端 pi-mobile-server 应答自己的地址/端口/版本
+//   2. 电脑端 pi-yz-server 应答自己的地址/端口/版本
 //   3. 选中设备后用「配对码」换 token（码由用户在电脑端显式开启窗口才有）
 //
 // 为什么用 dart:io 手写而不是拉 mDNS/扫码库：
@@ -38,7 +38,7 @@ class DiscoveredServer {
     try {
       final json = jsonDecode(raw);
       if (json is! Map) return null;
-      if (json['app'] != 'pi-mobile-server') return null;
+      if (json['app'] != 'pi-yz-server') return null;
       return DiscoveredServer(
         name: (json['name'] as String?)?.trim().isNotEmpty == true
             ? json['name'] as String

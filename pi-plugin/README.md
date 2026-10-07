@@ -1,10 +1,10 @@
-# pi-mobile 电脑端插件
+# pi-yz 电脑端插件
 
 这个目录是一个 pi 插件包，装一次能得到两样东西：
 
 | 扩展 | 干什么 |
 |---|---|
-| `extensions/mobile-server.ts` | 把 pi-mobile 的电脑端服务做成 pi 命令：`/yz start` 起服务、`stop` 停、`status` 看状态、`doctor` 自检、`token` 换 token |
+| `extensions/yz-server.ts` | 把 pi-yz 的电脑端服务做成 pi 命令：`/yz start` 起服务、`stop` 停、`status` 看状态、`doctor` 自检、`token` 换 token |
 | `extensions/quota-fallback.ts` | **额度兜底**：主 provider 因额度/计费失败时，自动切到备用 provider，并让 agent 接着把没干完的活干完（无人值守） |
 
 两者共用 `lib/ctl.mjs` —— 真正的进程控制逻辑写在那里（纯 Node，不依赖 pi 的 API），
@@ -14,7 +14,7 @@
 ## 安装
 
 ```bash
-pi install ./pi-plugin          # 在 pi-mobile 仓库里执行
+pi install ./pi-plugin          # 在 pi-yz 仓库里执行
 ```
 
 装完重启 pi（或在 pi 里 `/reload`）。文件直接放到 `~/.pi/agent/extensions/` 下也能生效（pi 启动时自动加载该目录）。

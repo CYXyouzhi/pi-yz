@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// pi-yz —— pi-mobile 服务端的命令行入口（不依赖 pi 主进程）。
+// pi-yz —— pi-yz 服务端的命令行入口（不依赖 pi 主进程）。
 //
 // 用它的理由：/yz 只能在 pi 里敲；pi 没开着的时候（或干脆不想开 TUI 的时候）
 // 你还是得有个办法把服务端拉起来。这条命令就是那个入口。
@@ -113,7 +113,7 @@ switch (action) {
     if (info.alreadyRunning) {
       console.log(`${C.green}服务已在运行${C.off}${C.dim}（pid ${info.pid}，已复用，没重复启动）${C.off}`);
     } else {
-      console.log(`${C.green}pi-mobile-server 已在后台启动${C.off}${C.dim}（pid ${info.pid}）${C.off}`);
+      console.log(`${C.green}pi-yz-server 已在后台启动${C.off}${C.dim}（pid ${info.pid}）${C.off}`);
     }
     printConnect(info);
     // 后台进程已 detached，这里正常退出，不占终端

@@ -1,4 +1,4 @@
-package com.youzhi.pimobile.pi_mobile
+package com.youzhi.piyz.pi_yz
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -39,8 +39,8 @@ class KeepAliveService : Service() {
     companion object {
         const val CHANNEL_ID = "pi_keepalive"
         const val NOTIF_ID = 9901
-        const val ACTION_START = "com.youzhi.pimobile.pi_mobile.KEEPALIVE_START"
-        const val ACTION_STOP = "com.youzhi.pimobile.pi_mobile.KEEPALIVE_STOP"
+        const val ACTION_START = "com.youzhi.piyz.pi_yz.KEEPALIVE_START"
+        const val ACTION_STOP = "com.youzhi.piyz.pi_yz.KEEPALIVE_STOP"
 
         /** 供 Dart 查询：服务是不是在跑（进程内静态量，够用且不用跨进程问） */
         @Volatile

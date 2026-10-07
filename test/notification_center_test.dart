@@ -7,7 +7,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pi_mobile/server/notification_center.dart';
+import 'package:pi_yz/server/notification_center.dart';
 
 void main() {
   // 钉住中文：I18n.t 无 context 时跟随系统 locale，全量跑时会被

@@ -4,9 +4,9 @@
 // 用来定位那条多出来的下划线到底从哪来。
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pi_mobile/theme/design_tokens.dart';
-import 'package:pi_mobile/theme/neu.dart';
-import 'package:pi_mobile/theme/neu_theme.dart';
+import 'package:pi_yz/theme/design_tokens.dart';
+import 'package:pi_yz/theme/neu.dart';
+import 'package:pi_yz/theme/neu_theme.dart';
 
 void main() {
   testWidgets('探测各处的有效 TextStyle', (tester) async {

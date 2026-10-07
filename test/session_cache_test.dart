@@ -4,8 +4,8 @@
 // 读写走内存，测的是真实的存取路径而不是我另写一套假实现。
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pi_mobile/server/chat_models.dart';
-import 'package:pi_mobile/server/session_cache.dart';
+import 'package:pi_yz/server/chat_models.dart';
+import 'package:pi_yz/server/session_cache.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 ChatMessage msg(int index, {String text = ''}) => ChatMessage(

@@ -12,7 +12,7 @@ import 'i18n.dart';
 class NativeBridge {
   NativeBridge._();
 
-  static const MethodChannel _channel = MethodChannel('pi_mobile/native');
+  static const MethodChannel _channel = MethodChannel('pi_yz/native');
 
   /// 系统分享面板（会话片段）
   static Future<bool> shareText({
@@ -35,7 +35,7 @@ class NativeBridge {
     }
   }
 
-  /// 存到系统相册（Pictures/pi-mobile）
+  /// 存到系统相册（Pictures/pi-yz）
   // ==================== 后台保活（task-10 遗留项补齐） ====================
 
   /// 起常驻服务：退到后台后连接与定时器继续活着。

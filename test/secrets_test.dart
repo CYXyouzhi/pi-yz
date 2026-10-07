@@ -4,7 +4,7 @@
 // 诊断页看起来正常，token 已经在里面了。
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pi_mobile/server/diagnose.dart';
+import 'package:pi_yz/server/diagnose.dart';
 
 void main() {
   group('诊断报告里的 token 必须是脱敏的', () {

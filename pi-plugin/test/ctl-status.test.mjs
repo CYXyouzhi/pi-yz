@@ -1,7 +1,7 @@
 // ctl.mjs 状态机测试
 //
 // 背景（真实踩过的坑）：原来的 status() 用 alive(pid) 判断「服务在不在跑」。
-// 结果 pid 文件里记着一个早就死掉的号时，/mobile start 会认为「已经在跑」，
+// 结果 pid 文件里记着一个早就死掉的号时，/yz start 会认为「已经在跑」，
 // 直接返回、什么都不做 —— 用户以为起了，手机连上却是连接被拒绝。
 //
 // 这里把状态判断的四条分支钉死，防止再退化回去。
@@ -15,9 +15,9 @@ import { join } from 'node:path';
 
 // 必须在 import ctl 之前设好 —— 它是模块级读取环境变量
 const sandbox = mkdtempSync(join(tmpdir(), 'pi-ctl-test-'));
-process.env.PI_MOBILE_CONFIG_PATH = join(sandbox, 'config.json');
-process.env.PI_MOBILE_STATE_PATH = join(sandbox, 'state.pid');
-process.env.PI_MOBILE_LOG_PATH = join(sandbox, 'server.log');
+process.env.PI_YZ_CONFIG_PATH = join(sandbox, 'config.json');
+process.env.PI_YZ_STATE_PATH = join(sandbox, 'state.pid');
+process.env.PI_YZ_LOG_PATH = join(sandbox, 'server.log');
 
 const ctl = await import('../lib/ctl.mjs');
 
@@ -62,11 +62,11 @@ after(() => {
 });
 
 function writeState(next) {
-  writeFileSync(process.env.PI_MOBILE_STATE_PATH, `${JSON.stringify(next, null, 2)}\n`, 'utf8');
+  writeFileSync(process.env.PI_YZ_STATE_PATH, `${JSON.stringify(next, null, 2)}\n`, 'utf8');
 }
 
 function writeConfig(next) {
-  writeFileSync(process.env.PI_MOBILE_CONFIG_PATH, `${JSON.stringify(next, null, 2)}\n`, 'utf8');
+  writeFileSync(process.env.PI_YZ_CONFIG_PATH, `${JSON.stringify(next, null, 2)}\n`, 'utf8');
 }
 
 test('down：进程没了、端口也没人应 —— 顺手清掉陈旧 pid 文件', async () => {
@@ -76,8 +76,8 @@ test('down：进程没了、端口也没人应 —— 顺手清掉陈旧 pid 文
   const info = await ctl.resolveStatus();
   assert.equal(info.kind, 'down');
   assert.equal(info.serving, false);
-  // 关键：陈旧的 pid 文件必须被清掉，否则 /mobile stop 会对着空气挥刀
-  assert.equal(existsSync(process.env.PI_MOBILE_STATE_PATH), false, '陈旧 pid 文件应被删除');
+  // 关键：陈旧的 pid 文件必须被清掉，否则 /yz stop 会对着空气挥刀
+  assert.equal(existsSync(process.env.PI_YZ_STATE_PATH), false, '陈旧 pid 文件应被删除');
 });
 
 test('foreign：端口有人应，但不是我们的 pid —— 如实识别，不当成自己起的', async () => {
@@ -93,7 +93,7 @@ test('foreign：端口有人应，但不是我们的 pid —— 如实识别，�
 test('foreign：start() 不重复拉起，并给出人话说明', async () => {
   writeConfig({ port: HTTP_PORT, token: 'x' });
   writeState({ pid: 999999, port: HTTP_PORT, host: '0.0.0.0', startedAt: '2026-01-01T00:00:00.000Z' });
-  const pidFileBefore = readFileSync(process.env.PI_MOBILE_STATE_PATH, 'utf8');
+  const pidFileBefore = readFileSync(process.env.PI_YZ_STATE_PATH, 'utf8');
 
   const result = await ctl.start();
   assert.equal(result.alreadyRunning, true, '不该重复拉起');
@@ -101,7 +101,7 @@ test('foreign：start() 不重复拉起，并给出人话说明', async () => {
   assert.match(String(result.hint), /不是本插件拉起/);
   // 旧实现到这步会「认为已在跑」直接 return，而它认为的依据是不可靠的 pid
   assert.equal(
-    readFileSync(process.env.PI_MOBILE_STATE_PATH, 'utf8'),
+    readFileSync(process.env.PI_YZ_STATE_PATH, 'utf8'),
     pidFileBefore,
     '不该动 pid 文件',
   );
@@ -113,7 +113,7 @@ test('foreign：stop() 不乱杀别人的服务', async () => {
 
   const result = await ctl.stop();
   assert.equal(result.stopped, false);
-  assert.match(String(result.reason), /不归 \/mobile 管/);
+  assert.match(String(result.reason), /不归 \/yz 管/);
 });
 
 test('zombie：进程活着但端口没服务 —— 识别出来，不当成健康', async () => {

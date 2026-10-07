@@ -5,9 +5,9 @@
 // —— 后者光看 UI 完全看不出来，只能靠计数器和 identical 断言。
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pi_mobile/server/chat_models.dart';
-import 'package:pi_mobile/server/chat_reducer.dart';
-import 'package:pi_mobile/server/elapsed_index.dart';
+import 'package:pi_yz/server/chat_models.dart';
+import 'package:pi_yz/server/chat_reducer.dart';
+import 'package:pi_yz/server/elapsed_index.dart';
 
 /// 造一条消息。`at` 为 null 表示没有时间戳（服务端事件里很常见）。
 ChatMessage msg(int index, {int? at}) => ChatMessage(

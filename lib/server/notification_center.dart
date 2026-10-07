@@ -26,7 +26,7 @@ class NotificationCenter with ChangeNotifier {
 
   static final NotificationCenter instance = NotificationCenter._();
 
-  static const _channel = MethodChannel('pi_mobile/native');
+  static const _channel = MethodChannel('pi_yz/native');
 
   // ==================== 设置（落盘） ====================
 

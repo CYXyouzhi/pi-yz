@@ -14,7 +14,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pi_mobile/server/i18n.dart';
+import 'package:pi_yz/server/i18n.dart';
 
 /// 扫出 `lib/` 下所有**字面量**文案 key（同时覆盖 `t('k')` 与 `tp('k', {...})`）。
 ///

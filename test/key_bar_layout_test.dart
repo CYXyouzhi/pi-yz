@@ -14,10 +14,10 @@
 // 而问题恰恰出在约束上。所以这个文件按聊天页的真实层级搭。
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pi_mobile/server/i18n.dart';
-import 'package:pi_mobile/theme/design_tokens.dart';
-import 'package:pi_mobile/theme/neu_theme.dart';
-import 'package:pi_mobile/ui/key_bar.dart';
+import 'package:pi_yz/server/i18n.dart';
+import 'package:pi_yz/theme/design_tokens.dart';
+import 'package:pi_yz/theme/neu_theme.dart';
+import 'package:pi_yz/ui/key_bar.dart';
 
 Widget _wrap(Widget child) => MaterialApp(
       debugShowCheckedModeBanner: false,

@@ -980,7 +980,7 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _infoRow(t, 'App', 'pi-mobile · pi-yz'),
+                  _infoRow(t, 'App', 'pi-yz · pi-yz'),
                   _infoRow(t, I18n.t('ui.1de0cfbc46'), store.health?.piVersion ?? '—'),
                   _infoRow(t, I18n.t('ui.b08caf56ca'), '${store.health?.activeSessions ?? 0}'),
                   _infoRow(t, I18n.t('ui.f98077685a'), '${store.sessions.length}'),

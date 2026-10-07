@@ -6,11 +6,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pi_mobile/server/activity_feed.dart';
-import 'package:pi_mobile/server/i18n.dart';
-import 'package:pi_mobile/server/chat_models.dart';
-import 'package:pi_mobile/server/chat_reducer.dart';
-import 'package:pi_mobile/server/server_types.dart';
+import 'package:pi_yz/server/activity_feed.dart';
+import 'package:pi_yz/server/i18n.dart';
+import 'package:pi_yz/server/chat_models.dart';
+import 'package:pi_yz/server/chat_reducer.dart';
+import 'package:pi_yz/server/server_types.dart';
 
 ChatMessage msg(
   String key,

@@ -149,7 +149,7 @@ export function verifyPairingCode(code, clientIp = 'unknown', now = Date.now()) 
     // 窗口没开不算「失败」：那是用户操作顺序问题，不该罚他、也不该计入限速
     return {
       ok: false,
-      reason: '配对窗口没开（在电脑端执行 pi-mobile server pair，或重启服务端会自动开 5 分钟）',
+      reason: '配对窗口没开（在电脑端执行 pi-yz server pair，或重启服务端会自动开 5 分钟）',
     };
   }
 

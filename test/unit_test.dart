@@ -6,10 +6,10 @@
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pi_mobile/services/key_encoder.dart';
-import 'package:pi_mobile/theme/design_tokens.dart';
-import 'package:pi_mobile/theme/svg_path.dart';
-import 'package:pi_mobile/ui/neu_icons.dart';
+import 'package:pi_yz/services/key_encoder.dart';
+import 'package:pi_yz/theme/design_tokens.dart';
+import 'package:pi_yz/theme/svg_path.dart';
+import 'package:pi_yz/ui/neu_icons.dart';
 
 void main() {
   group('KeyEncoder —— 转义序列编码', () {

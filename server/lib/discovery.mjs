@@ -5,7 +5,7 @@
 //   · 服务端持续发包是白耗电 + 局域网噪音，还容易被安全软件标记。
 //
 // 协议（一行 JSON，足够简单，出错也不会把服务端拖垮）：
-//   手机 → 广播 "PI_MOBILE_DISCOVER:<port?>" 到 255.255.255.255:30143
+//   手机 → 广播 "PI_YZ_DISCOVER:<port?>" 到 255.255.255.255:30143
 //   服务端 → 单播回一条 JSON 给来源地址
 //
 // 注意：**不回传 token**。要拿 token 得走配对码（见 pairing.mjs），
@@ -17,7 +17,7 @@ import os from 'node:os';
 /** 发现用的端口。刻意与 HTTP 端口分开：换 HTTP 端口不影响发现。 */
 export const DISCOVERY_PORT = 30143;
 
-const MAGIC = 'PI_MOBILE_DISCOVER';
+const MAGIC = 'PI_YZ_DISCOVER';
 
 /** 本机所有非回环 IPv4 地址（可能有多个：有线 + 无线 + 虚拟网卡） */
 export function lanAddresses() {
@@ -54,7 +54,7 @@ export function startDiscovery({ httpPort, piVersion, pairingOpen, onQuery }) {
     const port = Number.isInteger(asked) && asked > 0 ? httpPort : httpPort;
 
     const info = {
-      app: 'pi-mobile-server',
+      app: 'pi-yz-server',
       name: os.hostname(),
       port,
       piVersion,

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pi_mobile/ui/server/chat_page.dart';
+import 'package:pi_yz/ui/server/chat_page.dart';
 
 void main() {
   group('slashPanelMaxHeight：命令面板高度与键盘', () {

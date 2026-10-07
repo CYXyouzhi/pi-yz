@@ -14,8 +14,8 @@
 //   2. `ServerProfile` 的往返序列化 + 对旧 JSON 的向后兼容。
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pi_mobile/server/server_profile.dart';
-import 'package:pi_mobile/server/server_store.dart';
+import 'package:pi_yz/server/server_profile.dart';
+import 'package:pi_yz/server/server_store.dart';
 
 void main() {
   group('ServerTarget.candidates（候选地址顺序）', () {

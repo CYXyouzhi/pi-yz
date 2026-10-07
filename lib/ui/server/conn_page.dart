@@ -260,7 +260,7 @@ class _ServerConnPageState extends State<ServerConnPage> {
     setState(() => _profiles = next);
   }
 
-  /// 扫描局域网里的 pi-mobile-server（合同①）
+  /// 扫描局域网里的 pi-yz-server（合同①）
   Future<void> _scan() async {
     setState(() {
       _scanning = true;
