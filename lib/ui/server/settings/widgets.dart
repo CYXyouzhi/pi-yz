@@ -15,6 +15,12 @@ import '../../neu_icons.dart';
 import '../../neu_section.dart';
 import '../../../server/i18n.dart';
 
+/// 清空离线缓存后自增，让缓存区重读一次。
+///
+/// 原先定义在 settings_page.dart 里，但设置页的「App 设置」分组抽成组件后
+/// 它两边都要用 —— 挂在页面上会让组件反向依赖页面，所以挪到这里。
+final ValueNotifier<int> cacheTick = ValueNotifier<int>(0);
+
 /// 设置页的一个可折叠分组标题。
 ///
 /// 与 [NeuSection] 的区别：[NeuSection] 是纯展示（只管长什么样），

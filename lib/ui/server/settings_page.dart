@@ -19,13 +19,12 @@ import '../../theme/neu.dart';
 import '../neu_icons.dart';
 import '../neu_toast.dart';
 import 'config_page.dart';
-import 'files_page.dart';
-import 'log_page.dart';
-import 'pool_view.dart';
+import 'settings/about_section.dart';
+import 'settings/app_section.dart';
+import 'settings/conn_section.dart';
+import 'settings/workspace_section.dart';
 import 'settings/widgets.dart';
 
-/// 清空离线缓存后自增，让缓存区重读一次（设置页本身是无状态的）
-final ValueNotifier<int> cacheTick = ValueNotifier<int>(0);
 
 class ServerSettingsPage extends StatefulWidget {
   const ServerSettingsPage({
@@ -79,234 +78,18 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
           ),
           SizedBox(height: NeuSpace.n16),
 
-          _section(t, I18n.t('settings.conn', context: context),
-              icon: IconId.server,
-              summary: switch (store.state) {
-                ServerConnectionState.connected =>
-                  '${I18n.t('common.connected')} · ${store.activeEndpoint?.label ?? store.target?.label ?? ''}',
-                ServerConnectionState.connecting => I18n.t('common.connecting'),
-                ServerConnectionState.error =>
-                  store.errorMessage ?? I18n.t('common.connFailed'),
-                ServerConnectionState.disconnected => I18n.t('common.disconnected'),
-              }),
-          if (_expanded.contains(
-            I18n.t('settings.conn', context: context),
-          )) ...[
-            NeuRaised(
-              radius: NeuRadii.lg,
-              padding: const EdgeInsets.all(NeuSpace.n16),
-              child: Column(
-                children: [
-                  NeuPressable(
-                    onTap: onOpenConn,
-                    flat: true,
-                    padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n12),
-                    child: Row(
-                      children: [
-                        NeuIcon(IconId.server, size: 17, color: t.accentInk),
-                        const SizedBox(width: NeuSpace.n12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                // 显示**实际连上的**那个地址：配了备用地址且回落成功时，
-                                // 这里会和主地址不同 —— 不显示的话，用户根本不知道
-                                // 现在走的是局域网还是 VPN，排查问题只能靠猜。
-                                store.activeEndpoint?.label ??
-                                    store.target?.label ??
-                                    I18n.t('ui.95af3b54e0'),
-                                style: TextStyle(fontSize: NeuFonts.bodyTight, color: t.fg),
-                              ),
-                              if (store.activeEndpoint?.isFallback == true) ...[
-                                SizedBox(height: NeuSpace.n2),
-                                Text(
-                                  I18n.t('conn.viaFallback'),
-                                  style: TextStyle(fontSize: NeuFonts.badge, color: t.muted),
-                                ),
-                              ],
-                              SizedBox(height: NeuSpace.n2),
-                              Text(
-                                switch (store.state) {
-                                  ServerConnectionState.connected =>
-                                    I18n.tp('ui.b083df935e', {'v': store.health?.piVersion ?? ''}),
-                                  ServerConnectionState.connecting => I18n.t('common.connecting'),
-                                  ServerConnectionState.error =>
-                                    store.errorMessage ?? I18n.t('common.connFailed'),
-                                  ServerConnectionState.disconnected => I18n.t('common.disconnected'),
-                                },
-                                style: TextStyle(
-                                  fontSize: NeuFonts.label,
-                                  color: t.muted,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        NeuIcon(IconId.chevronRight, size: 16, color: t.muted),
-                      ],
-                    ),
-                  ),
-                  if (store.isConnected) ...[
-                    const SizedBox(height: NeuSpace.n10),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: NeuPressable(
-                            onTap: () => store.loadSessions(refresh: true),
-                            radius: NeuRadii.sm,
-                            padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                NeuIcon(IconId.sync, size: 14, color: t.muted),
-                                SizedBox(width: NeuSpace.n6),
-                                Text(
-                                  I18n.t('ui.5e51feb8f3'),
-                                  style: TextStyle(
-                                    fontSize: NeuFonts.bodySmall,
-                                    color: t.muted,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: NeuSpace.n10),
-                        Expanded(
-                          child: NeuPressable(
-                            onTap: () => store.disconnect(),
-                            radius: NeuRadii.sm,
-                            padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                NeuIcon(
-                                  IconId.power,
-                                  size: 14,
-                                  color: t.danger,
-                                ),
-                                SizedBox(width: NeuSpace.n6),
-                                Text(
-                                  I18n.t('ui.9b55c5c9f8'),
-                                  style: TextStyle(
-                                    fontSize: NeuFonts.bodySmall,
-                                    color: t.danger,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
+          ConnSection(
+            store: store,
+            open: _isOpen('settings.conn'),
+            onToggle: () => _toggle('settings.conn'),
+            onOpenConn: onOpenConn,
+          ),
           SizedBox(height: NeuSpace.n20),
-          _section(t, I18n.t('settings.workspace', context: context),
-              icon: IconId.folder,
-              summary: store.target?.defaultCwd ?? I18n.t('ui.e963f6371c')),
-          if (_expanded.contains(
-            I18n.t('settings.workspace', context: context),
-          )) ...[
-            NeuRaised(
-              radius: NeuRadii.lg,
-              padding: const EdgeInsets.all(NeuSpace.n16),
-              child: Column(
-                children: [
-                  NeuPressable(
-                    onTap: () {
-                      final cwd = store.chat.cwd.isNotEmpty
-                          ? store.chat.cwd
-                          : (store.target?.defaultCwd ?? '');
-                      if (cwd.isEmpty) {
-                        NeuToast.show(
-                          context,
-                          message: I18n.t('ui.45afe85695'),
-                          icon: IconId.warn,
-                        );
-                        return;
-                      }
-                      Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) =>
-                              WorkspaceFilesPage(store: store, cwd: cwd),
-                        ),
-                      );
-                    },
-                    flat: true,
-                    padding: const EdgeInsets.symmetric(vertical: NeuSpace.n6),
-                    child: Row(
-                      children: [
-                        NeuIcon(IconId.folder, size: 17, color: t.accentInk),
-                        SizedBox(width: NeuSpace.n12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                I18n.t('ui.5ba881d3c3'),
-                                style: TextStyle(fontSize: NeuFonts.bodyTight, color: t.fg),
-                              ),
-                              SizedBox(height: NeuSpace.n2),
-                              Text(
-                                I18n.t('ui.b66f0c9549'),
-                                style: TextStyle(
-                                  fontSize: NeuFonts.label,
-                                  color: t.muted,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        NeuIcon(IconId.chevronRight, size: 16, color: t.muted),
-                      ],
-                    ),
-                  ),
-                  // 存储占用：会话文件是本 App 在电脑上占地方的主角（实测一台机器 700+ MB），
-                  // 得让用户看得见、清得掉（task-15 合同④）
-                  NeuPressable(
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => StoragePage(store: store),
-                      ),
-                    ),
-                    flat: true,
-                    padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n12),
-                    child: Row(
-                      children: [
-                        NeuIcon(IconId.server, size: 17, color: t.accentInk),
-                        SizedBox(width: NeuSpace.n12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                I18n.t('ui.b9d0f24c4c'),
-                                style: TextStyle(fontSize: NeuFonts.bodyTight, color: t.fg),
-                              ),
-                              SizedBox(height: NeuSpace.n2),
-                              Text(
-                                I18n.t('ui.c7abd045d8'),
-                                style: TextStyle(
-                                  fontSize: NeuFonts.label,
-                                  color: t.muted,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        NeuIcon(IconId.chevronRight, size: 16, color: t.muted),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+          WorkspaceSection(
+            store: store,
+            open: _isOpen('settings.workspace'),
+            onToggle: () => _toggle('settings.workspace'),
+          ),
           SizedBox(height: NeuSpace.n20),
           // 「AI 配置」原先藏在「工作区」分组里，而模型、思考等级、技能命令、
           // MCP 服务器跟工作区没有任何关系。更麻烦的是 ConfigPage 全 App 只有
@@ -726,262 +509,21 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
             ),
           ],
           SizedBox(height: NeuSpace.n20),
-          _section(t, I18n.t('settings.app', context: context), icon: IconId.gear),
-          if (_expanded.contains(
-            I18n.t('settings.app', context: context),
-          )) ...[
-            ListenableBuilder(
-              listenable: AppPrefs.instance,
-              builder: (context, _) {
-                final prefs = AppPrefs.instance;
-                return NeuRaised(
-                  radius: NeuRadii.lg,
-                  padding: EdgeInsets.fromLTRB(NeuSpace.n14, NeuSpace.n10, NeuSpace.n14, NeuSpace.n14),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      PrefLabel(I18n.t('settings.fontSize', context: context),
-                      ),
-                      PrefChips([
-                          (I18n.t('ui.391b8fa9c7'), 0.9),
-                          (I18n.t('ui.544fac400d'), 1.0),
-                          (I18n.t('ui.ab18e30c0d'), 1.15),
-                          (I18n.t('ui.3386da5f56'), 1.3),
-                        ],
-                        current: prefs.fontScale,
-                        onPick: prefs.setFontScale,
-                      ),
-                      PrefLabel(I18n.t('settings.lineHeight', context: context),
-                      ),
-                      PrefChips([(I18n.t('ui.03e59bb33c'), 1.3), (I18n.t('ui.544fac400d'), 1.45), (I18n.t('ui.43e534acf9'), 1.7)],
-                        current: prefs.lineHeight,
-                        onPick: prefs.setLineHeight,
-                      ),
-                      PrefLabel(I18n.t('settings.enter', context: context)),
-                      PrefChips([(I18n.t('ui.2629bdbfad'), 0.0), (I18n.t('ui.63000cee55'), 1.0)],
-                        current: prefs.sendWithEnter ? 1.0 : 0.0,
-                        onPick: (v) => prefs.setSendWithEnter(v > 0.5),
-                      ),
-                      PrefLabel(I18n.t('settings.defaultWorkspace', context: context),
-                      ),
-                      PrefRow(prefs.defaultCwd.isEmpty ? I18n.t('ui.fe2d26a257') : prefs.defaultCwd,
-                        actionLabel: I18n.t('common.select'),
-                        onAction: () => _pickDefaultWorkspace(context, t),
-                      ),
-                      PrefLabel(I18n.t('settings.defaultModel', context: context),
-                      ),
-                      PrefRow((store.defaultModelId == null ||
-                                store.defaultModelProvider == null)
-                            ? I18n.t('ui.56420c43ac')
-                            : '${store.defaultModelId} · ${store.defaultModelProvider}',
-                        actionLabel: I18n.t('common.select'),
-                        onAction: () => _pickDefaultModel(context, t),
-                      ),
-                      PrefLabel(I18n.t('ui.6e33906ae2')),
-                      ValueListenableBuilder<int>(
-                        valueListenable: cacheTick,
-                        builder: (context, tick, _) => FutureBuilder<List<CacheEntry>>(
-                          key: ValueKey<int>(tick),
-                          future: SessionCache.entries(),
-                          builder: (context, snapshot) {
-                            final list = snapshot.data ?? const <CacheEntry>[];
-                            final bytes = list.fold<int>(
-                              0,
-                              (sum, item) => sum + item.bytes,
-                            );
-                            final sizeLabel = bytes < 1024
-                                ? '$bytes B'
-                                : bytes < 1024 * 1024
-                                ? '${(bytes / 1024).toStringAsFixed(1)} KB'
-                                : '${(bytes / 1024 / 1024).toStringAsFixed(2)} MB';
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  list.isEmpty
-                                      ? I18n.t('ui.577d49c54f')
-                                      : I18n.tp('ui.745a442139', {'n': list.length, 'size': sizeLabel}),
-                                  style: TextStyle(
-                                    fontSize: NeuFonts.small,
-                                    color: t.muted,
-                                  ),
-                                ),
-                                SizedBox(height: NeuSpace.n6),
-                                CollapsibleText(
-                                  // 用插值而不是 +：三段的语言不同，拼接位置由每条译文自己决定
-                                  text: '${I18n.tp('ui.c97d59e36c', {'n': SessionCache.maxSessions})}'
-                                      '${I18n.tp('ui.3c7de3c73a', {'n': SessionCache.maxMessages})}'
-                                      '${I18n.t('ui.6b1e5ff3a1')} ${SessionCache.maxCharsPerSession ~/ 1024} KB'
-                                      '${I18n.t('ui.2e2b64d0b1')}',
-                                  style: TextStyle(
-                                    fontSize: NeuFonts.badge,
-                                    height: 1.6,
-                                    color: t.onBgDim,
-                                  ),
-                                ),
-                                for (final entry in list)
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: NeuSpace.n6),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            '${entry.name.isEmpty ? entry.sessionId.substring(0, 8) : entry.name}'
-                                            '${I18n.tp('ui.96738eb2aa', {'n': entry.messageCount, 'size': entry.sizeLabel})}',
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: TextStyle(
-                                              fontSize: NeuFonts.label,
-                                              color: t.muted,
-                                            ),
-                                          ),
-                                        ),
-                                        NeuPressable(
-                                          onTap: () async {
-                                            await SessionCache.removeOne(
-                                              entry.sessionId,
-                                            );
-                                            cacheTick.value += 1;
-                                            if (!context.mounted) return;
-                                            NeuToast.show(
-                                              context,
-                                              message: I18n.t('ui.6d0d37ee23'),
-                                              icon: IconId.check,
-                                            );
-                                          },
-                                          radius: 8,
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: NeuSpace.n8,
-                                            vertical: NeuSpace.n4,
-                                          ),
-                                          child: Text(
-                                            I18n.t('ui.4403fca0c0'),
-                                            style: TextStyle(
-                                              fontSize: NeuFonts.label,
-                                              color: t.danger,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                if (list.isNotEmpty) ...[
-                                  const SizedBox(height: NeuSpace.n8),
-                                  NeuPressable(
-                                    onTap: () async {
-                                      await SessionCache.clear();
-                                      cacheTick.value += 1;
-                                      if (!context.mounted) return;
-                                      NeuToast.show(
-                                        context,
-                                        message: I18n.t('ui.b2b3bb2703'),
-                                        icon: IconId.check,
-                                      );
-                                    },
-                                    radius: NeuRadii.sm,
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: NeuSpace.n10,
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        I18n.t('ui.3bc9ba2888'),
-                                        style: TextStyle(
-                                          fontSize: NeuFonts.sub,
-                                          color: t.danger,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            );
-                          },
-                        ),
-                      ),
-                      SizedBox(height: NeuSpace.n10),
-                      PrefLabel(I18n.t('settings.localData', context: context),
-                      ),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: NeuPressable(
-                              onTap: () => _clearLocalData(context),
-                              radius: NeuRadii.sm,
-                              padding: EdgeInsets.symmetric(vertical: NeuSpace.n10),
-                              child: Center(
-                                child: Text(
-                                  I18n.t('settings.clear', context: context),
-                                  style: TextStyle(
-                                    fontSize: NeuFonts.sub,
-                                    color: t.danger,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: NeuSpace.n8),
-                          Expanded(
-                            child: NeuPressable(
-                              onTap: () => Navigator.of(context).push(
-                                MaterialPageRoute<void>(
-                                  builder: (_) => const LogPage(),
-                                ),
-                              ),
-                              radius: NeuRadii.sm,
-                              padding: EdgeInsets.symmetric(vertical: NeuSpace.n10),
-                              child: Center(
-                                child: Text(
-                                  I18n.t('settings.logs', context: context),
-                                  style: TextStyle(
-                                    fontSize: NeuFonts.sub,
-                                    color: t.accentInk,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ],
+          AppSection(
+            store: store,
+            open: _isOpen('settings.app'),
+            onToggle: () => _toggle('settings.app'),
+            // 这三个动作要动配置与缓存，留在页面侧；组件只负责触发
+            onPickWorkspace: () => _pickDefaultWorkspace(context, t),
+            onPickModel: () => _pickDefaultModel(context, t),
+            onClearData: () => _clearLocalData(context),
+          ),
           SizedBox(height: NeuSpace.n20),
-          _section(t, I18n.t('settings.about', context: context),
-              icon: IconId.info,
-              summary: store.health?.piVersion == null
-                  ? null
-                  : 'pi ${store.health!.piVersion}'),
-          if (_expanded.contains(
-            I18n.t('settings.about', context: context),
-          )) ...[
-            NeuRaised(
-              radius: NeuRadii.lg,
-              padding: const EdgeInsets.all(NeuSpace.n16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  InfoRow(label: 'App', value: 'pi-yz · pi-yz'),
-                  InfoRow(label: I18n.t('ui.1de0cfbc46'), value: store.health?.piVersion ?? '—'),
-                  InfoRow(label: I18n.t('ui.b08caf56ca'), value: '${store.health?.activeSessions ?? 0}'),
-                  InfoRow(label: I18n.t('ui.f98077685a'), value: '${store.sessions.length}'),
-                  SizedBox(height: NeuSpace.n6),
-                  CollapsibleText(
-                    // ignore: prefer_interpolation_to_compose_strings
-                    text: '${I18n.t('ui.d2bf098e02')}'
-                        '${I18n.t('ui.fccbc56d80')}',
-                    style: TextStyle(
-                      fontSize: NeuFonts.label,
-                      height: 1.7,
-                      color: t.onBgDim,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+          AboutSection(
+            store: store,
+            open: _isOpen('settings.about'),
+            onToggle: () => _toggle('settings.about'),
+          ),
         ],
       ),
     );
@@ -1292,6 +834,20 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
   ///
   /// 这里保留一层包装而不是让 8 处调用各自组装 NeuSection —— 那些调用点
   /// 关心的只是「标题 + 图标 + 摘要」，不该每次都写一遍 open/onToggle。
+  /// 分组是否展开（`_expanded` 存的是「展开了」的标题）。
+  ///
+  /// 配合 [_toggle] 给抽出去的分组组件用：它们自己不持有状态，
+  /// 只收「我展开了吗」和「点了要干什么」（约定见 docs/refactor-status.md）。
+  bool _isOpen(String key) => _expanded.contains(key);
+
+  void _toggle(String key) => setState(() {
+        if (_expanded.contains(key)) {
+          _expanded.remove(key);
+        } else {
+          _expanded.add(key);
+        }
+      });
+
   /// 保留这层薄包装：8 个分组的调用点都写 `_section(t, I18n.t(...), ...)`，
   /// 让它继续读 `_expanded` 并调 setState，就不用改那 8 处。
   /// 真正的壳已经搬到 `settings/widgets.dart`，分组抽出去时直接用那个。
