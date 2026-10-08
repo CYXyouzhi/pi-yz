@@ -210,6 +210,37 @@ void main() {
     });
   });
 
+  test('交给 _expanded 的键必须是翻译值（I18n.t），不是 i18n key 名', () {
+    // 背景（真机测出来的 bug，重构时引入）：
+    // `_expanded` 里存的是**翻译后的标题**（`I18n.t(key)` 的返回值），不是 key 本身。
+    // 重构时在 onToggle 里写成：
+    //
+    //   const k = 'conn.groupQuick';
+    //   _expanded.add(k);
+    //
+    // 而判定处写的是 `_expanded.contains(I18n.t('conn.groupQuick'))` —— 两个字符串
+    // 不相等，于是**点折叠头完全没反应**（箭头一直不翻）。
+    //
+    // 上面那条「键与门控配对」的测试抓不到它：两边确实出现了同一个 key，
+    // 只是**喂给 _expanded 的不是同一个值**。所以单独加这条。
+    final files = <String>[
+      ...pages.values.map((s) => s.page),
+      ...pages.values.map((s) => s.companion),
+    ];
+    for (final path in files) {
+      if (!File(path).existsSync()) continue;
+      final src = File(path).readAsStringSync();
+      for (final m in RegExp(r"(?:const|final)\s+(\w+)\s*=\s*'([^']+)'").allMatches(src)) {
+        final name = m.group(1)!;
+        final used = RegExp(r'_expanded\.(?:add|remove|contains)\(\s*' + name + r'\s*[,)]');
+        if (used.hasMatch(src)) {
+          fail('$path 里 `$name` 被赋成字面量 "${m.group(2)}" 之后交给了 _expanded —— '
+              '_expanded 存的是**翻译值**，应该用 I18n.t(...)。');
+        }
+      }
+    }
+  });
+
   test('连接页的两个分组确实被门控（审计点名的那两个）', () {
     final src = File('lib/ui/server/conn_page.dart').readAsStringSync();
     // conn.groupManual（「手动配置」那块表单）已经不在连接页内联了 ——

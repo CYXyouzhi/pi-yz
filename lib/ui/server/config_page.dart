@@ -452,7 +452,7 @@ class _ConfigPageState extends State<ConfigPage> {
                 chat: chat,
                 open: _expanded.contains(I18n.t('ui.11eead2c33')),
                 onToggle: () => setState(() {
-                  const k = 'ui.11eead2c33';
+                  final k = I18n.t('ui.11eead2c33');
                   _expanded.contains(k) ? _expanded.remove(k) : _expanded.add(k);
                 }),
               ),
@@ -464,7 +464,7 @@ class _ConfigPageState extends State<ConfigPage> {
                 onAddCredential: _addCredential,
                 open: _expanded.contains(I18n.t('ui.c4d89641a1')),
                 onToggle: () => setState(() {
-                  const k = 'ui.c4d89641a1';
+                  final k = I18n.t('ui.c4d89641a1');
                   _expanded.contains(k) ? _expanded.remove(k) : _expanded.add(k);
                 }),
               ),
@@ -484,7 +484,7 @@ class _ConfigPageState extends State<ConfigPage> {
                 store: _store,
                 open: _expanded.contains(I18n.t('ui.a9cec18e05')),
                 onToggle: () => setState(() {
-                  const k = 'ui.a9cec18e05';
+                  final k = I18n.t('ui.a9cec18e05');
                   _expanded.contains(k) ? _expanded.remove(k) : _expanded.add(k);
                 }),
               ),

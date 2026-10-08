@@ -492,7 +492,7 @@ class _ServerConnPageState extends State<ServerConnPage> {
               expanded: _expanded.contains(I18n.t('conn.groupQuick')),
               scanning: _scanning,
               onToggle: () => setState(() {
-                const k = 'conn.groupQuick';
+                final k = I18n.t('conn.groupQuick');
                 if (_expanded.contains(k)) {
                   _expanded.remove(k);
                 } else {
@@ -513,7 +513,7 @@ class _ServerConnPageState extends State<ServerConnPage> {
               editingId: _editingId,
               expanded: _expanded.contains(I18n.t('ui.f8dfedcd8a')),
               onToggle: () => setState(() {
-                const k = 'ui.f8dfedcd8a';
+                final k = I18n.t('ui.f8dfedcd8a');
                 if (_expanded.contains(k)) {
                   _expanded.remove(k);
                 } else {
