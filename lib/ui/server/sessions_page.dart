@@ -687,7 +687,26 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
             ),
           ),
         _GroupRow(:final cwd, :final name, :final sessions, :final expanded) =>
-          _buildGroup(t, cwd, name, sessions, expanded),
+          SessionGroupCard(
+            cwd: cwd,
+            name: name,
+            sessions: sessions,
+            expanded: expanded,
+            runningIds: _store.pool
+                .where((p) => p.running)
+                .map((p) => p.id)
+                .toSet(),
+            onToggle: (c) => setState(() {
+              if (_store.expandedWorkspaces.contains(c)) {
+                _store.expandedWorkspaces.remove(c);
+              } else {
+                _store.expandedWorkspaces.add(c);
+              }
+            }),
+            onOpenSession: (s) => widget.onOpenSession?.call(s),
+            onOpenChat: () => widget.onOpenChat?.call(),
+            onMore: _showSessionActions,
+          ),
         _EmptyRow() => EmptyStateView(store: _store),
       };
 
@@ -969,135 +988,4 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
   /// 新建但未落盘的会话：pi 要等第一条消息才写文件，
   /// 这里先给它一个位置，否则用户会以为「新建没生效」。
   /// 一个工作区一张卡：分组头 + （展开时）它自己的会话行。
-  Widget _buildGroup(
-    NeuTokens t,
-    String cwd,
-    String name,
-    List<ServerSession> sessions,
-    bool expanded,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: NeuSpace.n8),
-      child: NeuRaised(
-        radius: NeuRadii.md,
-        level: NeuLevel.small,
-        padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n6),
-        child: Column(
-          children: [
-            NeuPressable(
-              flat: true,
-              onTap: () => setState(() {
-                if (expanded) {
-                  _store.expandedWorkspaces.remove(cwd);
-                } else {
-                  _store.expandedWorkspaces.add(cwd);
-                }
-              }),
-              padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
-              child: Row(
-                children: [
-                  NeuIcon(IconId.folder, size: 15, color: t.accentInk),
-                  const SizedBox(width: NeuSpace.n8),
-                  Expanded(
-                    child: Text(
-                      name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: NeuFonts.bodyMid,
-                        color: t.fg,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  Text('${sessions.length}', style: TextStyle(fontSize: NeuFonts.label, color: t.muted)),
-                  const SizedBox(width: NeuSpace.n6),
-                  NeuIcon(
-                    expanded ? IconId.chevronDown : IconId.chevronRight,
-                    size: 14,
-                    color: t.muted,
-                  ),
-                ],
-              ),
-            ),
-            if (expanded)
-              for (var i = 0; i < sessions.length; i++) ...[
-                // 发丝分隔线：inset-grouped 靠它把多条会话读成同一组
-                Container(height: 1, color: t.border),
-                _buildSessionRow(t, sessions[i]),
-              ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSessionRow(NeuTokens t, ServerSession session) {
-    // 「哪个在跑」直接标在行上（task-21 合同④）：并行跑几条时，
-    // 用户第一眼要能看出哪一条在动，而不是只能看顶部的总览卡片。
-    final running =
-        _store.pool.any((p) => p.id == session.id && p.running);
-    return GestureDetector(
-      // 长按也进操作菜单（重命名/删除），与右侧图标同一入口
-      onLongPress: () => _showSessionActions(session),
-      child: NeuPressable(
-        flat: true,
-        onTap: () {
-          widget.onOpenSession?.call(session);
-          widget.onOpenChat?.call();
-        },
-        padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
-        child: Row(
-          children: [
-            NeuIcon(
-              running ? IconId.spinner : IconId.bubble,
-              size: 14,
-              color: running ? t.success : t.muted,
-            ),
-            const SizedBox(width: NeuSpace.n9),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    session.displayTitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: NeuFonts.bodyMid, color: t.fg),
-                  ),
-                  SizedBox(height: NeuSpace.n2),
-                  Text(
-                    running
-                        ? I18n.tp('ui.604c021ba2', {'n': session.messageCount, 'time': _relativeTime(session.modifiedAt)})
-                        : I18n.tp('ui.d05a6b72d1', {'n': session.messageCount, 'time': _relativeTime(session.modifiedAt)}),
-                    style: TextStyle(
-                        fontSize: NeuFonts.badge, color: running ? t.success : t.muted),
-                  ),
-                ],
-              ),
-            ),
-            GestureDetector(
-              onTap: () => _showSessionActions(session),
-              behavior: HitTestBehavior.opaque,
-              child: Padding(
-                padding: const EdgeInsets.all(NeuSpace.n6),
-                child: NeuIcon(IconId.pen, size: 14, color: t.muted),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  static String _relativeTime(DateTime? time) {
-    if (time == null) return I18n.t('ui.9418d7cb5e');
-    final diff = DateTime.now().difference(time);
-    if (diff.inMinutes < 1) return I18n.t('ui.4181f7fe2a');
-    if (diff.inMinutes < 60) return I18n.tp('ui.1f75ab9c48', {'count': diff.inMinutes});
-    if (diff.inHours < 24) return I18n.tp('ui.16362ceb20', {'n': diff.inHours});
-    if (diff.inDays < 30) return I18n.tp('ui.0dd2ae3aa0', {'n': diff.inDays});
-    return '${time.year}-${time.month.toString().padLeft(2, '0')}-'
-        '${time.day.toString().padLeft(2, '0')}';
-  }
 }
