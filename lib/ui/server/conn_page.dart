@@ -475,136 +475,31 @@ class _ServerConnPageState extends State<ServerConnPage> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n8, NeuSpace.n18, 28),
           children: [
-            Row(
-              children: [
-                NeuPressable(
-                  onTap: () => Navigator.of(context).maybePop(),
-                  radius: 12,
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n12),
-                    child: NeuIcon(IconId.chevronLeft, size: 16),
-                  ),
-                ),
-                SizedBox(width: NeuSpace.n10),
-                Text(
-                  I18n.t('ui.b1a9635c77'),
-                  style: TextStyle(
-                    fontSize: NeuFonts.pageTitle,
-                    fontWeight: FontWeight.w700,
-                    color: t.onBg,
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: NeuSpace.n6),
-            Text(
-              I18n.t('ui.445cf3f727'),
-              style: TextStyle(fontSize: NeuFonts.sub, color: t.onBgDim),
-            ),
-            const SizedBox(height: NeuSpace.n14),
+            const ConnPageHeader(),
 
             // ---- 远程访问（task-18）：不在同一局域网也能连 ----
             _remoteCard(t),
             const SizedBox(height: NeuSpace.n14),
 
-            // ---- 快速连接：把「扫一台连上」与「查为什么连不上」归成一组 ----
+            // ---- 快速连接：把「扫一台连上」与「查为什么连不上」归成一组 ---
             // 原来这两个大按钮和「已保存」「手动表单」平铺，看不出主次。
-            _section(t, I18n.t('conn.groupQuick'),
-                icon: IconId.sync, summary: I18n.t('ui.e33ff6aad6')),
-            // 内容必须真的跟着收起/展开。只画一个带箭头的标题、内容却无条件
-            // 渲染的话，点标题只会翻转箭头 —— 块根本折不起来。
-            // （审计就是这样抓到的：它把「_section(...) 带 onToggle」和
-            //  「内容有没有包在 if (_expanded.contains(...)) 里」对了一遍。）
-            if (_expanded.contains(I18n.t('conn.groupQuick'))) ...[
-            // ---- 局域网扫描（合同①）：不用手输 IP ----
-            NeuPressable(
-              onTap: _scanning ? null : _scan,
-              radius: NeuRadii.md,
-              padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  NeuIcon(
-                    _scanning ? IconId.spinner : IconId.sync,
-                    size: 15,
-                    color: t.accentInk,
-                  ),
-                  SizedBox(width: NeuSpace.n7),
-                  Text(
-                    _scanning ? I18n.t('ui.eb0bc967a8') : I18n.t('ui.3a8e52efff'),
-                    style: TextStyle(
-                      fontSize: NeuFonts.bodyMid,
-                      color: t.accentInk,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
+            QuickConnectSection(
+              expanded: _expanded.contains(I18n.t('conn.groupQuick')),
+              scanning: _scanning,
+              onToggle: () => setState(() {
+                const k = 'conn.groupQuick';
+                if (_expanded.contains(k)) {
+                  _expanded.remove(k);
+                } else {
+                  _expanded.add(k);
+                }
+              }),
+              onScan: _scan,
+              onDiagnose: _openDiagnose,
+              scanNote: _scanNote,
+              found: _found,
+              onUseDiscovered: _useDiscovered,
             ),
-            const SizedBox(height: NeuSpace.n10),
-
-            // ---- 连接诊断（合同③）：把「连不上」拆成能动手的原因 ----
-            NeuPressable(
-              onTap: _openDiagnose,
-              radius: NeuRadii.md,
-              padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  NeuIcon(IconId.sync, size: 15, color: t.muted),
-                  const SizedBox(width: NeuSpace.n7),
-                  Text(
-                    I18n.t('ui.diagnoseBtn'),
-                    style: TextStyle(
-                      fontSize: NeuFonts.bodyMid,
-                      color: t.muted,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (_scanNote != null)
-              Padding(
-                padding: const EdgeInsets.only(top: NeuSpace.n8),
-                child: Text(
-                  _scanNote!,
-                  style: TextStyle(fontSize: NeuFonts.label, height: 1.6, color: t.onBgDim),
-                ),
-              ),
-            for (final server in _found)
-              Padding(
-                padding: const EdgeInsets.only(top: NeuSpace.n8),
-                child: NeuPressable(
-                  onTap: () => _useDiscovered(server),
-                  padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n12),
-                  child: Row(
-                    children: [
-                      NeuIcon(IconId.server, size: 16, color: t.accentInk),
-                      const SizedBox(width: NeuSpace.n10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(server.name,
-                                style: TextStyle(fontSize: NeuFonts.bodyMid, color: t.fg)),
-                            Text(
-                              '${server.endpoint} · pi ${server.piVersion}'
-                              '${_pairingLabel(server.pairingOpen)}',
-                              style: TextStyle(fontSize: NeuFonts.label, color: t.muted),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Text(
-                        server.pairingOpen ? I18n.t('ui.e33ff6aad6') : I18n.t('ui.fad7c8a21f'),
-                        style: TextStyle(fontSize: NeuFonts.sub, color: t.accentInk),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
             SizedBox(height: NeuSpace.n18),
 
             if (_profiles.isNotEmpty) ...[
@@ -832,9 +727,6 @@ class _ServerConnPageState extends State<ServerConnPage> {
 
   /// 发现项副标题里那句「可配对 / 未开配对窗口」。
   /// 抽出来是因为 Dart 的字符串插值里不能再嵌同种引号的三元表达式。
-  String _pairingLabel(bool open) =>
-      open ? I18n.t('ui.b4912bca07') : I18n.t('ui.3b07ed0da7');
-
   /// 表单区（「手动配置」那块折叠区）的锚点，用于新增/编辑后滚过去。
 
   /// 新增一台机器：直接开子页面。
