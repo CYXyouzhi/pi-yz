@@ -9,6 +9,7 @@ import '../../../server/server_types.dart';
 import '../../../theme/design_tokens.dart';
 import '../../../theme/neu.dart';
 import '../../neu_icons.dart';
+import '../../neu_toast.dart';
 import '../activity_view.dart';
 import 'sheets.dart';
 
@@ -1066,4 +1067,241 @@ class ChatComposer extends StatelessWidget {
       );
   
   }
+}
+
+/// 模型切换器里的一行：模型名 + provider/窗口/推理标记，当前项打勾。
+///
+/// **收 `onTap` 而不是 `StateSetter`** —— 原实现把弹层的 `setState` 直接传进来、
+/// 在组件里去改父级状态，那是把「谁负责状态」搅在一起了。现在组件只报告被点了，
+/// 切模型、报错、弹 toast 都由弹层函数自己做。
+class ModelOptionRow extends StatelessWidget {
+  const ModelOptionRow({
+    super.key,
+    required this.model,
+    required this.current,
+    required this.onTap,
+  });
+
+  final ModelInfo model;
+
+  /// 当前选中的模型 —— 用来判断这一行是不是「正在用的」。
+  final ModelInfo? current;
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.neu;
+    final isCurrent =
+        current != null && current!.provider == model.provider && current!.id == model.id;
+    return NeuPressable(
+      flat: !isCurrent,
+      alwaysInset: isCurrent,
+      radius: 10,
+      padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n9),
+      margin: const EdgeInsets.only(bottom: NeuSpace.n6),
+      onTap: onTap,
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(model.name, style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.fg)),
+                Text(
+                  I18n.tp('ui.b7077d029c', {
+                        'provider': model.provider,
+                        'window': model.contextWindow ?? '?',
+                      }) +
+                      (model.reasoning ? I18n.t('ui.af181ac8b2') : ''),
+                  style: TextStyle(fontSize: NeuFonts.micro, color: t.muted),
+                ),
+              ],
+            ),
+          ),
+          if (isCurrent) NeuIcon(IconId.check, size: 15, color: t.accentInk),
+        ],
+      ),
+    );
+  }
+}
+
+/// 模型 + 思考等级的浮动切换器（弹层）。
+///
+/// **为什么错误行不用 NeuToast**：底部弹层也在 overlay 里且盖在上面，
+/// 弹层里弹出的 toast 会被自己挡住 —— 实测症状是「切模型失败但什么都看不到」。
+/// 所以错误显示在弹层内部的一行里（`inSheetError`）。
+///
+/// 按 provider 分组：用户切换时要能一眼看出「这条是官方还是中转」。
+/// 高度上限 80% 屏高，内容可滚。
+Future<void> showModelSwitcherSheet(BuildContext context, ServerStore store) async {
+  final models = await store.availableModels();
+  final levels = await store.availableThinkingLevels();
+  if (!context.mounted) return;
+
+    if (!context.mounted) return;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        final t = sheetContext.neu;
+        // 弹层内部的错误行。
+        // 为什么不用 NeuToast：底部弹层也在 overlay 里且盖在上面，
+        // 弹层里弹出的 toast 会被自己挡住 —— 实测「切模型失败但什么都看不到」。
+        String? inSheetError;
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            final chat = store.chat;
+            final current = chat.model;
+            // 按 provider 分组，切换时能一眼看出「这条是官方还是中转」
+            final byProvider = <String, List<ModelInfo>>{};
+            for (final model in models) {
+              byProvider.putIfAbsent(model.provider, () => []).add(model);
+            }
+
+            return Container(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.8,
+              ),
+              decoration: BoxDecoration(
+                color: t.bg,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(NeuRadii.lg),
+                ),
+              ),
+              padding: const EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n12, NeuSpace.n18, NeuSpace.n24),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      I18n.t('ui.29f830c6dd'),
+                      style: TextStyle(
+                        fontSize: NeuFonts.sectionTitle,
+                        fontWeight: FontWeight.w700,
+                        color: t.onBg,
+                      ),
+                    ),
+                    SizedBox(height: NeuSpace.n4),
+                    Text(
+                      current == null
+                          ? I18n.t('ui.6e6f9563b7')
+                          : I18n.tp('ui.9fa88d5d6f', {'name': current.name, 'provider': current.provider}),
+                      style: TextStyle(fontSize: NeuFonts.small, color: t.muted),
+                    ),
+                    if (inSheetError != null) ...[
+                      const SizedBox(height: NeuSpace.n8),
+                      Row(
+                        children: [
+                          NeuIcon(IconId.warn, size: 14, color: t.danger),
+                          const SizedBox(width: NeuSpace.n6),
+                          Expanded(
+                            child: Text(
+                              inSheetError!,
+                              style: TextStyle(fontSize: NeuFonts.small, color: t.danger),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                    SizedBox(height: NeuSpace.n14),
+                    Text(
+                      I18n.t('ui.11eead2c33'),
+                      style: TextStyle(
+                        fontSize: NeuFonts.sub,
+                        fontWeight: FontWeight.w700,
+                        color: t.accentInk,
+                      ),
+                    ),
+                    const SizedBox(height: NeuSpace.n8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        for (final level in levels)
+                          NeuPressable(
+                            onTap: () async {
+                              final ok = await store.setThinkingLevel(level);
+                              if (!sheetContext.mounted) return;
+                              setSheetState(() {
+                                inSheetError = ok ? null : store.lastError;
+                              });
+                              if (ok) {
+                                NeuToast.show(
+                                  sheetContext,
+                                  message: I18n.tp('ui.944e771000', {'level': level}),
+                                  icon: IconId.check,
+                                );
+                              }
+                            },
+                            flat: chat.thinkingLevel != level,
+                            alwaysInset: chat.thinkingLevel == level,
+                            radius: 8,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: NeuSpace.n12,
+                              vertical: NeuSpace.n7,
+                            ),
+                            child: Text(
+                              level,
+                              style: TextStyle(
+                                fontSize: NeuFonts.sub,
+                                color: chat.thinkingLevel == level
+                                    ? t.accentInk
+                                    : t.fg,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    SizedBox(height: NeuSpace.n16),
+                    Text(
+                      I18n.t('ui.41f1f2fb0e'),
+                      style: TextStyle(
+                        fontSize: NeuFonts.sub,
+                        fontWeight: FontWeight.w700,
+                        color: t.accentInk,
+                      ),
+                    ),
+                    const SizedBox(height: NeuSpace.n8),
+                    for (final entry in byProvider.entries) ...[
+                      Padding(
+                        padding: const EdgeInsets.only(top: NeuSpace.n8, bottom: NeuSpace.n4),
+                        child: Text(
+                          entry.key,
+                          style: TextStyle(fontSize: NeuFonts.label, color: t.muted),
+                        ),
+                      ),
+                      for (final model in entry.value)
+                        ModelOptionRow(
+                          model: model,
+                          current: current,
+                          onTap: () async {
+                            final ok = await store.setModel(model.provider, model.id);
+                            if (!sheetContext.mounted) return;
+                            setSheetState(() {
+                              inSheetError =
+                                  ok ? null : (store.lastError ?? I18n.t('ui.2d5fbafe5d'));
+                            });
+                            if (ok) {
+                              NeuToast.show(
+                                sheetContext,
+                                message: I18n.tp('ui.97523d250a',
+                                    {'name': model.name, 'provider': model.provider}),
+                                icon: IconId.check,
+                              );
+                            }
+                          },
+                        ),
+                    ],
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  
 }
