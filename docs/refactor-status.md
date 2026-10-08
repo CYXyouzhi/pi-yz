@@ -30,8 +30,8 @@
 | `lib/ui/server/settings_page.dart` | 1472 | ✅ 875 行（8 个分组抽了 7 个；「外观」未能抽出，原因见「踩过的坑⑤」）|
 | `lib/ui/server/config_page.dart` | 1307 | ✅ 811 行（6 个分组抽了 5 个；MCP 分组未抽）|
 | `lib/ui/server/files_page.dart` | 1059 | ✅ 645 行（6 个组件 + 2 个工具函数 + 2 个底部面板）|
-| `lib/ui/server/sessions_page.dart` | 1316 | ✅ 1103 行（5 个组件已抽；`_buildSessionRow`/`_buildGroup` 是雷区，不抽）|
-| `lib/ui/server/conn_page.dart` | 1300 | ✅ 1209 行（3 个组件已抽；`_remoteCard` 待手工加参数）|
+| `lib/ui/server/sessions_page.dart` | 1316 | ✅ **991 行**（减 25%；`_buildSessionRow`/`_buildGroup` 已手工搬）| (旧)雷区，不抽）|
+| `lib/ui/server/conn_page.dart` | 1300 | ✅ **692 行（减 47%）** —— 完成 |
 | `lib/ui/server/chat_page.dart` | 3374 | ✅ 2344 行（减 31%；余下见文档）|
 | `lib/server/server_store.dart` | 1814 | 🚫 **不动**（「唯一状态源」是架构决策的载体，拆它等于动地基）|
 
@@ -500,6 +500,41 @@ chat_page **3374 → 2740 行**（减 634 / 19%），新建 `chat/sheets.dart`�
 
 **建议下一轮**：这类「递归 + 多参数 + 签名多行」的方法**手工搬**，别用脚本 ——
 脚本对它的隐式假设太多（不是 State 方法、参数要对齐、内部递归调用不能漏改）。
+
+**⑰ conn_page 完成：1300 → 692 行（减 47%）**
+
+六个文件里减得最多的一个。**根因是一个 363 行的 build 方法** ——
+其它页面都没有超长 build，它却有。拆掉 build 里的 5 块 + `_remoteCard`（208 行）就下来了。
+
+**两条最有价值的经验（都来自这个文件）**
+
+**1. 依赖数不能靠正则数，要读代码。**
+`_remoteCard` 正则数出 **23 个依赖**，读代码只有 **8 个** ——
+正则把块外出现的 `_xxx` 也算进来了。
+`sessions_page` 的「已保存的服务器」块同样：正则 13 个，实际 8 个。
+**如果信了正则，这两块都会因为「依赖太多」被判不值得拆 ——
+而它们恰恰是各自文件里最大的块。**
+
+**2. `if (_expanded.contains(...)) ...[` 这类块的范围不能靠注释判断。**
+「快速连接」组的注释下面紧跟「连接诊断」，但诊断按钮**也属于这一组**，
+`],` 在更后面。第一次替换漏了 62 行、analyze 报 16 个错。
+**正确做法**：找那个 10 空格缩进的收尾 `],`。
+
+**一个测试适配（重要）**
+
+`test/fold_gating_test.dart` 是审计 bug 留下的守卫（分组头画了箭头、
+内容却无条件渲染 ⇒ 点下去只会翻箭头）。重构把分组头从页面的 `_section(KEY)`
+搬进了组件的 `NeuSection(title: KEY)`，守卫就扫不到东西、**形同虚设**了。
+
+改法：**「承诺可折叠」扫页面 + 该页对应的组件**，
+而**门控 `_expanded.contains(KEY)` 仍只认页面**（展开状态在页面的 State 里）。两个细节：
+  · 组件与页面必须**成对** —— 否则拿 A 页的组件去 B 页找门控，必然误报一片；
+  · 只认**能静态比对的键**（`I18n.t('...')` / `'...'`），传变量的（`title: title`）
+    由组件自己负责 —— 静态测试管不了运行时会传什么进来。
+
+**Dart 类型坑**：`_ownRemote` 是 `TextEditingController`（控制器由页面持有并 dispose，
+组件只读它的值）；`_saveOwnAddress` 返回 `Future<void>`，回调类型得写
+`Future<void> Function(String)`，不能偷懒写成 `ValueChanged<String>`。
 
 **结果**：`settings_page.dart` 停在 **875 行**（原 1472，减 597 行 / 40%），未达 800 目标。
 差的就是「外观」这 367 行。它仍作为整体留在页面里 —— 至少是**自洽**的
