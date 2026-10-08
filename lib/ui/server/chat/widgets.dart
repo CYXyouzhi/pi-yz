@@ -949,3 +949,121 @@ class ChatHeader extends StatelessWidget {
   
   }
 }
+
+/// 底部输入区：＋（素材/模板）、⌘（按键条）、输入框、发送 / 中止。
+///
+/// **控制器与焦点节点由页面持有**（页面负责 dispose），组件只把它们挂到
+/// TextField 上、自己不持有状态 —— 这样切 Tab、重进页面时草稿与焦点都不会丢。
+///
+/// 运行中「发送」变成「中止」：同一个按钮位置，不额外占地方。
+class ChatComposer extends StatelessWidget {
+  const ChatComposer({
+    super.key,
+    required this.input,
+    required this.inputFocus,
+    required this.running,
+    required this.keyBarVisible,
+    required this.onSend,
+    required this.onAbort,
+    required this.onShowMenu,
+    required this.onToggleKeyBar,
+  });
+
+  final TextEditingController input;
+  final FocusNode inputFocus;
+
+  /// agent 正在跑 —— 决定提示文案与按钮是「发送」还是「中止」。
+  final bool running;
+
+  /// ⌘ 键条是否已展开（决定图标是否高亮）。
+  final bool keyBarVisible;
+
+  final VoidCallback onSend;
+  final VoidCallback onAbort;
+  final VoidCallback onShowMenu;
+  final VoidCallback onToggleKeyBar;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.neu;
+    
+      return Container(
+        // 上下各收一点：输入区常驻，竖向每一像素都是从消息区里扣的
+        margin: EdgeInsets.fromLTRB(
+          NeuSpace.n12,
+          NeuSpace.n2,
+          NeuSpace.n12,
+          MediaQuery.paddingOf(context).bottom + NeuSpace.n4,
+        ),
+        padding: const EdgeInsets.all(NeuSpace.n2),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(NeuRadii.md),
+          gradient: NeuDecorations.wellGradient(t),
+          boxShadow: NeuShadows.inset(t),
+        ),
+        child: Row(
+          children: [
+            NeuPressable(
+              // ＋：一个入口装两类东西 —— 素材（相册/文件/剪贴板）与常用语模板。
+              // 聊天区拆两个按钮会很挤，手机上也难分。
+              onTap: onShowMenu,
+              radius: 12,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n11, vertical: NeuSpace.n11),
+                child: NeuIcon(IconId.plus, size: 18, color: t.muted),
+              ),
+            ),
+            const SizedBox(width: NeuSpace.n2),
+            NeuPressable(
+              // ⌘ 的语义按用户预期来：调出手机软键盘打不出的那些键
+              // （命令面板改成按键条里的「命令」键 + 手打 /）
+              onTap: onToggleKeyBar,
+              radius: 12,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n11, vertical: NeuSpace.n11),
+                child: NeuIcon(
+                  IconId.cmd,
+                  size: 18,
+                  color: keyBarVisible ? t.accentInk : t.muted,
+                ),
+              ),
+            ),
+            const SizedBox(width: NeuSpace.n6),
+            Expanded(
+              child: TextField(
+                controller: input,
+                focusNode: inputFocus,
+                maxLines: 5,
+                minLines: 1,
+                textInputAction: TextInputAction.newline,
+                style: TextStyle(fontSize: NeuFonts.body, color: t.fg),
+                decoration: InputDecoration(
+                  isDense: true,
+                  border: InputBorder.none,
+                  hintText: running
+                      ? I18n.t('chat.inputHintRunning', context: context)
+                      : I18n.t('chat.inputHint', context: context),
+                  hintStyle: TextStyle(fontSize: NeuFonts.bodyTight, color: t.muted),
+                ),
+                onSubmitted: (_) => onSend(),
+              ),
+            ),
+            const SizedBox(width: NeuSpace.n6),
+            NeuPressable(
+              onTap: running ? () => onAbort() : onSend,
+              radius: 12,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n11, vertical: NeuSpace.n11),
+                child: NeuIcon(
+                  running ? IconId.close : IconId.send,
+                  size: 18,
+                  color: running ? t.danger : t.accentInk,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+  
+  }
+}
