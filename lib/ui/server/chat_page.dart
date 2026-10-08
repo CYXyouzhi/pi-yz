@@ -911,7 +911,16 @@ class _ServerChatPageState extends State<ServerChatPage> {
           keyBarVisible: _keyBarVisible,
           onSend: _send,
           onAbort: () => _store.abort(),
-          onShowMenu: _showInputMenu,
+          onShowMenu: () => showInputMenuSheet(
+            context,
+            input: _input,
+            templates: _templates,
+            onTemplatesChanged: (items) => setState(() => _templates = items),
+            onInsert: _insertIntoInput,
+            onPickImage: _pickImage,
+            onPickFile: _pickFile,
+            onPaste: _pasteClipboardText,
+          ),
           onToggleKeyBar: _toggleKeyBar,
         ),
             ],
@@ -980,212 +989,6 @@ class _ServerChatPageState extends State<ServerChatPage> {
   ///
   /// 手机上没有文件管理器可用，「把东西给 agent」就这三条路，
   /// 所以合成一个入口，而不是在输入框旁摆三个小图标。
-  Future<void> _showInputMenu() async {
-    await showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (sheetContext) {
-        final t = sheetContext.neu;
-        return StatefulBuilder(
-          builder: (context, setSheetState) => Container(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.7,
-            ),
-            decoration: BoxDecoration(
-              color: t.bg,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(NeuRadii.lg),
-              ),
-            ),
-            padding: EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n14, NeuSpace.n18, NeuSpace.n24),
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    I18n.t('ui.54d363afee'),
-                    style: TextStyle(
-                      fontSize: NeuFonts.sub,
-                      fontWeight: FontWeight.w700,
-                      color: t.accentInk,
-                    ),
-                  ),
-                  const SizedBox(height: NeuSpace.n8),
-                  Row(
-                    children: [
-                      _menuTile(
-                        t,
-                        sheetContext,
-                        IconId.download,
-                        I18n.t('ui.824949be5b'),
-                        _pickImage,
-                      ),
-                      SizedBox(width: NeuSpace.n8),
-                      _menuTile(
-                        t,
-                        sheetContext,
-                        IconId.folder,
-                        I18n.t('ui.2a0c4740f1'),
-                        _pickFile,
-                      ),
-                      SizedBox(width: NeuSpace.n8),
-                      _menuTile(
-                        t,
-                        sheetContext,
-                        IconId.pen,
-                        I18n.t('ui.32249be96d'),
-                        _pasteClipboardText,
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: NeuSpace.n6),
-                  Text(
-                    I18n.t('ui.6b8e604809'),
-                    style: TextStyle(fontSize: NeuFonts.badge, color: t.muted),
-                  ),
-                  SizedBox(height: NeuSpace.n16),
-                  Row(
-                    children: [
-                      Text(
-                        I18n.t('ui.64dfcf277f'),
-                        style: TextStyle(
-                          fontSize: NeuFonts.sub,
-                          fontWeight: FontWeight.w700,
-                          color: t.accentInk,
-                        ),
-                      ),
-                      SizedBox(width: NeuSpace.n8),
-                      Text(
-                        I18n.t('ui.14768ed565'),
-                        style: TextStyle(fontSize: NeuFonts.badge, color: t.muted),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: NeuSpace.n8),
-                  if (_templates.isEmpty)
-                    Text(
-                      I18n.t('ui.d0f489e127'),
-                      style: TextStyle(fontSize: NeuFonts.small, color: t.muted),
-                    )
-                  else
-                    for (final item in _templates)
-                      NeuPressable(
-                        onTap: () {
-                          Navigator.of(sheetContext).pop();
-                          _insertIntoInput(item);
-                        },
-                        radius: 10,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: NeuSpace.n12,
-                          vertical: NeuSpace.n9,
-                        ),
-                        margin: const EdgeInsets.only(bottom: NeuSpace.n6),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                item,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.fg),
-                              ),
-                            ),
-                            NeuPressable(
-                              onTap: () async {
-                                await TemplateStore.instance.remove(item);
-                                final items = await TemplateStore.instance
-                                    .load();
-                                if (!sheetContext.mounted) return;
-                                setSheetState(() {});
-                                setState(() => _templates = List.of(items));
-                              },
-                              radius: 8,
-                              flat: true,
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n14, vertical: NeuSpace.n14),
-                                child: NeuIcon(
-                                  IconId.close,
-                                  size: 13,
-                                  color: t.muted,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                  const SizedBox(height: NeuSpace.n8),
-                  NeuPressable(
-                    onTap: () async {
-                      final text = _input.text.trim();
-                      if (text.isEmpty) {
-                        NeuToast.show(
-                          sheetContext,
-                          message: I18n.t('ui.37dba61d9d'),
-                          icon: IconId.warn,
-                        );
-                        return;
-                      }
-                      await TemplateStore.instance.add(text);
-                      final items = await TemplateStore.instance.load();
-                      if (!sheetContext.mounted) return;
-                      setSheetState(() {});
-                      setState(() => _templates = List.of(items));
-                      NeuToast.show(
-                        sheetContext,
-                        message: I18n.t('ui.17ab7240c1'),
-                        icon: IconId.check,
-                      );
-                    },
-                    radius: NeuRadii.sm,
-                    padding: const EdgeInsets.symmetric(vertical: NeuSpace.n11),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        NeuIcon(IconId.plus, size: 14, color: t.accentInk),
-                        SizedBox(width: NeuSpace.n6),
-                        Text(
-                          I18n.t('ui.8551ea0b22'),
-                          style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.accentInk),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _menuTile(
-    NeuTokens t,
-    BuildContext sheetContext,
-    IconId icon,
-    String label,
-    Future<void> Function() action,
-  ) {
-    return Expanded(
-      child: NeuPressable(
-        onTap: () async {
-          Navigator.of(sheetContext).pop();
-          await action();
-        },
-        radius: 10,
-        padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n11),
-        child: Column(
-          children: [
-            NeuIcon(icon, size: 18, color: t.accentInk),
-            const SizedBox(height: NeuSpace.n6),
-            Text(label, style: TextStyle(fontSize: NeuFonts.label, color: t.fg)),
-          ],
-        ),
-      ),
-    );
-  }
-
   /// 相册/图片：读成 base64 挂在这条消息上（pi 的 prompt 支持 images）
   Future<void> _pickImage() async {
     try {
