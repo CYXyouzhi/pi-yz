@@ -465,7 +465,6 @@ class _ServerConnPageState extends State<ServerConnPage> {
 
   @override
   Widget build(BuildContext context) {
-    final t = context.neu;
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
@@ -475,7 +474,16 @@ class _ServerConnPageState extends State<ServerConnPage> {
             const ConnPageHeader(),
 
             // ---- 远程访问（task-18）：不在同一局域网也能连 ----
-            _remoteCard(t),
+            RemoteAccessCard(
+              store: _store,
+              tunnelPref: _tunnelPref,
+              ownRemote: _ownRemote,
+              showThreat: _showThreat,
+              onPickTunnel: (v) => setState(() => _tunnelPref = v),
+              onToggleThreat: () => setState(() => _showThreat = !_showThreat),
+              onUseAddress: _useRemoteAddress,
+              onSaveOwnAddress: _saveOwnAddress,
+            ),
             const SizedBox(height: NeuSpace.n14),
 
             // ---- 快速连接：把「扫一台连上」与「查为什么连不上」归成一组 ---
@@ -656,215 +664,6 @@ class _ServerConnPageState extends State<ServerConnPage> {
   }
 
   /// 「远程访问」卡片：开/关隧道 + 地址 + 威胁模型（task-18 合同①②④⑤）
-  Widget _remoteCard(NeuTokens t) {
-    // RepaintBoundary：这块是页面上最大的阴影图层（NeuRaised + 内部一堆
-    // NeuPressable，每个都带两个大 blur 的 BoxShadow）。不隔离的话，
-    // 滚动时它会跟着视口一起重绘 —— 实测用户反映「手指滑、画面跟不上」。
-    // 隔离后滚动只移动已画好的图层，不再重新做高斯模糊。
-    return RepaintBoundary(
-      child: ListenableBuilder(
-      listenable: _store,
-      builder: (context, _) {
-        final r = _store.remote;
-        final up = r.status == 'up' && r.url.isNotEmpty;
-        final starting = _store.remoteBusy || r.status == 'starting';
-        return NeuRaised(
-          radius: NeuRadii.md,
-          padding: const EdgeInsets.all(NeuSpace.n14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: up ? t.success : (starting ? t.warn : t.muted),
-                    ),
-                  ),
-                  SizedBox(width: NeuSpace.n8),
-                  Text(I18n.t('ui.0959028680'),
-                      style: TextStyle(
-                          fontSize: NeuFonts.bodyTight, fontWeight: FontWeight.w700, color: t.fg)),
-                  SizedBox(width: NeuSpace.n8),
-                  Expanded(
-                    child: Text(
-                      up
-                          ? I18n.tp('ui.bb06dd8151', {'provider': r.providerLabel})
-                          : (starting ? I18n.t('ui.592ff57b9b') : I18n.t('ui.ea4a363d8f')),
-                      style: TextStyle(
-                          fontSize: NeuFonts.small,
-                          color: up ? t.success : t.muted),
-                    ),
-                  ),
-                  if (starting)
-                    NeuIcon(IconId.spinner, size: 14, color: t.muted),
-                ],
-              ),
-              if (up) ...[
-                const SizedBox(height: NeuSpace.n8),
-                GestureDetector(
-                  onTap: () async {
-                    // 隧道地址又长又随机，手抄必错 —— 点一下复制
-                    await Clipboard.setData(ClipboardData(text: r.url));
-                    // 这里用的是 builder 的 context，判断也要用它的 mounted
-                    if (!context.mounted) return;
-                    NeuToast.show(context, message: I18n.t('ui.d988ff0fb5'), icon: IconId.check);
-                  },
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n10, vertical: NeuSpace.n9),
-                    decoration: BoxDecoration(
-                      color: t.well,
-                      borderRadius: BorderRadius.circular(NeuRadii.sm),
-                    ),
-                    child: Text(
-                      r.url,
-                      style: TextStyle(
-                          fontSize: NeuFonts.sub, color: t.accentInk, fontFamily: 'monospace'),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: NeuSpace.n10),
-                Row(
-                  children: [
-                    Expanded(
-                      child: NeuPressable(
-                        // 隧道地址又长又随机，而且每次重开都变 —— 让用户手抄一遍
-                        // 再填进表单是最容易出错的一步，这里一步到位
-                        onTap: () => _useRemoteAddress(r.url),
-                        radius: NeuRadii.sm,
-                        padding: EdgeInsets.symmetric(vertical: NeuSpace.n10),
-                        child: Center(
-                          child: Text(I18n.t('ui.bd939b977d'),
-                              style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.accentInk)),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: NeuSpace.n8),
-                    Expanded(
-                      child: NeuPressable(
-                        onTap: () async {
-                          await _store.stopRemote();
-                          if (!context.mounted) return;
-                          NeuToast.show(context,
-                              message: I18n.t('ui.1b730b15b4'),
-                              icon: IconId.check);
-                        },
-                        radius: NeuRadii.sm,
-                        padding: EdgeInsets.symmetric(vertical: NeuSpace.n10),
-                        child: Center(
-                          child: Text(I18n.t('ui.e21425f183'),
-                              style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.danger)),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ] else ...[
-                SizedBox(height: NeuSpace.n6),
-                Text(
-                  I18n.t('ui.b645389837'),
-                  style: TextStyle(fontSize: NeuFonts.label, height: 1.5, color: t.muted),
-                ),
-                if (r.error.isNotEmpty) ...[
-                  const SizedBox(height: NeuSpace.n8),
-                  Text(
-                    r.error,
-                    style: TextStyle(fontSize: NeuFonts.label, height: 1.5, color: t.danger),
-                  ),
-                ],
-                const SizedBox(height: NeuSpace.n10),
-                // ── ① 让 App 开一条隧道：选走哪条道 ──
-                Text(I18n.t('remote.managedTitle'),
-                    style: TextStyle(
-                        fontSize: NeuFonts.bodySmall,
-                        fontWeight: FontWeight.w700,
-                        color: t.fg)),
-                const SizedBox(height: NeuSpace.n2),
-                Text(I18n.t('remote.managedHint'),
-                    style: TextStyle(fontSize: NeuFonts.label, color: t.muted)),
-                const SizedBox(height: NeuSpace.n6),
-                TunnelOption(
-                  value: 'cloudflare',
-                  current: _tunnelPref,
-                  onPick: (v) => setState(() => _tunnelPref = v),
-                ),
-                const SizedBox(height: NeuSpace.n4),
-                TunnelOption(
-                  value: 'ssh',
-                  current: _tunnelPref,
-                  onPick: (v) => setState(() => _tunnelPref = v),
-                ),
-                const SizedBox(height: NeuSpace.n10),
-                NeuPressable(
-                  onTap: starting
-                      ? null
-                      : () async {
-                          final ok = await _store.startRemote(prefer: _tunnelPref);
-                          if (!context.mounted) return;
-                          NeuToast.show(
-                            context,
-                            message: ok ? I18n.t('ui.3fc0cf9dc3') : I18n.tp('ui.54e7e0babb', {'error': _store.remote.error}),
-                            icon: ok ? IconId.check : IconId.warn,
-                          );
-                        },
-                  radius: NeuRadii.sm,
-                  padding: EdgeInsets.symmetric(vertical: NeuSpace.n11),
-                  child: Center(
-                    child: Text(
-                      starting ? I18n.t('ui.18a16fa829') : I18n.t('ui.d89ca63cd0'),
-                      style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.accentInk),
-                    ),
-                  ),
-                ),
-              ],
-              // ── ② 用你自己的工具 ──（与上面隧道是并列的两种做法，
-              // 所以不管隧道开没开都显示）
-              const SizedBox(height: NeuSpace.n12),
-              Divider(height: 1, color: t.border),
-              const SizedBox(height: NeuSpace.n10),
-              OwnToolSection(ownRemote: _ownRemote, onSave: _saveOwnAddress),
-              const SizedBox(height: NeuSpace.n10),
-              GestureDetector(
-                onTap: () => setState(() => _showThreat = !_showThreat),
-                behavior: HitTestBehavior.opaque,
-                child: Row(
-                  children: [
-                    NeuIcon(IconId.info, size: 13, color: t.muted),
-                    SizedBox(width: NeuSpace.n6),
-                    Text(I18n.t('ui.cead89f9f1'),
-                        style: TextStyle(fontSize: NeuFonts.label, color: t.muted)),
-                    const SizedBox(width: NeuSpace.n4),
-                    NeuIcon(_showThreat ? IconId.chevronDown : IconId.chevronRight,
-                        size: 12, color: t.muted),
-                  ],
-                ),
-              ),
-              if (_showThreat) ...[
-                SizedBox(height: NeuSpace.n8),
-                for (final line in (r.threatModel.isEmpty
-                    ? [
-                        I18n.t('ui.5a54a90ba5'),
-                      ]
-                    : r.threatModel))
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: NeuSpace.n5),
-                    child: Text('· $line',
-                        style: TextStyle(
-                            fontSize: NeuFonts.label, height: 1.5, color: t.muted)),
-                  ),
-              ],
-            ],
-          ),
-        );
-      },
-      ),
-    );
-  }
-
   /// 内置隧道的一个选项行：单选圆点 + 名称 + 一句代价说明。
   ///
   /// 点整行就选中，而不是只让小圆点可点：圆点只有 14dp，手指够不着，
