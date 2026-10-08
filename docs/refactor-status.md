@@ -32,7 +32,7 @@
 | `lib/ui/server/files_page.dart` | 1059 | ✅ 645 行（6 个组件 + 2 个工具函数 + 2 个底部面板）|
 | `lib/ui/server/sessions_page.dart` | 1316 | ✅ **991 行**（减 25%；`_buildSessionRow`/`_buildGroup` 已手工搬）| (旧)雷区，不抽）|
 | `lib/ui/server/conn_page.dart` | 1300 | ✅ **692 行（减 47%）** —— 完成 |
-| `lib/ui/server/chat_page.dart` | 3374 | ✅ 2344 行（减 31%；余下见文档）|
+| `lib/ui/server/chat_page.dart` | 3374 | ✅ **1082 行（减 68%）** —— 完成（余下见 ⑱）|
 | `lib/server/server_store.dart` | 1814 | 🚫 **不动**（「唯一状态源」是架构决策的载体，拆它等于动地基）|
 
 相关提交：`6138d6d`（server_types）、`8424632`（设置页共用件）
@@ -535,6 +535,35 @@ chat_page **3374 → 2740 行**（减 634 / 19%），新建 `chat/sheets.dart`�
 **Dart 类型坑**：`_ownRemote` 是 `TextEditingController`（控制器由页面持有并 dispose，
 组件只读它的值）；`_saveOwnAddress` 返回 `Future<void>`，回调类型得写
 `Future<void> Function(String)`，不能偷懒写成 `ValueChanged<String>`。
+
+**⑱ chat_page 完成：3374 → 1082 行（减 68%）**
+
+六个文件里最长的一个，也是拆得最多的一个（移出 2268 行）。
+`chat/widgets.dart` 从小长到大 —— 所有抽出的东西都落在它和 `sheets.dart` 里。
+
+抽出的东西：
+  · **弹层 → 顶层函数**：showModelSwitcherSheet / showInputMenuSheet /
+    showSessionInfoSheet / confirmForkDialog / confirmNavigateDialog（+ 早先的 sheets.dart 各函数）
+  · **渲染块 → StatelessWidget**：ChatHeader / ChatMessageArea / ChatComposer / ModelChip /
+    MenuTile / InfoLine / ScrollProgressBar / ScrollToBottomButton / ChatNoticeRow /
+    QueuedMessagesRow / SessionRow / SessionGroupCard …
+  · **纯函数 → 顶层**：countTree / formatTokens / decodeKey / modelChipLabel / treeRows / relativeTime
+
+**为什么停在 1082 行（离 800 还差 282）—— 这是路线的自然终点，不是没拆完**
+
+按 objective 的约定「状态仍留在父级 State」，剩下的**不该**再抽：
+
+  1. **`build`（133 行）** 已经**纯粹是组件编排** —— 每一行都是一个组件调用，
+     自身没有可抽的东西。（把整个 Column 抽成一层壳只会多一层间接，不减少耦合。）
+  2. **State 的行为方法（约 700 行 / 51 个）** —— `_send`（59）/ `_onKeyBarKey`（62）/
+     `_navigateTo`（81）/ `_pickFile`（39）/ `_pickImage`（31）/ `_syncUsagePolling`（27）…
+     这些是**逻辑**不是**界面**：它们读写 State 字段、调 store、处理键盘与文件选择。
+     按无状态组件的定义，它们没有「props」可传 —— 硬抽出去只能变成空壳加一堆回调，
+     比留在页面更难读（`_modelRow` 的 StateSetter 那次已经验证过一遍）。
+  3. **字段声明与监听注册**（约 200 行）—— 同样是 State 自己的东西。
+
+要再往下压，需要换路线（比如引入状态管理库把行为也搬走），
+那超出本次「无状态组件化」的范围，也会动到「server_store 是唯一状态源」这条地基。
 
 **结果**：`settings_page.dart` 停在 **875 行**（原 1472，减 597 行 / 40%），未达 800 目标。
 差的就是「外观」这 367 行。它仍作为整体留在页面里 —— 至少是**自洽**的
