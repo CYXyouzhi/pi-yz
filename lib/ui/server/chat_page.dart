@@ -26,8 +26,6 @@ import '../../theme/neu.dart';
 import '../key_bar.dart';
 import '../neu_icons.dart';
 import '../neu_toast.dart';
-import 'export_page.dart';
-import 'files_page.dart';
 // slashPanelMaxHeight 搬到了 chat/widgets.dart，但测试还从本文件引用它 ——
 // export 回去保持兼容（纯函数搬家，不改行为）。
 export 'chat/widgets.dart' show slashPanelMaxHeight, modelChipLabel;
@@ -35,7 +33,6 @@ export 'chat/widgets.dart' show slashPanelMaxHeight, modelChipLabel;
 import 'chat/sheets.dart';
 import 'chat/widgets.dart';
 import 'message_view.dart';
-import 'usage_page.dart';
 
 /// 模型胶囊上显示的**短名**。
 ///
@@ -683,7 +680,14 @@ class _ServerChatPageState extends State<ServerChatPage> {
             chat: chat,
             runStartedAt: _runStartedAt,
             onShare: _shareLastAnswer,
-            onShowInfo: _showSessionInfo,
+            onShowInfo: () => showSessionInfoSheet(
+            context,
+            _store,
+            focusMode: _focusMode,
+            onToggleFocusMode: () => setState(() => _focusMode = !_focusMode),
+            onFork: _forkFrom,
+            onNavigate: _navigateTo,
+          ),
             onNewSession: _newSessionInCurrentWorkspace,
             onShowModelSwitcher: () => showModelSwitcherSheet(context, _store),
           ),
@@ -1101,257 +1105,6 @@ class _ServerChatPageState extends State<ServerChatPage> {
   ///
   /// pi 的会话是一棵树（fork / 编辑重发都会长出分支），
   /// 手机上先用一个只读列表把它展示出来（切换分支需要 AgentSessionRuntime，待接）。
-  Future<void> _showSessionInfo() async {
-    // 这里以前是裸 await：一旦取数抛出，面板会「点了没反应」——
-    // 这类静默失败比报错难查得多，所以先接住再提示。
-    Map<String, dynamic>? tree;
-    SessionStats? stats;
-    try {
-      tree = await _store.fetchTree();
-      // 用量/花费/上下文占用：跟分支树一起拉，别让面板分两次刷新
-      stats = await _store.sessionStats();
-    } catch (error) {
-      if (!mounted) return;
-      NeuToast.show(context, message: I18n.tp('ui.a6664f495a', {'error': error}), icon: IconId.warn);
-      return;
-    }
-    if (!mounted) return;
-    final chat = _store.chat;
-    final nodes = tree?['tree'];
-    final leafId = tree?['leafId'] as String?;
-
-    await showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (sheetContext) {
-        final t = sheetContext.neu;
-        return Container(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.75,
-          ),
-          decoration: BoxDecoration(
-            color: t.bg,
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(NeuRadii.lg),
-            ),
-          ),
-          padding: const EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n10, NeuSpace.n18, NeuSpace.n24),
-          // 整张面板可滚动。
-          // 以前只有分支树那一小块能滑，上面的「用量」一多就把下面按钮顶出屏幕，
-          // 怎么滑都够不到（实测过：三指上推都不动）。
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: t.muted.withValues(alpha: 0.35),
-                      borderRadius: BorderRadius.circular(NeuRadii.hairline),
-                    ),
-                  ),
-                ),
-                SizedBox(height: NeuSpace.n14),
-                Text(
-                  I18n.t('ui.155e26ceeb'),
-                  style: TextStyle(
-                    fontSize: NeuFonts.sectionTitle,
-                    fontWeight: FontWeight.w700,
-                    color: t.onBg,
-                  ),
-                ),
-                SizedBox(height: NeuSpace.n10),
-                InfoLine(I18n.t('common.model'),
-                  chat.model == null
-                      ? '—'
-                      : '${chat.model!.name} (${chat.model!.provider})',
-                ),
-                InfoLine(I18n.t('ui.11eead2c33'), chat.thinkingLevel),
-                InfoLine(I18n.t('ui.ff692f04ac'),
-                  I18n.tp('ui.7622b8adf0', {'n': chat.messages.length, 'total': chat.historyTotal}),
-                ),
-                InfoLine(I18n.t('settings.workspace'), chat.cwd),
-                if (chat.sessionName != null)
-                  InfoLine(I18n.t('ui.20c94429e5'), chat.sessionName!),
-                if (stats != null) ...[
-                  SizedBox(height: NeuSpace.n6),
-                  Text(
-                    I18n.t('ui.743735721a'),
-                    style: TextStyle(
-                      fontSize: NeuFonts.small,
-                      fontWeight: FontWeight.w700,
-                      color: t.accentInk,
-                    ),
-                  ),
-                  SizedBox(height: NeuSpace.n4),
-                  InfoLine(I18n.t('ui.50f198f07f'),
-                    stats.contextPercent != null
-                        ? '${stats.contextPercent!.toStringAsFixed(1)}% · ${formatTokens(stats.contextTokens)} / ${formatTokens(stats.contextWindow)}'
-                        : I18n.t('ui.4f23e4de2b'),
-                  ),
-                  InfoLine('tokens',
-                    I18n.tp('ui.37e8f35792', {'total': formatTokens(stats.totalTokens), 'input': formatTokens(stats.inputTokens), 'output': formatTokens(stats.outputTokens), 'cr': formatTokens(stats.cacheReadTokens), 'cw': formatTokens(stats.cacheWriteTokens)}),
-                  ),
-                  if (stats.costTotal > 0)
-                    InfoLine(I18n.t('ui.f970d0272c'),
-                      '\$${stats.costTotal.toStringAsFixed(4)}',
-                    ),
-                  InfoLine(I18n.t('ui.8fd578b58a'),
-                    I18n.tp('ui.d8deeeee4c', {'u': stats.userMessages, 'a': stats.assistantMessages, 'tc': stats.toolCalls, 'tr': stats.toolResults}),
-                  ),
-                  InfoLine(I18n.t('ui.dc0f2e515f'),
-                    chat.autoCompactionEnabled ? I18n.t('ui.9db7a84fcd') : I18n.t('ui.9c58505de3'),
-                  ),
-                  const SizedBox(height: NeuSpace.n4),
-                  // 「重点模式」从标题栏下沉到这里：标题栏一行要塞下
-                  // 会话名 + 状态点 + 模型 + 按钮，四个按钮里它最低频，
-                  // 却是把会话名挤到 0 宽的元凶之一（实测）。
-                  NeuPressable(
-                    onTap: () {
-                      setState(() => _focusMode = !_focusMode);
-                      Navigator.of(sheetContext).pop();
-                      NeuToast.show(
-                        context,
-                        message: _focusMode ? I18n.t('ui.d03d895f04') : I18n.t('ui.13261adf5f'),
-                        icon: IconId.bubble,
-                      );
-                    },
-                    radius: NeuRadii.sm,
-                    flat: true,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: NeuSpace.n6,
-                      vertical: NeuSpace.n10,
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            I18n.t('ui.d03d895f04'),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(fontSize: NeuFonts.small, color: t.fg),
-                          ),
-                        ),
-                        Text(
-                          _focusMode ? I18n.t('ui.9db7a84fcd') : I18n.t('ui.9c58505de3'),
-                          style: TextStyle(fontSize: NeuFonts.label, color: t.muted),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-                const SizedBox(height: NeuSpace.n12),
-                NeuPressable(
-                  onTap: () {
-                    Navigator.of(sheetContext).pop();
-                    Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => SessionExportPage(store: _store),
-                      ),
-                    );
-                  },
-                  radius: NeuRadii.sm,
-                  padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      NeuIcon(IconId.download, size: 15, color: t.accentInk),
-                      SizedBox(width: NeuSpace.n8),
-                      Text(
-                        I18n.t('ui.cb9bf0e70e'),
-                        style: TextStyle(fontSize: NeuFonts.bodyMid, color: t.accentInk),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: NeuSpace.n8),
-                NeuPressable(
-                  onTap: () {
-                    Navigator.of(sheetContext).pop();
-                    Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => UsagePage(
-                          store: _store,
-                          contextPercent: stats?.contextPercent,
-                          contextTokens: stats?.contextTokens,
-                          contextWindow: stats?.contextWindow,
-                          autoCompactEnabled: chat.autoCompactionEnabled,
-                        ),
-                      ),
-                    );
-                  },
-                  radius: NeuRadii.sm,
-                  padding: const EdgeInsets.symmetric(vertical: NeuSpace.n11),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      NeuIcon(IconId.info, size: 15, color: t.accentInk),
-                      SizedBox(width: NeuSpace.n8),
-                      Text(
-                        I18n.t('ui.f0d15d56eb'),
-                        style: TextStyle(fontSize: NeuFonts.bodyMid, color: t.accentInk),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: NeuSpace.n8),
-                NeuPressable(
-                  onTap: () {
-                    Navigator.of(sheetContext).pop();
-                    Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) =>
-                            WorkspaceFilesPage(store: _store, cwd: chat.cwd),
-                      ),
-                    );
-                  },
-                  radius: NeuRadii.sm,
-                  padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      NeuIcon(IconId.folder, size: 15, color: t.accentInk),
-                      SizedBox(width: NeuSpace.n8),
-                      Text(
-                        I18n.t('ui.480b698883'),
-                        style: TextStyle(fontSize: NeuFonts.bodyMid, color: t.accentInk),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: NeuSpace.n16),
-                Text(
-                  I18n.t('ui.19b5e0a26e'),
-                  style: TextStyle(
-                    fontSize: NeuFonts.sectionTitle,
-                    fontWeight: FontWeight.w700,
-                    color: t.onBg,
-                  ),
-                ),
-                SizedBox(height: NeuSpace.n6),
-                Text(
-                  nodes == null
-                      ? I18n.t('ui.dd55c97800')
-                      : I18n.tp('ui.d7320b9231', {'n': countTree(nodes)}),
-                  style: TextStyle(fontSize: NeuFonts.label, color: t.muted),
-                ),
-                const SizedBox(height: NeuSpace.n10),
-                if (nodes != null)
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: treeRows(t, nodes, 0, leafId, onFork: _forkFrom, onNavigate: _navigateTo),
-                  ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
   /// 从某条历史消息分出一条新会话。
   ///
   /// 与「切换分支」的区别：切换是同一个会话内换路径，
