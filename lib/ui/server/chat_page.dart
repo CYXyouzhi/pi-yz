@@ -1342,7 +1342,7 @@ class _ServerChatPageState extends State<ServerChatPage> {
                 if (nodes != null)
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: _treeRows(t, nodes, 0, leafId),
+                    children: treeRows(t, nodes, 0, leafId, onFork: _forkFrom, onNavigate: _navigateTo),
                   ),
               ],
             ),
@@ -1490,103 +1490,6 @@ class _ServerChatPageState extends State<ServerChatPage> {
 
   /// 把 token 数按人类读法缩短（1.2M / 34.5k / 900）
   /// 把树压成带缩进的列表（深度优先）
-  List<Widget> _treeRows(
-    NeuTokens t,
-    List<dynamic> nodes,
-    int depth,
-    String? leafId,
-  ) {
-    final rows = <Widget>[];
-    for (final node in nodes) {
-      if (node is! Map) continue;
-      final entry = (node['entry'] ?? node) as Map;
-      final id = entry['id']?.toString();
-      final message = entry['message'] as Map?;
-      final role =
-          message?['role']?.toString() ?? entry['type']?.toString() ?? '?';
-
-      String preview = '';
-      final content = message?['content'];
-      if (content is String) {
-        preview = content;
-      } else if (content is List) {
-        for (final block in content) {
-          if (block is Map && block['type'] == 'text') {
-            preview = block['text']?.toString() ?? '';
-            break;
-          }
-        }
-      }
-      // 把所有空白（含换行）压成单个空格；用正则避免在源码里写转义换行
-      preview = preview.replaceAll(RegExp(r'\s+'), ' ').trim();
-      if (preview.length > 42) preview = '${preview.substring(0, 42)}…';
-
-      final isLeaf = id != null && id == leafId;
-      final children = node['children'];
-      final childCount = children is List ? children.length : 0;
-      // 分叉点标出来：这里曾经有过另一条路
-      final branchHint =
-          childCount > 1 ? I18n.tp('ui.5bbb1a9d41', {'n': childCount}) : '';
-
-      final rowContent = Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (depth > 0)
-            Padding(
-              padding: const EdgeInsets.only(right: NeuSpace.n6, top: NeuSpace.n1),
-              child: NeuIcon(IconId.chevronRight, size: 12, color: t.muted),
-            ),
-          Expanded(
-            child: Text(
-              '${isLeaf ? '● ' : ''}$role${preview.isEmpty ? '' : ' · $preview'}$branchHint',
-              style: TextStyle(
-                fontSize: NeuFonts.small,
-                height: 1.5,
-                color: isLeaf ? t.accentInk : t.fg,
-                fontWeight: isLeaf ? FontWeight.w700 : FontWeight.w400,
-              ),
-            ),
-          ),
-          // 从这里分出一条新会话（复制历史 + 回退到该节点）
-          if (id != null && !isLeaf)
-            NeuPressable(
-              onTap: () => _forkFrom(id, preview),
-              radius: 10,
-              // 触控目标 13 + 14×2 = 41dp；原本 23dp（13+5×2），手指按不准
-              padding: const EdgeInsets.all(NeuSpace.n14),
-              child: NeuIcon(IconId.plus, size: 13, color: t.muted),
-            ),
-        ],
-      );
-
-      rows.add(
-        Padding(
-          padding: EdgeInsets.only(left: depth * 14.0),
-          child: isLeaf || id == null
-              // 当前节点不可点；其余节点点一下切过去
-              ? Padding(
-                  padding: const EdgeInsets.symmetric(vertical: NeuSpace.n3),
-                  child: rowContent,
-                )
-              : NeuPressable(
-                  flat: true,
-                  onTap: () => _navigateTo(id, preview),
-                  padding: const EdgeInsets.symmetric(
-                    vertical: NeuSpace.n6,
-                    horizontal: NeuSpace.n4,
-                  ),
-                  child: rowContent,
-                ),
-        ),
-      );
-
-      if (children is List && children.isNotEmpty) {
-        rows.addAll(_treeRows(t, children, depth + 1, leafId));
-      }
-    }
-    return rows;
-  }
-
   /// @ 引用候选列表（与命令面板同一套样式，只是数据源是工作区文件）
   /// 引用：把这段文字带上引用标记塞回输入框（引用后还能补一句自己的话）
   void _quoteText(String text) {
