@@ -79,8 +79,6 @@ class _ServerConnPageState extends State<ServerConnPage> {
   final TextEditingController _ownRemote = TextEditingController();
 
   /// 电脑端两种启动方式，都能一键复制（合同④向导页）
-  static const String _cmdViaPi = '/mobile start';
-  static const String _cmdViaNode = 'node server/index.mjs --host 0.0.0.0';
   String? _testResult;
   bool _testOk = false;
 
@@ -584,141 +582,21 @@ class _ServerConnPageState extends State<ServerConnPage> {
               const SizedBox(height: NeuSpace.n16),
             ],
 
-            // ---- 手动配置：整块默认收起 ----
-            // 它是次要路径（常态是从「已保存」点进去），展开时占掉大半屏，
-            // 整页看起来又长又杂。
+            // ---- 连接动作：测试连不通、保存并连接、进诊断 ----
+            // 原来这块叫「手动配置」整块默认收起，但它其实是「连不上时怎么办」的
+            // 主入口，收起反而不易找。抽成组件后由页面直接平铺。
             const SizedBox(height: NeuSpace.n16),
-
-            if (_testResult != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: NeuSpace.n10),
-                child: Row(
-                  children: [
-                    NeuIcon(
-                      _testOk ? IconId.check : IconId.warn,
-                      size: 14,
-                      color: _testOk ? t.success : t.danger,
-                    ),
-                    const SizedBox(width: NeuSpace.n8),
-                    Expanded(
-                      child: Text(
-                        _testResult!,
-                        style: TextStyle(fontSize: NeuFonts.sub, color: _testOk ? t.success : t.danger),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-            Row(
-              children: [
-                Expanded(
-                  child: NeuPressable(
-                    onTap: _testing ? null : _test,
-                    radius: NeuRadii.md,
-                    padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        if (_testing)
-                          NeuIcon(IconId.spinner, size: 15, color: t.muted)
-                        else
-                          NeuIcon(IconId.sync, size: 15, color: t.muted),
-                        SizedBox(width: NeuSpace.n7),
-                        Text(I18n.t('ui.69e74756bc'), style: TextStyle(fontSize: NeuFonts.bodyTight, color: t.muted)),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: NeuSpace.n10),
-                Expanded(
-                  child: NeuPressable(
-                    onTap: _saveAndConnect,
-                    radius: NeuRadii.md,
-                    padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        NeuIcon(IconId.power, size: 15, color: t.accentInk),
-                        SizedBox(width: NeuSpace.n7),
-                        Text(
-                          I18n.t('ui.e8ba811b3f'),
-                          style: TextStyle(fontSize: NeuFonts.bodyTight, color: t.accentInk, fontWeight: FontWeight.w600),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+            ConnectionActions(
+              testResult: _testResult,
+              testOk: _testOk,
+              testing: _testing,
+              onTest: _test,
+              onSaveAndConnect: _saveAndConnect,
+              onDiagnose: _openDiagnose,
             ),
-            const SizedBox(height: NeuSpace.n12),
-            NeuPressable(
-              onTap: _openDiagnose,
-              radius: NeuRadii.md,
-              padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  NeuIcon(IconId.info, size: 15, color: t.muted),
-                  SizedBox(width: NeuSpace.n7),
-                  Text(I18n.t('ui.d0bacac615'),
-                      style: TextStyle(fontSize: NeuFonts.bodyMid, color: t.muted)),
-                ],
-              ),
-            ),
-
             const SizedBox(height: NeuSpace.n16),
-
             // ---- 服务端启动向导（合同④）：命令可一键复制 ----
-            NeuRaised(
-              radius: NeuRadii.lg,
-              padding: const EdgeInsets.all(NeuSpace.n14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      NeuIcon(IconId.terminal, size: 15, color: t.accentInk),
-                      SizedBox(width: NeuSpace.n8),
-                      Text(I18n.t('ui.fb75dd5ecd'),
-                          style: TextStyle(
-                              fontSize: NeuFonts.bodyMid, fontWeight: FontWeight.w700, color: t.fg)),
-                    ],
-                  ),
-                  SizedBox(height: NeuSpace.n10),
-                  Text(
-                    // ignore: prefer_interpolation_to_compose_strings
-                    '${I18n.t('ui.da96bf7843')}'
-                    '${I18n.t('ui.e28ad37f63')}',
-                    style: TextStyle(fontSize: NeuFonts.label, height: 1.7, color: t.onBgDim),
-                  ),
-                  SizedBox(height: NeuSpace.n6),
-                  CmdRow(
-                    command: _cmdViaPi,
-                    label: I18n.t('common.command'),
-                    onCopy: _copy,
-                  ),
-                  SizedBox(height: NeuSpace.n10),
-                  Text(
-                    I18n.t('ui.282652e49f'),
-                    style: TextStyle(fontSize: NeuFonts.label, height: 1.7, color: t.onBgDim),
-                  ),
-                  SizedBox(height: NeuSpace.n6),
-                  CmdRow(
-                    command: _cmdViaNode,
-                    label: I18n.t('common.command'),
-                    onCopy: _copy,
-                  ),
-                  SizedBox(height: NeuSpace.n10),
-                  Text(
-                    // ignore: prefer_interpolation_to_compose_strings
-                    '${I18n.t('ui.e2c2055ec7')}'
-                    '${I18n.t('ui.44d23ca46b')}',
-                    style: TextStyle(fontSize: NeuFonts.label, height: 1.7, color: t.onBgDim),
-                  ),
-                ],
-              ),
-            ),
+            ServerStartupGuide(onCopy: _copy),
           ],
         ),
       ),

@@ -338,3 +338,189 @@ class QuickConnectSection extends StatelessWidget {
     );
   }
 }
+
+/// 连接动作区：测试结果条 + 「测试连接 / 保存并连接」+ 诊断入口。
+///
+/// 测试结果不单独弹 toast，而是**常驻在按钮上方**（`testResult`）——
+/// 用户点完测试往往要看一眼结果再决定下一步，弹出来 3 秒消失反而碍事。
+class ConnectionActions extends StatelessWidget {
+  const ConnectionActions({
+    super.key,
+    required this.testResult,
+    required this.testOk,
+    required this.testing,
+    required this.onTest,
+    required this.onSaveAndConnect,
+    required this.onDiagnose,
+  });
+
+  /// 上次测试的结果文案；没测过时为 null（那条提示就不显示）。
+  final String? testResult;
+
+  /// 测试是否通过 —— 决定结果条的图标与颜色（对勾/警告）。
+  final bool testOk;
+
+  /// 正在测试：按钮变 spinner 且不可再点。
+  final bool testing;
+
+  final VoidCallback onTest;
+  final VoidCallback onSaveAndConnect;
+  final VoidCallback onDiagnose;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.neu;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (testResult != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: NeuSpace.n10),
+            child: Row(
+              children: [
+                NeuIcon(
+                  testOk ? IconId.check : IconId.warn,
+                  size: 14,
+                  color: testOk ? t.success : t.danger,
+                ),
+                const SizedBox(width: NeuSpace.n8),
+                Expanded(
+                  child: Text(
+                    testResult!,
+                    style: TextStyle(fontSize: NeuFonts.sub, color: testOk ? t.success : t.danger),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        Row(
+          children: [
+            Expanded(
+              child: NeuPressable(
+                onTap: testing ? null : onTest,
+                radius: NeuRadii.md,
+                padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (testing)
+                      NeuIcon(IconId.spinner, size: 15, color: t.muted)
+                    else
+                      NeuIcon(IconId.sync, size: 15, color: t.muted),
+                    SizedBox(width: NeuSpace.n7),
+                    Text(I18n.t('ui.69e74756bc'),
+                        style: TextStyle(fontSize: NeuFonts.bodyTight, color: t.muted)),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: NeuSpace.n10),
+            Expanded(
+              child: NeuPressable(
+                onTap: onSaveAndConnect,
+                radius: NeuRadii.md,
+                padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    NeuIcon(IconId.power, size: 15, color: t.accentInk),
+                    SizedBox(width: NeuSpace.n7),
+                    Text(
+                      I18n.t('ui.e8ba811b3f'),
+                      style: TextStyle(
+                          fontSize: NeuFonts.bodyTight, color: t.accentInk, fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: NeuSpace.n12),
+        NeuPressable(
+          onTap: onDiagnose,
+          radius: NeuRadii.md,
+          padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              NeuIcon(IconId.info, size: 15, color: t.muted),
+              SizedBox(width: NeuSpace.n7),
+              Text(I18n.t('ui.d0bacac615'),
+                  style: TextStyle(fontSize: NeuFonts.bodyMid, color: t.muted)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// 服务端启动向导：两条命令 + 一键复制。
+///
+/// 两条命令**并排给**：`/mobile start` 是已经在 pi 里时最快的，
+/// `node server/index.mjs` 是从零起服务端用的。不替用户选，各给一条。
+class ServerStartupGuide extends StatelessWidget {
+  const ServerStartupGuide({super.key, required this.onCopy});
+
+  /// 复制命令。动作留在页面（要弹 toast），组件只报告要复制什么。
+  /// 收 (命令文本, 显示名) 两个参数，与 CmdRow 一致。
+  final void Function(String text, String label) onCopy;
+
+  static const String _cmdViaPi = '/mobile start';
+  static const String _cmdViaNode = 'node server/index.mjs --host 0.0.0.0';
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.neu;
+    return NeuRaised(
+      radius: NeuRadii.lg,
+      padding: const EdgeInsets.all(NeuSpace.n14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              NeuIcon(IconId.terminal, size: 15, color: t.accentInk),
+              SizedBox(width: NeuSpace.n8),
+              Text(I18n.t('ui.fb75dd5ecd'),
+                  style: TextStyle(
+                      fontSize: NeuFonts.bodyMid, fontWeight: FontWeight.w700, color: t.fg)),
+            ],
+          ),
+          SizedBox(height: NeuSpace.n10),
+          Text(
+            // ignore: prefer_interpolation_to_compose_strings
+            '${I18n.t('ui.da96bf7843')}'
+            '${I18n.t('ui.e28ad37f63')}',
+            style: TextStyle(fontSize: NeuFonts.label, height: 1.7, color: t.onBgDim),
+          ),
+          SizedBox(height: NeuSpace.n6),
+          CmdRow(
+            command: _cmdViaPi,
+            label: I18n.t('common.command'),
+            onCopy: onCopy,
+          ),
+          SizedBox(height: NeuSpace.n10),
+          Text(
+            I18n.t('ui.282652e49f'),
+            style: TextStyle(fontSize: NeuFonts.label, height: 1.7, color: t.onBgDim),
+          ),
+          SizedBox(height: NeuSpace.n6),
+          CmdRow(
+            command: _cmdViaNode,
+            label: I18n.t('common.command'),
+            onCopy: onCopy,
+          ),
+          SizedBox(height: NeuSpace.n10),
+          Text(
+            // ignore: prefer_interpolation_to_compose_strings
+            '${I18n.t('ui.e2c2055ec7')}'
+            '${I18n.t('ui.44d23ca46b')}',
+            style: TextStyle(fontSize: NeuFonts.label, height: 1.7, color: t.onBgDim),
+          ),
+        ],
+      ),
+    );
+  }
+}
