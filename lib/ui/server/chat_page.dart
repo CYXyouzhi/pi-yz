@@ -26,7 +26,6 @@ import '../../theme/neu.dart';
 import '../key_bar.dart';
 import '../neu_icons.dart';
 import '../neu_toast.dart';
-import 'activity_view.dart';
 import 'export_page.dart';
 import 'files_page.dart';
 // slashPanelMaxHeight 搬到了 chat/widgets.dart，但测试还从本文件引用它 ——
@@ -679,7 +678,15 @@ class _ServerChatPageState extends State<ServerChatPage> {
           child: Column(
             children: [
               // 滚动时标题栏自动收起（省约 44 逻辑高），回到顶部自动恢复
-              if (!_headerCollapsed) _buildHeader(t, chat),
+              if (!_headerCollapsed) ChatHeader(
+            store: _store,
+            chat: chat,
+            runStartedAt: _runStartedAt,
+            onShare: _shareLastAnswer,
+            onShowInfo: _showSessionInfo,
+            onNewSession: _newSessionInCurrentWorkspace,
+            onShowModelSwitcher: _showModelSwitcher,
+          ),
               // 活动条只在「跑着」或「有待确认」时占行：
               // 空闲时它显示「你好 · 空闲 · 本轮 N 次工具调用」，信息量低却照样
               // 吃掉约 37 逻辑高。入口没丢 —— 点标题栏的会话名就能打开活动视图。
@@ -920,117 +927,6 @@ class _ServerChatPageState extends State<ServerChatPage> {
   ///
   /// 空会话且没在跑时不占地方；其余情况都显示 —— 「结束态」本身也是信息
   /// （合同④：空态与结束态都要明确）。
-  Widget _buildHeader(NeuTokens t, ChatReducer chat) {
-    final connected = _store.isConnected;
-    return Padding(
-      // 垂直 8 → 5：标题栏已并成一行，上下再多留就是白占竖向空间
-      padding: const EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n5, NeuSpace.n12, NeuSpace.n5),
-      child: Row(
-        children: [
-          Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(NeuRadii.chip),
-              gradient: NeuDecorations.raisedGradient(t),
-              boxShadow: NeuShadows.raiseSm(t),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              'p',
-              style: TextStyle(fontWeight: FontWeight.w700, color: t.accentInk),
-            ),
-          ),
-          const SizedBox(width: NeuSpace.n10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    // 会话名与地址都要能收缩：右侧还有分享/详情/新建三个按钮，
-                    // 不收缩时长会话名会把地址挤到按钮底下（看起来像被遮住）。
-                    Flexible(
-                      // 会话名可点：打开实时活动视图。
-                      // 活动条空闲时不再占行（见 build 里的条件），入口落在这里 ——
-                      // 省空间不能把入口弄丢。
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onTap: () => showActivitySheet(context, _store),
-                        child: Text(
-                          // 会话名可能是空串（用户没命名）：只判 null 标题栏会空一块
-                          // （实测被挤成「p ● 模型」），空串也要回落到默认名
-                          (chat.sessionName ?? '').trim().isEmpty
-                              ? 'pi agent'
-                              : chat.sessionName!.trim(),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: NeuFonts.bodyLg,
-                            fontWeight: FontWeight.w700,
-                            color: t.onBg,
-                          ),
-                        ),
-                      ),
-                    ),
-                    // 地址胶囊从标题栏拿掉：一行里要塞下「会话名 + 地址 + 状态点 +
-                    // 模型 + 四个按钮」，谁都不够宽（实测会话名和地址一起被挤成 0）。
-                    // 连的是哪台机器，活动条和连接页都能看到，这里让位给会话名。
-                    const SizedBox(width: NeuSpace.n6),
-                    Container(
-                      width: 7,
-                      height: 7,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: connected ? t.success : t.muted,
-                      ),
-                    ),
-                    const SizedBox(width: NeuSpace.n6),
-                    // 会话内一键切模型/思考等级：不用离开会话，也不用记命令
-                    ModelChip(model: chat.model, onTap: _showModelSwitcher),
-                    if (chat.isRunning) ...[
-                      const SizedBox(width: NeuSpace.n6),
-                      LiveSpeed(store: _store, runStartedAt: _runStartedAt),
-                    ],
-                  ],
-                ),
-              ],
-            ),
-          ),
-          NeuPressable(
-            // 分享这条回复（⑩）：走系统分享面板。
-            // 放在头部而不是只藏在消息菜单里 —— 手机上「把这段发给同事」
-            // 是高频动作，值得一个一眼可见的入口。
-            onTap: _shareLastAnswer,
-            radius: 14,
-            child: const Padding(
-              padding: EdgeInsets.all(NeuSpace.n11),
-              child: NeuIcon(IconId.share, size: 18),
-            ),
-          ),
-          const SizedBox(width: NeuSpace.n6),
-          NeuPressable(
-            onTap: _showSessionInfo,
-            radius: 14,
-            child: const Padding(
-              padding: EdgeInsets.all(NeuSpace.n11),
-              child: NeuIcon(IconId.info, size: 18),
-            ),
-          ),
-          const SizedBox(width: NeuSpace.n6),
-          NeuPressable(
-            onTap: _newSessionInCurrentWorkspace,
-            radius: 14,
-            child: const Padding(
-              padding: EdgeInsets.all(NeuSpace.n11),
-              child: NeuIcon(IconId.plus, size: 18),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   /// 分享最后一条 agent 回复的正文（走系统分享面板）。
   ///
   /// 只分享**正文**，不带工具调用与思考 —— 那些是过程，不是结论，
