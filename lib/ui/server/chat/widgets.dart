@@ -719,3 +719,84 @@ String formatTokens(int? value) {
   if (value >= 1000) return '${(value / 1000).toStringAsFixed(1)}k';
   return '$value';
 }
+
+/// 会话内的模型胶囊：显示当前模型名，点开切换器。
+///
+/// **只显示模型名** —— `模型 · provider` 太长，会把会话名挤到看不见
+/// （provider 在点开的切换器里能看到）。
+///
+/// 宽度限制 96，且用 **FittedBox 缩字**而不是截断：截成 `DeepSe…`
+/// 只剩三个字母，既认不出是哪个模型、又像渲染坏了。缩小时配合
+/// `modelChipLabel` 剥掉冗余厂商词，通常几乎不缩。
+///
+/// 只收 `model` 字符串（不收整个 chat）—— 组件要什么就给什么，
+/// 这样它的依赖一眼看得见，也不会因为 chat 多一个字段就重新编译。
+class ModelChip extends StatelessWidget {
+  const ModelChip({super.key, required this.model, required this.onTap});
+
+  final ModelInfo? model;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.neu;
+      // 只显示模型名：`模型 · provider` 太长，会把会话名挤到看不见
+      //（provider 在点开的切换器里能看到）
+      final label = modelChipLabel(model);
+      return ConstrainedBox(
+        // 宽度：一行里还要放会话名 + 状态点 + 三个按钮，所以必须给上限。
+        // 76 是更早的值 —— 实测它把「DeepSeek V4.1 Flash」截成 Dee…，用户的原话是
+        // 「太杂乱了一点也不美观」：一个只剩三个字母的截断，既认不出是哪个模型，
+        // 看起来也像渲染坏了。
+        //
+        // 96 配上面剥掉厂商词之后的型号（`V4.1 Flash`，10 个字符）刚好装得下，
+        // 不用再抢会话名的空间。
+        constraints: const BoxConstraints(maxWidth: 96),
+        child: NeuPressable(
+          onTap: onTap,
+          radius: 8,
+          flat: true,
+          padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n14, vertical: NeuSpace.n14),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                // 缩放而不是截断。用户的原话是「在这里显示缩小的不就好了」——
+                // 截成 `DeepSe…` 只剩三个字母，既认不出是哪个模型、又像渲染坏了；
+                // 缩到小一号至少把名字完整给出来。
+                //
+                // 配合 modelChipLabel 剥掉冗余厂商词，缩的幅度通常很小
+                //（`V4.1 Flash` 在 96dp 里几乎不用缩）；即使遇到特别长的名字
+                //（`DeepSeek V4 Flash Vision Exp`），也只是变小，不会丢字。
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    softWrap: false,
+                    style: TextStyle(fontSize: NeuFonts.badge, color: t.accentInk),
+                  ),
+                ),
+              ),
+              const SizedBox(width: NeuSpace.n4),
+              NeuIcon(IconId.chevronDown, size: 12, color: t.accentInk),
+            ],
+          ),
+        ),
+      );
+  }
+}
+
+String modelChipLabel(ModelInfo? model) {
+  if (model == null) return I18n.t('ui.aa50cded3a');
+  final name = model.name.trim();
+  final firstSpace = name.indexOf(' ');
+  if (firstSpace <= 0) return name;
+  final head = name.substring(0, firstSpace);
+  final tail = name.substring(firstSpace + 1).trim();
+  if (tail.isEmpty || !tail.contains(' ')) return name;
+  final idHead = model.id.split(RegExp(r'[-_]')).first;
+  if (head.toLowerCase() != idHead.toLowerCase()) return name;
+  return tail;
+}

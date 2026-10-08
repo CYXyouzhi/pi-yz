@@ -31,7 +31,7 @@ import 'export_page.dart';
 import 'files_page.dart';
 // slashPanelMaxHeight 搬到了 chat/widgets.dart，但测试还从本文件引用它 ——
 // export 回去保持兼容（纯函数搬家，不改行为）。
-export 'chat/widgets.dart' show slashPanelMaxHeight;
+export 'chat/widgets.dart' show slashPanelMaxHeight, modelChipLabel;
 
 import 'chat/sheets.dart';
 import 'chat/widgets.dart';
@@ -55,19 +55,6 @@ import 'usage_page.dart';
 ///
 /// 放在顶层（而不是 State 的私有方法）是为了能直接写单元测试：
 /// 这几条边界（剥 / 不剥）正是最容易写错的地方。
-String modelChipLabel(ModelInfo? model) {
-  if (model == null) return I18n.t('ui.aa50cded3a');
-  final name = model.name.trim();
-  final firstSpace = name.indexOf(' ');
-  if (firstSpace <= 0) return name;
-  final head = name.substring(0, firstSpace);
-  final tail = name.substring(firstSpace + 1).trim();
-  if (tail.isEmpty || !tail.contains(' ')) return name;
-  final idHead = model.id.split(RegExp(r'[-_]')).first;
-  if (head.toLowerCase() != idHead.toLowerCase()) return name;
-  return tail;
-}
-
 class ServerChatPage extends StatefulWidget {
   const ServerChatPage({super.key, required this.store, this.onOpenSessions});
 
@@ -1000,7 +987,7 @@ class _ServerChatPageState extends State<ServerChatPage> {
                     ),
                     const SizedBox(width: NeuSpace.n6),
                     // 会话内一键切模型/思考等级：不用离开会话，也不用记命令
-                    _buildModelChip(t, chat),
+                    ModelChip(model: chat.model, onTap: _showModelSwitcher),
                     if (chat.isRunning) ...[
                       const SizedBox(width: NeuSpace.n6),
                       LiveSpeed(store: _store, runStartedAt: _runStartedAt),
@@ -1078,54 +1065,6 @@ class _ServerChatPageState extends State<ServerChatPage> {
   /// 不假装它是实时的字符级速度。
   /// 顶部的模型胶囊：一眼看出现在用的是哪个模型、属于哪个 provider，
   /// 点一下就能换（不必打 /model，也不用离开会话）。
-  Widget _buildModelChip(NeuTokens t, ChatReducer chat) {
-    // 只显示模型名：`模型 · provider` 太长，会把会话名挤到看不见
-    //（provider 在点开的切换器里能看到）
-    final label = modelChipLabel(chat.model);
-    return ConstrainedBox(
-      // 宽度：一行里还要放会话名 + 状态点 + 三个按钮，所以必须给上限。
-      // 76 是更早的值 —— 实测它把「DeepSeek V4.1 Flash」截成 Dee…，用户的原话是
-      // 「太杂乱了一点也不美观」：一个只剩三个字母的截断，既认不出是哪个模型，
-      // 看起来也像渲染坏了。
-      //
-      // 96 配上面剥掉厂商词之后的型号（`V4.1 Flash`，10 个字符）刚好装得下，
-      // 不用再抢会话名的空间。
-      constraints: const BoxConstraints(maxWidth: 96),
-      child: NeuPressable(
-        onTap: _showModelSwitcher,
-        radius: 8,
-        flat: true,
-        padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n14, vertical: NeuSpace.n14),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Flexible(
-              // 缩放而不是截断。用户的原话是「在这里显示缩小的不就好了」——
-              // 截成 `DeepSe…` 只剩三个字母，既认不出是哪个模型、又像渲染坏了；
-              // 缩到小一号至少把名字完整给出来。
-              //
-              // 配合 modelChipLabel 剥掉冗余厂商词，缩的幅度通常很小
-              //（`V4.1 Flash` 在 96dp 里几乎不用缩）；即使遇到特别长的名字
-              //（`DeepSeek V4 Flash Vision Exp`），也只是变小，不会丢字。
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  softWrap: false,
-                  style: TextStyle(fontSize: NeuFonts.badge, color: t.accentInk),
-                ),
-              ),
-            ),
-            const SizedBox(width: NeuSpace.n4),
-            NeuIcon(IconId.chevronDown, size: 12, color: t.accentInk),
-          ],
-        ),
-      ),
-    );
-  }
-
   /// 模型 + 思考等级的浮动切换器。
   ///
   /// 只改**当前会话**：pi 的 set_model / set_thinking_level 写的是会话记录，
