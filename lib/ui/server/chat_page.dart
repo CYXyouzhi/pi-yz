@@ -32,7 +32,6 @@ export 'chat/widgets.dart' show slashPanelMaxHeight, modelChipLabel;
 
 import 'chat/sheets.dart';
 import 'chat/widgets.dart';
-import 'message_view.dart';
 
 /// 模型胶囊上显示的**短名**。
 ///
@@ -658,7 +657,6 @@ class _ServerChatPageState extends State<ServerChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    final t = context.neu;
     return ListenableBuilder(
       listenable: _store,
       builder: (context, _) {
@@ -698,85 +696,17 @@ class _ServerChatPageState extends State<ServerChatPage> {
                 ChatActivityBar(store: _store, chat: chat),
               // 离线缓存提示：有缓存时界面不空，但必须说清楚「你看到的是旧的」
               if (_store.cacheShownAt != null) OfflineBanner(store: _store),
-              Expanded(
-                child: Stack(
-                  children: [
-                    if (_store.loadingSession && chat.messages.isEmpty)
-                      ChatLoading(store: _store)
-                    else if (_store.lastError != null && chat.messages.isEmpty)
-                      // 会话没拉起来：说清楚 + 给一条重试的路
-                      _buildLoadFailed(t)
-                    else if (chat.messages.isEmpty)
-                      ChatEmptyState(store: _store)
-                    else
-                      Builder(
-                        builder: (context) {
-                          // 重点模式只过滤**渲染**，不动 chat.messages ——
-                          // 过滤掉数据会让「加载更早」「本轮耗时」这些基于相邻消息的
-                          // 计算跟着变，模式一开关数字就跳。
-                          final visible = _focusMode
-                              ? chat.messages
-                                    .where(
-                                      (m) =>
-                                          m.isUser ||
-                                          (!m.isToolResult &&
-                                              m.toolCalls.isEmpty &&
-                                              m.thinking.trim().isEmpty &&
-                                              m.text.trim().isNotEmpty),
-                                    )
-                                    .toList()
-                              : chat.messages;
-                          final elapsedMap = _elapsed.of(chat);
-                          return ListView.builder(
-                            controller: _scroll,
-                            padding: const EdgeInsets.fromLTRB(NeuSpace.n14, NeuSpace.n10, NeuSpace.n14, NeuSpace.n10),
-                            // 列表顶部多一格：还有更早的消息时放「加载更早」
-                            itemCount:
-                                visible.length + (chat.historyHasMore ? 1 : 0),
-                            itemBuilder: (context, index) {
-                              if (chat.historyHasMore && index == 0) {
-                                return LoadMoreRow(store: _store, chat: chat);
-                              }
-                              final message =
-                                  visible[chat.historyHasMore
-                                      ? index - 1
-                                      : index];
-                              final tile = MessageTile(
-                                // 必须给 key：否则 ListView 复用 widget 时，
-                                // 上一条消息的「思考展开/工具展开」状态会串到这一条上
-                                key: ValueKey<String>(message.key),
-                                message: message,
-                                elapsed: elapsedMap[message.key],
-                                toolRun: chat.toolRunOf(message.toolCallId),
-                                runOf: chat.toolRunOf,
-                                onQuote: _quoteText,
-                                onEditResend: _editResend,
-                              );
-                              // 横滑用户消息＝把这条拉回输入框改写再发（左滑右滑都认，
-                              // 手机上不用记住方向是哪个）。只对用户消息开放：拉回自己的话才有意义。
-                              if (!message.isUser ||
-                                  message.text.trim().isEmpty) {
-                                return tile;
-                              }
-                              return GestureDetector(
-                                onHorizontalDragEnd: (details) {
-                                  final velocity = details.primaryVelocity ?? 0;
-                                  if (velocity.abs() < 260) return;
-                                  _editResend(message.text);
-                                },
-                                child: tile,
-                              );
-                            },
-                          );
-                        },
-                      ),
-                    // 顶部细进度条：列表能滚的时候常驻，一眼看出读到哪儿了。
-                    // 以前根本没有进度条，只有一个时灵时不灵的回底按钮。
-                    if (chat.messages.isNotEmpty)
-                      ScrollProgressBar(progress: _scrollProgress),
-                    if (!_atBottom) ScrollToBottomButton(onTap: _scrollToBottom),
-                  ],
-                ),
+                            ChatMessageArea(
+                store: _store,
+                chat: chat,
+                focusMode: _focusMode,
+                atBottom: _atBottom,
+                scroll: _scroll,
+                elapsed: _elapsed,
+                scrollProgress: _scrollProgress,
+                onQuote: _quoteText,
+                onEditResend: _editResend,
+                onScrollToBottom: _scrollToBottom,
               ),
               if (chat.notice != null) ChatNoticeRow(notice: chat.notice!),
               if (chat.queuedSteering > 0 || chat.queuedFollowUp > 0)
@@ -1016,16 +946,6 @@ class _ServerChatPageState extends State<ServerChatPage> {
     _setInput('$current${needsSpace ? ' ' : ''}$text');
     _inputFocus.requestFocus();
   }
-
-  /// 顶部「加载更早的消息」。
-  ///
-  /// 快照只带最近几十条（实测一个大会话有 523 条上下文消息），
-  /// 更早的用 get_history 往上翻。
-  /// 离线提示条：说清楚三件事 —— 现在没连上、看到的是几点的缓存、怎么重试。
-  /// 「更早的 N 条未缓存」也要写出来，否则用户会以为消息被弄丢了。
-  /// 会话没拉起来：错误文案 + 「重新载入」入口（复用加载态的失败样式）。
-  /// 单独留一个方法，是为了让「失败」这个状态在代码里显式存在，不再被当成空会话。
-  Widget _buildLoadFailed(NeuTokens t) => ChatLoading(store: _store);
 
   /// 会话信息 + 分支树。
   ///
