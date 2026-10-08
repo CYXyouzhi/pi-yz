@@ -20,7 +20,6 @@ import '../../server/native_bridge.dart';
 import '../../server/server_store.dart';
 import '../../server/server_types.dart';
 import '../../server/template_store.dart';
-import '../../services/key_encoder.dart';
 import '../../theme/design_tokens.dart';
 import '../../theme/neu.dart';
 import '../key_bar.dart';
@@ -476,40 +475,8 @@ class _ServerChatPageState extends State<ServerChatPage> {
   /// 为什么要还原：按键条是终端时代写的，`onKey` 给的是转义字节；
   /// 而我们的通道是 pi（一个 agent，不是终端），转义字节本身没有意义。
   /// 所以序列只在 App 里被解释成动作，**绝不原样发给会话**。
-  String _decodeKey(String seq) {
-    if (seq == KeyEncoder.esc) return 'esc';
-    if (seq == KeyEncoder.tab) return 'tab';
-    if (seq == KeyEncoder.shiftTab) return 'shift-tab';
-    if (seq == '\x1b[Z') return 'shift-tab';
-    if (seq == '\x03' || seq == KeyEncoder.ctrlLetter('c')) return 'ctrl-c';
-    if (seq == '\r' || seq == '\n') return 'enter';
-    // CSI 序列：ESC [ 参数? 终结符 —— 参数可能带修饰键（如 1;5A = Ctrl+↑）
-    final m = RegExp(r'^\x1b\[(?:(\d+)(?:;(\d+))?)?([A-Za-z~])$')
-        .firstMatch(seq);
-    if (m == null) return '';
-    final tail = m.group(3)!;
-    return switch (tail) {
-      'A' => 'up',
-      'B' => 'down',
-      'C' => 'right',
-      'D' => 'left',
-      'H' => 'home',
-      'F' => 'end',
-      'Z' => 'shift-tab',
-      '~' => switch (m.group(1)) {
-        '1' => 'home',
-        '3' => 'delete',
-        '4' => 'end',
-        '5' => 'page-up',
-        '6' => 'page-down',
-        _ => '',
-      },
-      _ => '',
-    };
-  }
-
   void _onKeyBarKey(String seq) {
-    final key = _decodeKey(seq);
+    final key = decodeKey(seq);
     if (key == 'esc') {
       // Esc 三级退让：先收面板 → 再中断任务 → 最后清输入
       if (_showSuggestions || _showFileRefs) {
@@ -765,24 +732,24 @@ class _ServerChatPageState extends State<ServerChatPage> {
                   onSummary: () => showTurnSummarySheet(context, _store.turnSummary!),
                 ),
               ChatComposer(
-          input: _input,
-          inputFocus: _inputFocus,
-          running: chat.isRunning,
-          keyBarVisible: _keyBarVisible,
-          onSend: _send,
-          onAbort: () => _store.abort(),
-          onShowMenu: () => showInputMenuSheet(
-            context,
-            input: _input,
-            templates: _templates,
-            onTemplatesChanged: (items) => setState(() => _templates = items),
-            onInsert: _insertIntoInput,
-            onPickImage: _pickImage,
-            onPickFile: _pickFile,
-            onPaste: _pasteClipboardText,
-          ),
-          onToggleKeyBar: _toggleKeyBar,
-        ),
+                input: _input,
+                inputFocus: _inputFocus,
+                running: chat.isRunning,
+                keyBarVisible: _keyBarVisible,
+                onSend: _send,
+                onAbort: () => _store.abort(),
+                onShowMenu: () => showInputMenuSheet(
+                context,
+                input: _input,
+                templates: _templates,
+                onTemplatesChanged: (items) => setState(() => _templates = items),
+                onInsert: _insertIntoInput,
+                onPickImage: _pickImage,
+                onPickFile: _pickFile,
+                onPaste: _pasteClipboardText,
+                ),
+                onToggleKeyBar: _toggleKeyBar,
+                ),
             ],
           ),
         );

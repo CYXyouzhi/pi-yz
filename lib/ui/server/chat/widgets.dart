@@ -11,6 +11,7 @@ import '../../../server/server_types.dart';
 import '../../../server/template_store.dart';
 import '../../../theme/design_tokens.dart';
 import '../../../theme/neu.dart';
+import '../../../services/key_encoder.dart';
 import '../../neu_icons.dart';
 import '../../neu_toast.dart';
 import '../activity_view.dart';
@@ -2191,4 +2192,36 @@ class ChatMessageArea extends StatelessWidget {
       ),
     );
   }
+}
+
+String decodeKey(String seq) {
+  if (seq == KeyEncoder.esc) return 'esc';
+  if (seq == KeyEncoder.tab) return 'tab';
+  if (seq == KeyEncoder.shiftTab) return 'shift-tab';
+  if (seq == '\x1b[Z') return 'shift-tab';
+  if (seq == '\x03' || seq == KeyEncoder.ctrlLetter('c')) return 'ctrl-c';
+  if (seq == '\r' || seq == '\n') return 'enter';
+  // CSI 序列：ESC [ 参数? 终结符 —— 参数可能带修饰键（如 1;5A = Ctrl+↑）
+  final m = RegExp(r'^\x1b\[(?:(\d+)(?:;(\d+))?)?([A-Za-z~])$')
+      .firstMatch(seq);
+  if (m == null) return '';
+  final tail = m.group(3)!;
+  return switch (tail) {
+    'A' => 'up',
+    'B' => 'down',
+    'C' => 'right',
+    'D' => 'left',
+    'H' => 'home',
+    'F' => 'end',
+    'Z' => 'shift-tab',
+    '~' => switch (m.group(1)) {
+      '1' => 'home',
+      '3' => 'delete',
+      '4' => 'end',
+      '5' => 'page-up',
+      '6' => 'page-down',
+      _ => '',
+    },
+    _ => '',
+  };
 }
