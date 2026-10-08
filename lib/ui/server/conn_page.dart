@@ -1,14 +1,15 @@
 // 连接配置页。
 //
-// 原型这里配的是 SSH（主机/密钥/工作区），服务端改成 HTTP 后字段变为：
-// 配置名称 / 主机地址 / 端口 / token / 默认工作区。
+// 页面只负责三件事：局域网发现 + 配对、远程访问隧道、「已保存的连接」列表
+//（切换 / 编辑 / 删除 / 新增）。**字段表单不在这里** ——
+// 配置名称 / 主机地址 / 端口 / token / 默认工作区 那套字段在 conn_edit_page，
+// 点「＋新增」或「手动添加连接」过去填。
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../server/discovery.dart';
 import '../../server/i18n.dart';
-import '../../server/server_client.dart';
 import '../../server/server_profile.dart';
 import '../../server/server_store.dart';
 import '../../theme/design_tokens.dart';
@@ -30,21 +31,8 @@ class ServerConnPage extends StatefulWidget {
 }
 
 class _ServerConnPageState extends State<ServerConnPage> {
-  final _name = TextEditingController();
-  final _host = TextEditingController();
-  final _port = TextEditingController(text: '30142');
-  final _token = TextEditingController();
-  final _cwd = TextEditingController();
-  /// 备用地址（可选）。留空 = 不启用回落，行为与改动前一致。
-  final _fallback = TextEditingController();
-
-  /// 是否走 HTTPS。**显式开关**（原来只能靠在地址栏粘 https:// 或把端口填 443
-  /// 隐式触发，用户根本不知道有这回事）。粘贴完整 URL 时仍会自动打开它。
-  bool _secure = false;
-
   List<ServerProfile> _profiles = const [];
   String? _editingId;
-  bool _testing = false;
 
   // 局域网扫描（合同①：不再手输 IP）
   bool _scanning = false;
@@ -77,10 +65,6 @@ class _ServerConnPageState extends State<ServerConnPage> {
   /// 一条独立连接）。
   final TextEditingController _ownRemote = TextEditingController();
 
-  /// 电脑端两种启动方式，都能一键复制（合同④向导页）
-  String? _testResult;
-  bool _testOk = false;
-
   ServerStore get _store => widget.store;
 
   @override
@@ -93,12 +77,6 @@ class _ServerConnPageState extends State<ServerConnPage> {
 
   @override
   void dispose() {
-    _name.dispose();
-    _host.dispose();
-    _port.dispose();
-    _token.dispose();
-    _cwd.dispose();
-    _fallback.dispose();
     _ownRemote.dispose();
     super.dispose();
   }
@@ -111,141 +89,10 @@ class _ServerConnPageState extends State<ServerConnPage> {
       _profiles = profiles;
       final active = profiles.where((p) => p.id == activeId).firstOrNull ??
           profiles.firstOrNull;
-      if (active != null) _fill(active);
+      // 只用于「已保存」列表里当前项的高亮：表单已搬进 conn_edit_page，
+      // 这里不再回填任何输入框
+      if (active != null) _editingId = active.id;
     });
-  }
-
-  void _fill(ServerProfile profile) {
-    _editingId = profile.id;
-    _name.text = profile.name;
-    _host.text = profile.host;
-    _port.text = profile.port.toString();
-    _token.text = profile.token;
-    _cwd.text = profile.defaultCwd ?? '';
-    _fallback.text = profile.fallbackHost ?? '';
-    _secure = profile.secure;
-  }
-
-  ServerProfile _collect() {
-    var host = _host.text.trim();
-    var portText = _port.text.trim();
-    // 以开关为准；粘贴完整 URL 时下面会把它改成 true（那是用户明确表达的意图）
-    var secure = _secure;
-
-    // 允许直接粘贴一整条 URL：远程隧道给用户的就是
-    // `https://xxx.trycloudflare.com`，逼他自己拆域名和端口既费事又容易错。
-    if (host.startsWith('https://') || host.startsWith('http://')) {
-      final isHttps = host.startsWith('https://');
-      final parsed = Uri.tryParse(host);
-      if (parsed != null && parsed.host.isNotEmpty) {
-        host = parsed.host;
-        portText = parsed.hasPort ? '${parsed.port}' : (isHttps ? '443' : '80');
-        secure = isHttps;
-      }
-    } else if (portText == '443') {
-      // 手填 443 也当作 https（不然会拿 http 去打 443 端口，必失败）
-      secure = true;
-    }
-
-    final port = int.tryParse(portText) ?? (secure ? 443 : 30142);
-    final rawName = _name.text.trim();
-    return ServerProfile(
-      id: _editingId ?? DateTime.now().microsecondsSinceEpoch.toString(),
-      // 名字留空时用地址兜底：否则列表里会是一条没名字的记录
-      name: rawName.isEmpty
-          ? (secure ? host : '$host:$port')
-          : rawName,
-      host: host,
-      port: port,
-      token: _token.text.trim(),
-      defaultCwd: _cwd.text.trim().isEmpty ? null : _cwd.text.trim(),
-      secure: secure,
-      fallbackHost: _fallback.text.trim().isEmpty ? null : _fallback.text.trim(),
-    );
-  }
-
-  Future<void> _test() async {
-    final profile = _collect();
-    if (profile.host.isEmpty) {
-      setState(() {
-        _testResult = I18n.t('ui.69ffdd9247');
-        _testOk = false;
-      });
-      return;
-    }
-    setState(() {
-      _testing = true;
-      _testResult = null;
-    });
-
-    // 只探一次健康检查。
-    // 之前这里建了个临时 ServerStore 并 connect()，会顺带把 244 条会话
-    // 全扫一遍（实测 900ms），测试连接根本不需要这个。
-    final probe = ServerClient(
-      host: profile.host,
-      port: profile.port,
-      token: profile.token,
-      timeout: kConnectTestTimeout,
-    );
-    String message;
-    var ok = false;
-    try {
-      final health = await probe.health();
-      ok = health.ok;
-      message = ok ? I18n.tp('ui.57e6d24d08', {'version': health.piVersion}) : I18n.t('ui.fb58f723f1');
-    } on ServerException catch (error) {
-      message = error.message;
-    } finally {
-      await probe.dispose();
-    }
-
-    if (!mounted) return;
-    setState(() {
-      _testing = false;
-      _testOk = ok;
-      _testResult = message;
-    });
-  }
-
-  Future<void> _saveAndConnect() async {
-    final profile = _collect();
-    if (profile.host.isEmpty) {
-      NeuToast.show(context, message: I18n.t('ui.69ffdd9247'), icon: IconId.warn);
-      return;
-    }
-    final next = [..._profiles.where((p) => p.id != profile.id), profile];
-    await ServerProfileStore.saveAll(next);
-    await ServerProfileStore.saveActiveId(profile.id);
-    if (!mounted) return;
-    setState(() {
-      _profiles = next;
-      _editingId = profile.id;
-      // 名字被兜底成地址时，回写输入框，免得输入框仍显示为空
-      if (_name.text.trim().isEmpty) _name.text = profile.name;
-    });
-
-    await _store.connect(ServerTarget(
-      host: profile.host,
-      port: profile.port,
-      token: profile.token,
-      defaultCwd: profile.defaultCwd,
-      secure: profile.secure,
-      fallbackHost: profile.fallbackHost,
-      fallbackPort: profile.fallbackPort,
-      fallbackSecure: profile.fallbackSecure,
-    ));
-
-    if (!mounted) return;
-    if (_store.isConnected) {
-      NeuToast.show(context, message: I18n.tp('ui.754e7e0a0b', {'endpoint': profile.endpoint}), icon: IconId.check);
-      widget.onConnected?.call();
-    } else {
-      NeuToast.show(
-        context,
-        message: _store.errorMessage ?? I18n.t('common.connFailed'),
-        icon: IconId.warn,
-      );
-    }
   }
 
   Future<void> _delete(ServerProfile profile) async {
@@ -416,8 +263,7 @@ class _ServerConnPageState extends State<ServerConnPage> {
 
   /// 一键切换（合同②）：点已保存的机器直接连过去，不用先点「保存并使用」
   Future<void> _switchTo(ServerProfile profile) async {
-    _fill(profile);
-    setState(() {});
+    setState(() => _editingId = profile.id);
     await ServerProfileStore.saveActiveId(profile.id);
     await _store.connect(ServerTarget(
       host: profile.host,
@@ -442,16 +288,22 @@ class _ServerConnPageState extends State<ServerConnPage> {
     }
   }
 
-  /// 打开诊断页（合同③）：把当前表单里的参数带过去
+  /// 打开诊断页（合同③）：拿当前**已保存 / 已连**的那条去查。
+  ///
+  /// 不再读页面内联表单 —— 表单已搬进 conn_edit_page，这里的 controller 永远是空。
   Future<void> _openDiagnose() async {
-    final profile = _collect();
+    final target = _store.target;
+    if (target == null) {
+      NeuToast.show(context, message: I18n.t('conn.diagnoseNeedsTarget'), icon: IconId.warn);
+      return;
+    }
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => DiagnosePage(
-          host: profile.host,
-          port: profile.port,
-          token: profile.token,
-          defaultCwd: profile.defaultCwd,
+          host: target.host,
+          port: target.port,
+          token: target.token,
+          defaultCwd: target.defaultCwd,
         ),
       ),
     );
@@ -468,79 +320,89 @@ class _ServerConnPageState extends State<ServerConnPage> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n8, NeuSpace.n18, 28),
+        child: Column(
           children: [
-            const ConnPageHeader(),
-
-            // ---- 远程访问（task-18）：不在同一局域网也能连 ----
-            RemoteAccessCard(
-              store: _store,
-              tunnelPref: _tunnelPref,
-              ownRemote: _ownRemote,
-              showThreat: _showThreat,
-              onPickTunnel: (v) => setState(() => _tunnelPref = v),
-              onToggleThreat: () => setState(() => _showThreat = !_showThreat),
-              onUseAddress: _useRemoteAddress,
-              onSaveOwnAddress: _saveOwnAddress,
+            // 返回键固定在顶部。
+            //
+            // 原来它在 ListView 的 children 里，滚下去就跟着滚走 ——
+            // 页面上再没有任何返回入口（只剩系统返回手势），
+            // 用户会以为「页面卡住了」。
+            const Padding(
+              padding: EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n8, NeuSpace.n18, 0),
+              child: ConnPageHeader(),
             ),
-            const SizedBox(height: NeuSpace.n14),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n4, NeuSpace.n18, 28),
+                children: [
 
-            // ---- 快速连接：把「扫一台连上」与「查为什么连不上」归成一组 ---
-            // 原来这两个大按钮和「已保存」「手动表单」平铺，看不出主次。
-            QuickConnectSection(
-              expanded: _expanded.contains(I18n.t('conn.groupQuick')),
-              scanning: _scanning,
-              onToggle: () => setState(() {
-                final k = I18n.t('conn.groupQuick');
-                if (_expanded.contains(k)) {
-                  _expanded.remove(k);
-                } else {
-                  _expanded.add(k);
-                }
-              }),
-              onScan: _scan,
-              onDiagnose: _openDiagnose,
-              scanNote: _scanNote,
-              found: _found,
-              onUseDiscovered: _useDiscovered,
-            ),
-            SizedBox(height: NeuSpace.n18),
+                  // ---- 远程访问（task-18）：不在同一局域网也能连 ----
+                  RemoteAccessCard(
+                    store: _store,
+                    tunnelPref: _tunnelPref,
+                    ownRemote: _ownRemote,
+                    showThreat: _showThreat,
+                    onPickTunnel: (v) => setState(() => _tunnelPref = v),
+                    onToggleThreat: () => setState(() => _showThreat = !_showThreat),
+                    onUseAddress: _useRemoteAddress,
+                    onSaveOwnAddress: _saveOwnAddress,
+                  ),
+                  const SizedBox(height: NeuSpace.n14),
 
-            // ---- 已保存的服务器：整行点=切过去，右边笔/垃圾桶=改/删 ----
-            SavedProfilesSection(
-              profiles: _profiles,
-              editingId: _editingId,
-              expanded: _expanded.contains(I18n.t('ui.f8dfedcd8a')),
-              onToggle: () => setState(() {
-                final k = I18n.t('ui.f8dfedcd8a');
-                if (_expanded.contains(k)) {
-                  _expanded.remove(k);
-                } else {
-                  _expanded.add(k);
-                }
-              }),
-              onSwitchTo: _switchTo,
-              onEdit: _editProfile,
-              onDelete: _delete,
-              onNew: _newProfile,
-            ),
+                  // ---- 快速连接：把「扫一台连上」与「查为什么连不上」归成一组 ---
+                  // 原来这两个大按钮和「已保存」「手动表单」平铺，看不出主次。
+                  QuickConnectSection(
+                    expanded: _expanded.contains(I18n.t('conn.groupQuick')),
+                    scanning: _scanning,
+                    onToggle: () => setState(() {
+                      final k = I18n.t('conn.groupQuick');
+                      if (_expanded.contains(k)) {
+                        _expanded.remove(k);
+                      } else {
+                        _expanded.add(k);
+                      }
+                    }),
+                    onScan: _scan,
+                    onDiagnose: _openDiagnose,
+                    scanNote: _scanNote,
+                    found: _found,
+                    onUseDiscovered: _useDiscovered,
+                  ),
+                  SizedBox(height: NeuSpace.n18),
 
-            // ---- 连接动作：测试连不通、保存并连接、进诊断 ----
-            // 原来这块叫「手动配置」整块默认收起，但它其实是「连不上时怎么办」的
-            // 主入口，收起反而不易找。抽成组件后由页面直接平铺。
-            const SizedBox(height: NeuSpace.n16),
-            ConnectionActions(
-              testResult: _testResult,
-              testOk: _testOk,
-              testing: _testing,
-              onTest: _test,
-              onSaveAndConnect: _saveAndConnect,
-              onDiagnose: _openDiagnose,
+                  // ---- 已保存的服务器：整行点=切过去，右边笔/垃圾桶=改/删 ----
+                  SavedProfilesSection(
+                    profiles: _profiles,
+                    editingId: _editingId,
+                    expanded: _expanded.contains(I18n.t('ui.f8dfedcd8a')),
+                    onToggle: () => setState(() {
+                      final k = I18n.t('ui.f8dfedcd8a');
+                      if (_expanded.contains(k)) {
+                        _expanded.remove(k);
+                      } else {
+                        _expanded.add(k);
+                      }
+                    }),
+                    onSwitchTo: _switchTo,
+                    onEdit: _editProfile,
+                    onDelete: _delete,
+                    onNew: _newProfile,
+                  ),
+
+                  // ---- 连接动作：测试连不通、保存并连接、进诊断 ----
+                  // 原来这块叫「手动配置」整块默认收起，但它其实是「连不上时怎么办」的
+                  // 主入口，收起反而不易找。抽成组件后由页面直接平铺。
+                  const SizedBox(height: NeuSpace.n16),
+                  ConnectionActions(
+                    onNew: _newProfile,
+                    onDiagnose: _openDiagnose,
+                  ),
+                  const SizedBox(height: NeuSpace.n16),
+                  // ---- 服务端启动向导（合同④）：命令可一键复制 ----
+                  ServerStartupGuide(onCopy: _copy),
+                ],
+              ),
             ),
-            const SizedBox(height: NeuSpace.n16),
-            // ---- 服务端启动向导（合同④）：命令可一键复制 ----
-            ServerStartupGuide(onCopy: _copy),
           ],
         ),
       ),
@@ -596,7 +458,10 @@ class _ServerConnPageState extends State<ServerConnPage> {
       NeuToast.show(context, message: I18n.tp('ui.3bff752a5d', {'url': url}), icon: IconId.warn);
       return;
     }
-    final token = _store.target?.token ?? _token.text.trim();
+    // 页面已无内联表单，token 只能来自「当前已连的那条」。
+    // 没有 = 用户还没配对过；此时存下地址也连不上（缺 token），
+    // 所以下面会给一句提示把他引到新增/配对那条路。
+    final token = _store.target?.token ?? '';
     if (token.isEmpty) {
       NeuToast.show(context, message: I18n.t('ui.8e72a51181'), icon: IconId.warn);
       return;
@@ -632,7 +497,6 @@ class _ServerConnPageState extends State<ServerConnPage> {
     setState(() {
       _profiles = next;
       _editingId = profile.id;
-      _fill(profile);
     });
 
     // 只存不切：告诉用户存到哪去了，否则他会以为按钮没生效

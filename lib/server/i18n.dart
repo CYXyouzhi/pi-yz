@@ -369,6 +369,15 @@ class I18n {
     // 连接页分区。原来扫描/诊断/已保存/手动表单全平铺，用户说「设置项太杂乱了」。
     'conn.groupQuick': ('快速连接', 'Quick connect'),
     'conn.groupManual': ('手动配置', 'Manual setup'),
+    // 「手动添加连接」：配置连接页底部的入口按钮。
+    // 原先这里是「测试连接 / 保存并使用」一对按钮，但它们读的是页面内联
+    // 表单的 controller —— 表单已经搬去 conn_edit_page 了，两个按钮永远
+    // 拿到空 host，点下去只会弹「请填写主机地址」。改成直接开子页。
+    'conn.manualAdd': ('手动添加连接', 'Add connection manually'),
+    // 一条连接都没有时，「已保存」分组里显示的占位说明。
+    'conn.noSavedYet': ('还没有保存的连接', 'No saved connections yet'),
+    // 没连过就去点「连接诊断」时的提示：诊断要拿一条已知配置去查。
+    'conn.diagnoseNeedsTarget': ('先添加一条连接，再诊断', 'Add a connection first'),
     // 新建会话时手动指定工作区（候选只来自历史 + 默认，没用过的目录进不来）
     // ---- 「目标」配置子页面（conn_edit_page.dart）----
     'ui.4a3d8c1f0b': ('配对成功', 'Paired'),

@@ -347,28 +347,25 @@ class QuickConnectSection extends StatelessWidget {
 ///
 /// 测试结果不单独弹 toast，而是**常驻在按钮上方**（`testResult`）——
 /// 用户点完测试往往要看一眼结果再决定下一步，弹出来 3 秒消失反而碍事。
+/// 连接动作：手动添加连接 + 连接诊断。
+///
+/// 以前这里是「测试连接 / 保存并使用」两个按钮，数据源是页面内联表单的
+/// `_host` / `_port` / `_token` controller —— 但表单早已搬进 conn_edit_page，
+/// 那三个 controller 在配置连接页**没有任何输入框**（getter 永远是空字符串）。
+/// 结果：点「测试连接」只会弹「请填写主机地址」，而页面上根本没有可填的地方。
+///
+/// 所以这一块从「动作」改成「入口」：表单和测试都回到 conn_edit_page
+/// （那里有同样的测试连接 + 保存并连接，且数据来自真实输入框）。
 class ConnectionActions extends StatelessWidget {
   const ConnectionActions({
     super.key,
-    required this.testResult,
-    required this.testOk,
-    required this.testing,
-    required this.onTest,
-    required this.onSaveAndConnect,
+    required this.onNew,
     required this.onDiagnose,
   });
 
-  /// 上次测试的结果文案；没测过时为 null（那条提示就不显示）。
-  final String? testResult;
+  /// 打开「新增连接」子页（完整表单 + 测试连接）。
+  final VoidCallback onNew;
 
-  /// 测试是否通过 —— 决定结果条的图标与颜色（对勾/警告）。
-  final bool testOk;
-
-  /// 正在测试：按钮变 spinner 且不可再点。
-  final bool testing;
-
-  final VoidCallback onTest;
-  final VoidCallback onSaveAndConnect;
   final VoidCallback onDiagnose;
 
   @override
@@ -377,68 +374,22 @@ class ConnectionActions extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (testResult != null)
-          Padding(
-            padding: const EdgeInsets.only(bottom: NeuSpace.n10),
-            child: Row(
-              children: [
-                NeuIcon(
-                  testOk ? IconId.check : IconId.warn,
-                  size: 14,
-                  color: testOk ? t.success : t.danger,
-                ),
-                const SizedBox(width: NeuSpace.n8),
-                Expanded(
-                  child: Text(
-                    testResult!,
-                    style: TextStyle(fontSize: NeuFonts.sub, color: testOk ? t.success : t.danger),
-                  ),
-                ),
-              ],
-            ),
+        NeuPressable(
+          onTap: onNew,
+          radius: NeuRadii.md,
+          padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              NeuIcon(IconId.plus, size: 15, color: t.accentInk),
+              SizedBox(width: NeuSpace.n7),
+              Text(
+                I18n.t('conn.manualAdd'),
+                style: TextStyle(
+                    fontSize: NeuFonts.bodyTight, color: t.accentInk, fontWeight: FontWeight.w600),
+              ),
+            ],
           ),
-        Row(
-          children: [
-            Expanded(
-              child: NeuPressable(
-                onTap: testing ? null : onTest,
-                radius: NeuRadii.md,
-                padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (testing)
-                      NeuIcon(IconId.spinner, size: 15, color: t.muted)
-                    else
-                      NeuIcon(IconId.sync, size: 15, color: t.muted),
-                    SizedBox(width: NeuSpace.n7),
-                    Text(I18n.t('ui.69e74756bc'),
-                        style: TextStyle(fontSize: NeuFonts.bodyTight, color: t.muted)),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(width: NeuSpace.n10),
-            Expanded(
-              child: NeuPressable(
-                onTap: onSaveAndConnect,
-                radius: NeuRadii.md,
-                padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    NeuIcon(IconId.power, size: 15, color: t.accentInk),
-                    SizedBox(width: NeuSpace.n7),
-                    Text(
-                      I18n.t('ui.e8ba811b3f'),
-                      style: TextStyle(
-                          fontSize: NeuFonts.bodyTight, color: t.accentInk, fontWeight: FontWeight.w600),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
         ),
         const SizedBox(height: NeuSpace.n12),
         NeuPressable(
@@ -563,7 +514,10 @@ class SavedProfilesSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.neu;
-    if (profiles.isEmpty) return const SizedBox.shrink();
+    // 空列表**不能**整块隐藏 —— 那样第一次用的用户既看不到「已保存」，
+    // 也看不到「+ 新增」，等于没有任何手动配置入口（只剩局域网扫描；
+    // 外网穿透、手填 IP 全进不来）。分组头与「+ 新增」始终显示，
+    // 列表内容按 expanded 展开（为空时给一句占位说明）。
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -597,6 +551,12 @@ class SavedProfilesSection extends StatelessWidget {
         // 内容必须真的跟着收起/展开，不能只翻箭头（审计抓过一次）
         if (expanded) ...[
           const SizedBox(height: NeuSpace.n8),
+          if (profiles.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: NeuSpace.n6),
+              child: Text(I18n.t('conn.noSavedYet'),
+                  style: TextStyle(fontSize: NeuFonts.label, color: t.muted)),
+            ),
           for (final profile in profiles)
             NeuPressable(
               flat: editingId != profile.id,
