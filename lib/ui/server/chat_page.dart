@@ -773,42 +773,8 @@ class _ServerChatPageState extends State<ServerChatPage> {
                     // 顶部细进度条：列表能滚的时候常驻，一眼看出读到哪儿了。
                     // 以前根本没有进度条，只有一个时灵时不灵的回底按钮。
                     if (chat.messages.isNotEmpty)
-                      Positioned(
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        child: ValueListenableBuilder<double>(
-                          valueListenable: _scrollProgress,
-                          builder: (context, value, _) => Align(
-                            alignment: Alignment.centerLeft,
-                            child: FractionallySizedBox(
-                              widthFactor: value.clamp(0.02, 1.0),
-                              child: Container(
-                                height: 2.5,
-                                decoration: BoxDecoration(
-                                  color: t.accentInk.withValues(alpha: 0.55),
-                                  borderRadius: const BorderRadius.vertical(
-                                    bottom: Radius.circular(3),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    if (!_atBottom)
-                      Positioned(
-                        right: 16,
-                        bottom: 12,
-                        child: NeuPressable(
-                          onTap: _scrollToBottom,
-                          radius: 20,
-                          child: const Padding(
-                            padding: EdgeInsets.symmetric(horizontal: NeuSpace.n11, vertical: NeuSpace.n11),
-                            child: NeuIcon(IconId.chevronDown, size: 18),
-                          ),
-                        ),
-                      ),
+                      ScrollProgressBar(progress: _scrollProgress),
+                    if (!_atBottom) ScrollToBottomButton(onTap: _scrollToBottom),
                   ],
                 ),
               ),

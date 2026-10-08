@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../server/activity_feed.dart';
@@ -1912,4 +1913,66 @@ Future<void> showSessionInfoSheet(
         },
       );
   
+}
+
+/// 顶部细进度条：列表能滚的时候常驻，一眼看出读到哪儿了。
+///
+/// 以前没有进度条，只有一个时灵时不灵的回底按钮 —— 用户不知道自己在
+/// 长会话的什么位置。用 ListenableBuilder 订阅滚动进度，避免整页重建。
+class ScrollProgressBar extends StatelessWidget {
+  const ScrollProgressBar({super.key, required this.progress});
+
+  final ValueListenable<double> progress;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.neu;
+    return Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
+      child: ValueListenableBuilder<double>(
+        valueListenable: progress,
+        builder: (context, value, _) => Align(
+          alignment: Alignment.centerLeft,
+          child: FractionallySizedBox(
+            // 至少 2% 宽，否则刚滚一点时几乎看不见，像是没反应
+            widthFactor: value.clamp(0.02, 1.0),
+            child: Container(
+              height: 2.5,
+              decoration: BoxDecoration(
+                color: t.accentInk.withValues(alpha: 0.55),
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(3),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 回底按钮：不在底部时浮在右下角（在底部时不显示，省掉一个没用的按钮）。
+class ScrollToBottomButton extends StatelessWidget {
+  const ScrollToBottomButton({super.key, required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      right: 16,
+      bottom: 12,
+      child: NeuPressable(
+        onTap: onTap,
+        radius: 20,
+        child: const Padding(
+          padding: EdgeInsets.symmetric(horizontal: NeuSpace.n11, vertical: NeuSpace.n10),
+          child: NeuIcon(IconId.chevronDown, size: 18),
+        ),
+      ),
+    );
+  }
 }
