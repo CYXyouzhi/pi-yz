@@ -1976,3 +1976,84 @@ class ScrollToBottomButton extends StatelessWidget {
     );
   }
 }
+
+/// 一行进度提示（`chat.notice`）：转圈图标 + 文案。没有提示时不要插进来。
+class ChatNoticeRow extends StatelessWidget {
+  const ChatNoticeRow({super.key, required this.notice});
+
+  final String notice;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.neu;
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: NeuSpace.n18,
+        vertical: NeuSpace.n4,
+      ),
+      child: Row(
+        children: [
+          NeuIcon(IconId.spinner, size: 13, color: t.muted),
+          const SizedBox(width: NeuSpace.n6),
+          Expanded(
+            child: Text(
+              notice,
+              style: TextStyle(fontSize: NeuFonts.small, color: t.muted),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 排队中的消息提示：跑着的时候又发了话，会排进队列。
+///
+/// 必须**看得见 + 能撤** —— 用户发了话却看不出它有没有被接收，会重复发。
+/// 右侧「清空」直接把队列丢掉。
+class QueuedMessagesRow extends StatelessWidget {
+  const QueuedMessagesRow({
+    super.key,
+    required this.steering,
+    required this.followUp,
+    required this.onClear,
+  });
+
+  /// steering（插话，中途改变方向）与 followUp（追加）的条数。
+  final int steering;
+  final int followUp;
+
+  final VoidCallback onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.neu;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n4, NeuSpace.n18, NeuSpace.n4),
+      child: Row(
+        children: [
+          NeuIcon(IconId.info, size: 13, color: t.accentInk),
+          SizedBox(width: NeuSpace.n6),
+          Expanded(
+            child: Text(
+              I18n.tp('ui.ae9a52e8c8', {'a': steering, 'b': followUp}),
+              style: TextStyle(fontSize: NeuFonts.small, color: t.muted),
+            ),
+          ),
+          NeuPressable(
+            onTap: onClear,
+            radius: 10,
+            padding: const EdgeInsets.symmetric(
+              horizontal: NeuSpace.n10,
+              vertical: NeuSpace.n6,
+            ),
+            child: Text(
+              I18n.t('common.clear'),
+              style: TextStyle(fontSize: NeuFonts.small, color: t.danger),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

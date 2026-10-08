@@ -778,55 +778,15 @@ class _ServerChatPageState extends State<ServerChatPage> {
                   ],
                 ),
               ),
-              if (chat.notice != null)
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: NeuSpace.n18,
-                    vertical: NeuSpace.n4,
-                  ),
-                  child: Row(
-                    children: [
-                      NeuIcon(IconId.spinner, size: 13, color: t.muted),
-                      const SizedBox(width: NeuSpace.n6),
-                      Expanded(
-                        child: Text(
-                          chat.notice!,
-                          style: TextStyle(fontSize: NeuFonts.small, color: t.muted),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              if (chat.notice != null) ChatNoticeRow(notice: chat.notice!),
               if (chat.queuedSteering > 0 || chat.queuedFollowUp > 0)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n4, NeuSpace.n18, NeuSpace.n2),
-                  child: Row(
-                    children: [
-                      NeuIcon(IconId.info, size: 13, color: t.accentInk),
-                      SizedBox(width: NeuSpace.n6),
-                      Expanded(
-                        child: Text(
-                          I18n.tp('ui.ae9a52e8c8', {'a': chat.queuedSteering, 'b': chat.queuedFollowUp}),
-                          style: TextStyle(fontSize: NeuFonts.small, color: t.muted),
-                        ),
-                      ),
-                      NeuPressable(
-                        onTap: () => _store.runCommand({
-                          'id': 'cq${DateTime.now().microsecondsSinceEpoch}',
-                          'type': 'clear_queue',
-                        }),
-                        radius: 10,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: NeuSpace.n10,
-                          vertical: NeuSpace.n6,
-                        ),
-                        child: Text(
-                          I18n.t('common.clear'),
-                          style: TextStyle(fontSize: NeuFonts.small, color: t.danger),
-                        ),
-                      ),
-                    ],
-                  ),
+                QueuedMessagesRow(
+                  steering: chat.queuedSteering,
+                  followUp: chat.queuedFollowUp,
+                  onClear: () => _store.runCommand({
+                    'id': 'cq${DateTime.now().microsecondsSinceEpoch}',
+                    'type': 'clear_queue',
+                  }),
                 ),
               if (_showSuggestions)
                 Suggestions(
