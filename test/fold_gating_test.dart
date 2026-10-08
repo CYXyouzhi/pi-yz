@@ -88,6 +88,33 @@ List<({String title, String? stateKey})> sectionCalls(String src) {
   return calls;
 }
 
+/// 取出组件里 `NeuSection(title: <KEY>, ...)` 的 title。
+///
+/// 重构后「分组头」从页面的 `_section(<KEY>, ...)` 搬进了组件的 `NeuSection(...)` ——
+/// 两者是同一件事（都画标题 + 箭头 + onToggle），所以「承诺可折叠」的扫描
+/// 必须把组件文件也覆盖到，否则守卫会形同虚设。
+///
+/// 排除 `class NeuSection` 的定义与构造函数声明（那不是调用）。
+List<String> neuSectionTitles(String src) {
+  final out = <String>[];
+  for (final m in RegExp(r'NeuSection\(').allMatches(src)) {
+    final before = src.substring(0, m.start);
+    final lineStart = before.lastIndexOf('\n') + 1;
+    final line = src.substring(lineStart, m.start);
+    if (line.contains('class ') || line.contains('const ')) continue;
+    final args = argumentsOf(src, m.end - 1);
+    final arg = args.firstWhere((a) => a.trimLeft().startsWith('title:'), orElse: () => '');
+    if (arg.isEmpty) continue;
+    final title = arg.trim().substring('title:'.length).trim();
+    // 只收能静态比对的键（`I18n.t('...')` 或 `'...'`）。
+    // 传变量（如 `title: title`）的组件由它自己对内负责配对 —— 静态测试
+    // 无法知道运行时会传什么进来，硬管只会误报。
+    if (!RegExp(r"^(I18n\.t\('.*'|'.*')").hasMatch(title)) continue;
+    out.add(title);
+  }
+  return out;
+}
+
 /// 源码里是否存在 `_expanded.contains(<key>)` 形式的门控。
 ///
 /// 用正则而不是 `contains`：真实写法常常是跨行的 ——
@@ -112,32 +139,56 @@ List<String> stateKeys(String src) => RegExp(
       "stateKey:\\s*('[^']*'|\"[^\"]*\")",
     ).allMatches(src).map((m) => m.group(1)!).toList();
 
-void main() {
-  const pages = <String, String>{
-    '设置页': 'lib/ui/server/settings_page.dart',
-    '连接页': 'lib/ui/server/conn_page.dart',
-    'AI 配置页': 'lib/ui/server/config_page.dart',
-  };
+/// 每个页面与为它抽出的组件文件 —— 「分组头」现在住在各自的组件文件里。
+///
+/// 必须**成对**：组件里的 `NeuSection(title: KEY)` 承诺可折叠，
+/// 对应的门控 `_expanded.contains(KEY)` 只在该页面的源码里。
+/// 拿 A 页的组件去 B 页找门控必然找不到，所以不能写成一个大列表。
+const pages = <String, ({String page, String companion})>{
+  '设置页': (
+    page: 'lib/ui/server/settings_page.dart',
+    companion: 'lib/ui/server/settings/widgets.dart',
+  ),
+  '连接页': (
+    page: 'lib/ui/server/conn_page.dart',
+    companion: 'lib/ui/server/conn/widgets.dart',
+  ),
+  'AI 配置页': (
+    page: 'lib/ui/server/config_page.dart',
+    companion: 'lib/ui/server/config/widgets.dart',
+  ),
+};
 
-  pages.forEach((label, path) {
-    group('$label（$path）', () {
+void main() {
+
+  pages.forEach((label, spec) {
+    group('$label（${spec.page}）', () {
       late String src;
 
       setUpAll(() {
-        src = File(path).readAsStringSync();
+        src = File(spec.page).readAsStringSync();
       });
 
-      test('每个 _section 的键都出现在 _expanded.contains(...) 里', () {
-        final calls = sectionCalls(src);
-        expect(calls, isNotEmpty, reason: '一个 _section 都没解析到，说明解析逻辑失效了');
-
-        final missing = <String>[];
-        for (final call in calls) {
+      test('每个分组头的键都出现在 _expanded.contains(...) 里', () {
+        // 「承诺可折叠」现在有两种落点：
+        //   · 页面里的 `_section(t, <KEY>, ...)`（老写法，还剩少量）
+        //   · 组件的 `NeuSection(title: <KEY>, ...)`（重构后搬过去的）
+        // 两种都要看，否则拆完组件守卫就形同虚设。
+        final keys = <String>{};
+        for (final call in sectionCalls(src)) {
           // 显式给了 stateKey 的分组，门控键就是 stateKey、与标题无关
           // （标题里带计数，不能拿来当键），交给下面那条测试管。
-          if (call.stateKey != null) continue;
-          if (!hasGate(src, call.title)) missing.add(call.title);
+          if (call.stateKey == null) keys.add(call.title);
         }
+        for (final path in [spec.companion]) {
+          if (!File(path).existsSync()) continue;
+          keys.addAll(neuSectionTitles(File(path).readAsStringSync()));
+        }
+
+        expect(keys, isNotEmpty, reason: '一个分组头都没解析到，说明解析逻辑失效了');
+
+        // 门控只看本页 —— 展开状态存在页面的 `_expanded` 里，不在组件里
+        final missing = keys.where((k) => !hasGate(src, k)).toList();
 
         expect(
           missing,

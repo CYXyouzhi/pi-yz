@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../server/discovery.dart';
+import '../../../server/server_profile.dart';
 import '../../../server/i18n.dart';
 import '../../../theme/design_tokens.dart';
 import '../../../theme/neu.dart';
@@ -521,6 +522,131 @@ class ServerStartupGuide extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// 「已保存的服务器」分组：分组头（带「＋新增」）+ 展开后的配置列表。
+///
+/// **点整行 = 一键切过去**（合同②）；要改配置点右边那支笔。
+/// 没有「＋新增」这个入口的话，用户就只能改现有配置，永远存不下第二台机器。
+///
+/// 展开状态存在页面的 `_expanded` 里，组件不持有状态 —— 只画 + 回调。
+class SavedProfilesSection extends StatelessWidget {
+  const SavedProfilesSection({
+    super.key,
+    required this.profiles,
+    required this.editingId,
+    required this.expanded,
+    required this.onToggle,
+    required this.onSwitchTo,
+    required this.onEdit,
+    required this.onDelete,
+    required this.onNew,
+  });
+
+  final List<ServerProfile> profiles;
+
+  /// 正在编辑的那台配置 id；那一行会高亮并显示对勾。
+  final String? editingId;
+
+  final bool expanded;
+  final VoidCallback onToggle;
+  final ValueChanged<ServerProfile> onSwitchTo;
+  final ValueChanged<ServerProfile> onEdit;
+  final ValueChanged<ServerProfile> onDelete;
+  final VoidCallback onNew;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.neu;
+    if (profiles.isEmpty) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: NeuSection(
+                title: I18n.t('ui.f8dfedcd8a'),
+                icon: IconId.server,
+                summary: '${profiles.length}',
+                open: expanded,
+                onToggle: onToggle,
+              ),
+            ),
+            // Spacer 交给 Expanded + NeuSection
+            NeuPressable(
+              onTap: onNew,
+              radius: 10,
+              padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n14, vertical: NeuSpace.n10),
+              child: Row(
+                children: [
+                  NeuIcon(IconId.plus, size: 13, color: t.accentInk),
+                  SizedBox(width: NeuSpace.n4),
+                  Text(I18n.t('ui.66ab5e9f24'),
+                      style: TextStyle(fontSize: NeuFonts.sub, color: t.accentInk)),
+                ],
+              ),
+            ),
+          ],
+        ),
+        // 内容必须真的跟着收起/展开，不能只翻箭头（审计抓过一次）
+        if (expanded) ...[
+          const SizedBox(height: NeuSpace.n8),
+          for (final profile in profiles)
+            NeuPressable(
+              flat: editingId != profile.id,
+              alwaysInset: editingId == profile.id,
+              onTap: () => onSwitchTo(profile),
+              padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n10),
+              margin: const EdgeInsets.only(bottom: NeuSpace.n6),
+              child: Row(
+                children: [
+                  NeuIcon(IconId.server, size: 16, color: t.accentInk),
+                  SizedBox(width: NeuSpace.n10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          profile.name.trim().isEmpty ? I18n.t('ui.7f0425a8a6') : profile.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: NeuFonts.bodyMid, color: t.fg),
+                        ),
+                        Text(
+                          profile.endpoint,
+                          style: TextStyle(fontSize: NeuFonts.label, color: t.muted),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (editingId == profile.id)
+                    NeuIcon(IconId.check, size: 16, color: t.accentInk),
+                  const SizedBox(width: NeuSpace.n8),
+                  NeuPressable(
+                    onTap: () => onEdit(profile),
+                    radius: 10,
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n10),
+                      child: NeuIcon(IconId.pen, size: 14),
+                    ),
+                  ),
+                  const SizedBox(width: NeuSpace.n6),
+                  NeuPressable(
+                    onTap: () => onDelete(profile),
+                    radius: 10,
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n10),
+                      child: NeuIcon(IconId.trash, size: 14),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ],
     );
   }
 }

@@ -11,7 +11,6 @@ import '../../server/i18n.dart';
 import '../../server/server_client.dart';
 import '../../server/server_profile.dart';
 import '../../server/server_store.dart';
-import '../neu_section.dart';
 import '../../theme/design_tokens.dart';
 import '../../theme/neu.dart';
 import '../neu_icons.dart';
@@ -500,87 +499,24 @@ class _ServerConnPageState extends State<ServerConnPage> {
             ),
             SizedBox(height: NeuSpace.n18),
 
-            if (_profiles.isNotEmpty) ...[
-              Row(
-                children: [
-                        Expanded(child: _section(t, I18n.t('ui.f8dfedcd8a'),
-                            icon: IconId.server,
-                            summary: '${_profiles.length}')),
-                  // Spacer 交给 Expanded + NeuSection
-                  // 没有这个入口就只能「改现有配置」，永远存不下第二台机器（合同②）
-                  NeuPressable(
-                    onTap: _newProfile,
-                    radius: 10,
-                    padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n14, vertical: NeuSpace.n14),
-                    child: Row(
-                      children: [
-                        NeuIcon(IconId.plus, size: 13, color: t.accentInk),
-                        SizedBox(width: NeuSpace.n4),
-                        Text(I18n.t('ui.66ab5e9f24'),
-                            style: TextStyle(fontSize: NeuFonts.sub, color: t.accentInk)),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              // 同上：已保存的列表也要真的收起来，不能只翻箭头
-              if (_expanded.contains(I18n.t('ui.f8dfedcd8a'))) ...[
-              const SizedBox(height: NeuSpace.n8),
-              for (final profile in _profiles)
-                NeuPressable(
-                  flat: _editingId != profile.id,
-                  alwaysInset: _editingId == profile.id,
-                  // 点整行 = 一键切过去（合同②）；要改配置点右边那支笔
-                  onTap: () => _switchTo(profile),
-                  padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n12),
-                  margin: const EdgeInsets.only(bottom: NeuSpace.n6),
-                  child: Row(
-                    children: [
-                      NeuIcon(IconId.server, size: 16, color: t.accentInk),
-                      SizedBox(width: NeuSpace.n10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              profile.name.trim().isEmpty ? I18n.t('ui.7f0425a8a6') : profile.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(fontSize: NeuFonts.bodyMid, color: t.fg),
-                            ),
-                            Text(
-                              profile.endpoint,
-                              style: TextStyle(fontSize: NeuFonts.label, color: t.muted),
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (_editingId == profile.id)
-                        NeuIcon(IconId.check, size: 16, color: t.accentInk),
-                      const SizedBox(width: NeuSpace.n8),
-                      NeuPressable(
-                        onTap: () => _editProfile(profile),
-                        radius: 10,
-                        child: const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
-                          child: NeuIcon(IconId.pen, size: 14),
-                        ),
-                      ),
-                      const SizedBox(width: NeuSpace.n6),
-                      NeuPressable(
-                        onTap: () => _delete(profile),
-                        radius: 10,
-                        child: const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
-                          child: NeuIcon(IconId.trash, size: 14),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-              const SizedBox(height: NeuSpace.n16),
-            ],
+            // ---- 已保存的服务器：整行点=切过去，右边笔/垃圾桶=改/删 ----
+            SavedProfilesSection(
+              profiles: _profiles,
+              editingId: _editingId,
+              expanded: _expanded.contains(I18n.t('ui.f8dfedcd8a')),
+              onToggle: () => setState(() {
+                const k = 'ui.f8dfedcd8a';
+                if (_expanded.contains(k)) {
+                  _expanded.remove(k);
+                } else {
+                  _expanded.add(k);
+                }
+              }),
+              onSwitchTo: _switchTo,
+              onEdit: _editProfile,
+              onDelete: _delete,
+              onNew: _newProfile,
+            ),
 
             // ---- 连接动作：测试连不通、保存并连接、进诊断 ----
             // 原来这块叫「手动配置」整块默认收起，但它其实是「连不上时怎么办」的
@@ -954,26 +890,4 @@ class _ServerConnPageState extends State<ServerConnPage> {
 
   /// 折叠分组的薄包装，复用 [NeuSection]（三套折叠各写各的正是
   /// 「有的地方点了能收、有的地方点了没反应」的根源）。
-  Widget _section(
-    NeuTokens t,
-    String title, {
-    IconId icon = IconId.circle,
-    String? summary,
-  }) {
-    final open = _expanded.contains(title);
-    return NeuSection(
-      title: title,
-      icon: icon,
-      summary: summary,
-      open: open,
-      onToggle: () => setState(() {
-        if (open) {
-          _expanded.remove(title);
-        } else {
-          _expanded.add(title);
-        }
-      }),
-    );
-  }
-
 }
