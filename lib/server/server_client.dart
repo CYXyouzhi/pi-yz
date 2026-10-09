@@ -129,13 +129,31 @@ class ServerClient {
       request.add(bytes);
     }
 
-    final HttpClientResponse response = await request.close().timeout(
-      effective,
-    );
-    final text = await response
-        .transform(utf8.decoder)
-        .join()
-        .timeout(effective);
+    // 这三段都要包：超时不只可能发生在「打开连接」时，也可能发生在
+    // 「等服务端响应」与「读正文」这两段。只包第一段的话，后两段的 TimeoutException
+    // 会**裸着漏出去** —— 而调用方（server_store）到处是 `on ServerException`，
+    // 漏出去的异常表现为「没有提示的失败」，比报错更难查。
+    final HttpClientResponse response;
+    final String text;
+    try {
+      response = await request.close().timeout(effective);
+      text = await response.transform(utf8.decoder).join().timeout(effective);
+    } on TimeoutException {
+      DebugLog.instance.error(
+        'api',
+        '$method $path 读响应超时（${effective.inSeconds}s）',
+      );
+      final explained = explainFailure(TimeoutException('$host:$port'));
+      throw ServerException(
+        '${explained.reason}（$host:$port）→ ${explained.hint}',
+      );
+    } on SocketException catch (error) {
+      DebugLog.instance.error('api', '$method $path 连接中断：${error.message}');
+      final explained = explainFailure(error);
+      throw ServerException(
+        '${explained.reason}（$host:$port）→ ${explained.hint}',
+      );
+    }
 
     if (response.statusCode != 200) {
       final explained = _explainStatus(response.statusCode, text);
