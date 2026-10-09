@@ -1,7 +1,10 @@
 name: pi_yz
-description: "A new Flutter project."
+description: "把电脑上 pi 的会话搬到手机上：局域网直连 pi-yz-server 的 Android 客户端"
 publish_to: 'none'
-version: 0.1.0+1
+version: 0.2.0+2
+homepage: https://github.com/CYXyouzhi/pi-yz
+repository: https://github.com/CYXyouzhi/pi-yz
+issue_tracker: https://github.com/CYXyouzhi/pi-yz/issues
 
 environment:
   sdk: ^3.13.4
