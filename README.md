@@ -20,6 +20,8 @@ cd server && npm install && npm start
 
 服务端起来后会打印局域网地址、token 和 6 位配对码。手机上装 APK，进「连接」→ 配对，填那个 6 位码就行。
 
+服务端有两个拿法：**仓库源码**里的 `server/` 目录，或者 Releases 里的 `pi-yz-server-0.2.0.tgz`（66 kB，只有源码，`npm install` 会自己把依赖装上）。
+
 Windows 上双击 `server/start.cmd` 也可以。想在任意目录一条命令启动，先 `cd server && npm link`，之后 `pi-yz` 就是它（`pi-yz --help` 看参数）。
 
 手机 App 从 Releases 下 `arm64-v8a` 那个包（不确定架构就下 universal）。
