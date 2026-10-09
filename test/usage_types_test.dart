@@ -197,7 +197,7 @@ void main() {
         ],
         'byWorkspace': [
           {
-            'cwd': 'C:/Users/YOUZHI/Desktop/1',
+            'cwd': 'C:/work/demo',
             'tokens': 800,
             'cost': 0.3,
             'turns': 9,
@@ -212,7 +212,7 @@ void main() {
       expect(s.byProvider.single.provider, 'opencode-go');
       expect(s.byProvider.single.turns, 12);
       expect(s.byDay.single.day, '2026-10-09');
-      expect(s.byWorkspace.single.cwd, 'C:/Users/YOUZHI/Desktop/1');
+      expect(s.byWorkspace.single.cwd, 'C:/work/demo');
       expect(s.byWorkspace.single.sessions, 3);
     });
 

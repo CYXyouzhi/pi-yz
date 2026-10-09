@@ -87,10 +87,10 @@ void main() {
 
     test('query 参数会被拼进 URL（工作区路径这种含特殊字符的要编码）', () async {
       handler = (req) => respond(req, 200, '{"entries":[]}');
-      await client.listFiles(path: 'C:/Users/YOUZHI/Desktop/1');
+      await client.listFiles(path: 'C:/work/demo');
       expect(
         seen.single.uri.queryParameters['path'],
-        'C:/Users/YOUZHI/Desktop/1',
+        'C:/work/demo',
       );
     });
   });

@@ -439,7 +439,7 @@ class _WorkspaceFilesPageState extends State<WorkspaceFilesPage> {
                     // canPop 定成「列表没有上一级」，有上一级时 maybePop() 会被它
                     // 拦成 _goUp() —— 于是这个「<」在深目录里根本不是「退出页面」，
                     // 而是和右边那个 ⌄ 干同一件事：实测从 Desktop\1 点它只是往上
-                    // 退一层，要一直退到 C:\Users\YOUZHI 才能关掉页面。
+                    // 退一层，要一直退到 C:\Users\you 才能关掉页面。
                     onTap: () => Navigator.of(context).pop(),
                     radius: 12,
                     child: const Padding(

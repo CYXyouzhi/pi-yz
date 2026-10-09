@@ -1,6 +1,6 @@
 // 工作区文件页（`files_page.dart`）的共用件。
 //
-// 约定同其它页面（见 docs/refactor-status.md）：组件不持有状态，
+// 约定同其它页面：组件不持有状态，
 // 需要的数据与动作都由页面传进来。
 
 import 'package:flutter/material.dart';

@@ -74,13 +74,13 @@ void main() {
 
     test('setDefaultCwd / setKeepAlive', () async {
       final p = AppPrefs.instance;
-      await p.setDefaultCwd('C:/Users/YOUZHI/Desktop/1');
+      await p.setDefaultCwd('C:/work/demo');
       await p.setKeepAlive(false);
 
-      expect(p.defaultCwd, 'C:/Users/YOUZHI/Desktop/1');
+      expect(p.defaultCwd, 'C:/work/demo');
       expect(p.keepAlive, isFalse);
       final prefs = await SharedPreferences.getInstance();
-      expect(prefs.getString('app_default_cwd'), 'C:/Users/YOUZHI/Desktop/1');
+      expect(prefs.getString('app_default_cwd'), 'C:/work/demo');
       expect(prefs.getBool('app_keep_alive'), isFalse);
     });
   });

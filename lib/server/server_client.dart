@@ -33,7 +33,7 @@ class ServerException implements Exception {
 ///
 /// 为什么抽成常量：新增连接页（`conn_edit_page.dart`）与连接页（`conn_page.dart`）
 /// 各有一份「测试」，原先一处传了 8 秒、一处没传（两份实现走偏了，
-/// 见 `docs/audit/bug-audit-2026-10-08.md` 的 E1）。共享同一个值，
+/// E1）。共享同一个值，
 /// 以后再改也是改一处。
 const Duration kConnectTestTimeout = Duration(seconds: 8);
 

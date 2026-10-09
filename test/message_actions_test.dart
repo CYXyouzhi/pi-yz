@@ -147,7 +147,7 @@ void main() {
   });
 
   // ⑨ 的「长按图片 → 存相册」这条链路在实机上有硬证据（相册里真的多了
-  // Pictures/pi-yz/pi-*.png，见 docs/verify/ui-rework/task-9）。
+  // Pictures/pi-yz/pi-*.png）。
   // 这里只把最底下那层桥钉住：widget 测试里 Image.memory 解不出尺寸，
   // 长按落不到它身上 —— 与其写个永远点不中的测试，不如测桥本身。
   test('⑨ 原生桥：存相册与分享都把参数交给平台通道', () async {

@@ -47,7 +47,7 @@ v0.1.0 之后累计 **89 个提交**，以「解耦 + 修 bug」为主，没有�
 | `lib/ui/server/sessions_page.dart` | 1316 | 991 |
 | `lib/server/server_types.dart` | 1268 | 拆成 `types/` 6 个领域文件（barrel 保留） |
 
-`server_store.dart`（唯一状态源）**按约定不拆**。进度与约定见 `docs/refactor-status.md`。
+`server_store.dart`（唯一状态源）**按约定不拆**。进度与约定见提交历史。
 
 ### 工程
 

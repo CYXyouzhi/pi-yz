@@ -96,7 +96,6 @@ fix(i18n): 存储占用删除确认的文案主语
 | 体积、架构拆分 | `docs/apk-size.md` |
 | 平板 / 横屏行为 | `docs/tablet-landscape.md` |
 | 测试方法 | `docs/testing.md` |
-| 进度 | `ROADMAP.md`（README 不重复写） |
 
 ## 不要提交这些
 

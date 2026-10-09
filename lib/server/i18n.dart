@@ -7,7 +7,6 @@
 //   3. 只覆盖主路径（Tab、开始页、设置页、输入框、命令说明）——
 //      剩下的中文仍是中文，这一点在文档里写清楚，不糊过去。
 //
-// 术语对照表见 docs/verify/ui-rework/task-19-i18n.md。
 
 import 'package:flutter/widgets.dart';
 

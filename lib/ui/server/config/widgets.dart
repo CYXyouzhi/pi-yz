@@ -1,6 +1,6 @@
 // AI 配置页（`config_page.dart`）的共用件。
 //
-// 与设置页的做法一致（见 docs/refactor-status.md）：状态留在 `_ConfigPageState`，
+// 与设置页的做法一致：状态留在 `_ConfigPageState`，
 // 组件只收 open / onToggle 与渲染所需的数据；这样分组才能各自抽出去。
 
 import 'package:flutter/material.dart';

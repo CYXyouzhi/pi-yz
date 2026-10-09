@@ -1,6 +1,6 @@
 // 设置页的「settings.app」分组（由 tool/extract_section.py 机械搬运，之后人工校对）。
 //
-// 抽出来的理由与做法见 docs/refactor-status.md：状态留在父级 State，
+// 抽出来的理由与做法：状态留在父级 State，
 // 组件只收 open（我展开了吗）与 onToggle（点了要干什么），自己不持有任何字段。
 
 import 'package:flutter/material.dart';

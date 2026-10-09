@@ -136,7 +136,7 @@ void main() {
     test('ServerSession：字段齐全', () {
       final s = ServerSession.fromJson({
         'id': '01a11b9d',
-        'cwd': 'C:/Users/YOUZHI/Desktop/1',
+        'cwd': 'C:/work/demo',
         'preview': 'hi',
         'messageCount': 8,
         'name': '会话名',
@@ -145,7 +145,7 @@ void main() {
         'parentId': null,
       });
       expect(s.id, '01a11b9d');
-      expect(s.cwd, 'C:/Users/YOUZHI/Desktop/1');
+      expect(s.cwd, 'C:/work/demo');
       expect(s.messageCount, 8);
       expect(s.name, '会话名');
       expect(s.parentId, isNull);

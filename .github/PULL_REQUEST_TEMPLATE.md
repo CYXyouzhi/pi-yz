@@ -39,7 +39,6 @@ cd server && node --test  # 结果（改了服务端时）
 - [ ] `docs/apk-size.md`（体积、架构拆分）
 - [ ] `docs/tablet-landscape.md`（平板 / 横屏行为）
 - [ ] `docs/testing.md`（测试方法）
-- [ ] `ROADMAP.md`（进度）
 
 ## 截图 / 录屏
 

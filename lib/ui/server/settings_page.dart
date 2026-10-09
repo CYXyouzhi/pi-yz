@@ -459,7 +459,7 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
   /// 分组是否展开（`_expanded` 存的是「展开了」的标题）。
   ///
   /// 配合 [_toggle] 给抽出去的分组组件用：它们自己不持有状态，
-  /// 只收「我展开了吗」和「点了要干什么」（约定见 docs/refactor-status.md）。
+  /// 只收「我展开了吗」和「点了要干什么」（约定）。
   bool _isOpen(String key) => _expanded.contains(key);
 
   void _toggle(String key) => setState(() {
