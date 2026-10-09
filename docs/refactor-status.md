@@ -34,7 +34,7 @@
 | `lib/ui/server/conn_page.dart` | 1300 | 632 | ✅ 完成 |
 | `lib/ui/server/chat_page.dart` | 3374 | **1157** | ✅ 完成（余下见 ⑱）|
 | `lib/server/server_store.dart` | 1814 | 1953 | 🚫 **不拆**（「唯一状态源」是架构决策的载体，拆它等于动地基）|
-| `lib/ui/server/chat/widgets.dart` | — | **2655** | ⬜ **现在最大的文件，下一步拆它** |
+| `lib/ui/server/chat/widgets.dart` | 2655 | **26（barrel）** | ✅ 2026-10-09 拆成 9 个文件，调用点 0 改动（见成功经验⑧）|
 
 **行数口径变了，别直接相减**：2026-10-09 全仓 `dart format` 之后，长行被折成多行，
 所有文件都涨了 10~30%（例：settings_page 875 → 990，抽掉外观后才到 472；
@@ -617,7 +617,38 @@ AI 配置页「思考等级」「技能与命令」「pi 插件」—— 点折�
 
 ---
 
-## 成功经验⑦：「外观」422 行 + 三层嵌套子分组，怎么一次搬成
+## 成功经验⑧：2655 行的 chat/widgets.dart 拆成 9 个文件，调用点 0 改动
+
+目标文件：`lib/ui/server/chat/widgets.dart`（2655 行、34 个顶层声明、被 40 多处 import）。
+分 5 批搬完（`60d9064` / `bc33654` / `1e5d48b` / `c794239` / `fac3f02`），中途仓库**始终可编译**。
+
+**① 先跑依赖分析，再决定分文件**
+用一个脚本列出每个顶层声明「用到谁 / 被谁用」，一眼就能分出层次：
+叶子（ChatActivityBar…）→ 一层（ChatHeader→LiveSpeed、ModelChip→modelChipLabel）→
+弹层（showSessionInfoSheet→InfoLine/countTree/formatTokens/treeRows）。
+按这个顺序搬，能最大限度避免循环 import。
+
+**② 「渐进式 barrel」是关键手法**
+`widgets.dart` 一边搬出一边 `export` 搬走的声明 —— 于是 40 多个调用点
+（含 `chat_page.dart`、`slash_panel_*_test`、`model_chip_label_test`）**一行都不用改**。
+注意 `export` 只影响「导入本文件的人」：本文件自己要用某个符号，仍要单独 `import`，
+所以中间状态下 import 与 export 两段并存。
+到最后一批时把 import 全删光，它就变成一份 26 行的纯 barrel（只剩索引注释 + export）。
+
+**③ 用 analyze 报错驱动补 import，不要先猜**
+每批流程：提取 → 给新文件加一个「能想到的最全」的 import 头 → `flutter analyze` →
+按报错增删。比先读完 400 行代码再推断 import 快得多，也不容易漏。
+
+**④ 顺手删掉随搬家失效的 import**
+analyze 会报 `unused_import`；每批搬完都清一次，否则最后要一次面对十几个。
+
+**⑤ 真机复验挑「代表性交互」**，不用全测：
+这次验了消息区（含 Markdown 表格）、输入区、快捷键栏、输入菜单弹层 —— 四个分别来自
+message_area / composer / key_bar / sheets，足够覆盖各新文件的代表性代码路径。
+
+---
+
+## 成功经验⑦：「外观」422 行 + 三层嵌套子分组，怎么一次搬成（前一轮）
 
 「踩过的坑⑤」记的是**失败四次**，这里是它的解法。五条，按重要性排：
 
