@@ -1,9 +1,11 @@
-# 持续集成：push 到 main 与所有 PR 都跑一遍三条门禁。
+# 持续集成：push 到 main 与所有 PR 都跑一遍门禁。
 #
-# 为什么要它：项目有 166 个 Flutter 用例（另 3 个 golden 除外）与 27 个 Node 用例，
+# 为什么要它：项目有 173 个 Flutter 用例（另 3 个 golden 除外）与 27 个 Node 用例，
 # 在此之前全靠手动跑。纪律依赖人就会漏 —— 尤其是改动横跨 Dart / Node / 插件三块时。
 #
-# 三个 job 的分工与一个刻意的取舍见下面注释。
+# 两个 job 的分工，以及两处**刻意的取舍**见下面注释：
+#   · 跳过 golden 比对（基线是 Windows 上生成的，Ubuntu 的像素必然不同）
+#   · node job 不跑 npm install（开发机上的 server/node_modules 是指向 pi 的软链接）
 
 name: CI
 
@@ -28,6 +30,11 @@ jobs:
       - name: 装依赖
         run: flutter pub get
 
+      # 格式检查：不通过直接失败，省得以后每个 PR 都夹带格式噪音。
+      # 本地一条命令就能修好：`dart format lib test tool`
+      - name: 格式检查（dart format）
+        run: dart format --output=none --set-exit-if-changed lib test tool
+
       - name: 静态分析
         run: flutter analyze
 
@@ -35,8 +42,22 @@ jobs:
       # 不同，渲染出的像素必然有差异 —— 直接在 CI 上比对会「红得没有意义」。
       # 本地（Windows）跑全量时它们照常执行，视觉回归仍能抓到。
       # 详见 test/settings_golden_test.dart 的头部说明。
-      - name: 单元与组件测试（排除 Windows 生成的 golden 基线）
-        run: flutter test --exclude-tags golden
+      - name: 单元与组件测试 + 覆盖率（排除 Windows 生成的 golden 基线）
+        run: flutter test --coverage --exclude-tags golden
+
+      # 还没接覆盖率服务，先把数字打进日志：让「这次改动把覆盖率拉低了」
+      # 肉眼可见。等有了稳定基线，再把阈值设成硬门禁。
+      - name: 覆盖率摘要
+        run: |
+          awk -F: '/^LF:/{lf+=$2} /^LH:/{lh+=$2} \
+            END{if (lf>0) printf "行覆盖率 %.1f%%（命中 %d / 共 %d 行）\n", lh*100/lf, lh, lf; \
+            else print "lcov 里没有 LF/LH 记录"}' coverage/lcov.info
+
+      - name: 上传覆盖率报告（lcov）
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-lcov
+          path: coverage/lcov.info
 
   node:
     name: Node（服务端 + pi 插件）
