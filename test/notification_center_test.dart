@@ -8,6 +8,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pi_yz/server/notification_center.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   // 钉住中文：I18n.t 无 context 时跟随系统 locale，全量跑时会被
@@ -192,5 +193,113 @@ void main() {
       () => expect(NotificationCenter.humanIdle(600), '10 分钟'),
     );
     test('0 秒也不崩', () => expect(NotificationCenter.humanIdle(0), '0 秒'));
+  });
+
+  // 设置项必须「改了存住」：用户下次进来看到的还是自己上次选的那样。
+  //
+  // 这是**单例 + SharedPreferences**，所以每个用例都得把内存字段与 `loaded`
+  // 标志一起重置 —— 否则上个用例的改动会串到下个用例（串了会得到假绿）。
+  group('⑨ 设置持久化：改了必须存住（重进 App 还在）', () {
+    final center = NotificationCenter.instance;
+
+    setUp(() {
+      center.enabled = true;
+      center.stallSeconds = 120;
+      center.watchOnly = false;
+      center.dndEnabled = false;
+      center.dndStartHour = 23;
+      center.dndEndHour = 8;
+      center.quickReply = true;
+      center.loaded = false;
+    });
+
+    test('全新安装（prefs 空）：默认开通知、阈值 120 秒、带快速回复', () async {
+      SharedPreferences.setMockInitialValues({});
+      await center.load();
+
+      expect(center.enabled, isTrue);
+      expect(center.stallSeconds, 120);
+      expect(center.watchOnly, isFalse);
+      expect(center.dndEnabled, isFalse);
+      expect(center.dndStartHour, 23);
+      expect(center.dndEndHour, 8);
+      expect(center.quickReply, isTrue);
+      expect(center.loaded, isTrue);
+    });
+
+    test('load：存过的值覆盖默认值（7 个字段全都要读回）', () async {
+      SharedPreferences.setMockInitialValues({
+        'notif_enabled': false,
+        'notif_stall_seconds': 300,
+        'notif_watch_only': true,
+        'notif_dnd_on': true,
+        'notif_dnd_start': 22,
+        'notif_dnd_end': 7,
+        'notif_quick_reply': false,
+      });
+      await center.load();
+
+      expect(center.enabled, isFalse);
+      expect(center.stallSeconds, 300);
+      expect(center.watchOnly, isTrue);
+      expect(center.dndEnabled, isTrue);
+      expect(center.dndStartHour, 22);
+      expect(center.dndEndHour, 7);
+      expect(center.quickReply, isFalse);
+    });
+
+    test('setter 真的写进 prefs —— 只改内存的话重启就丢', () async {
+      SharedPreferences.setMockInitialValues({});
+      await center.load();
+
+      await center.setStallSeconds(45);
+      await center.setWatchOnly(true);
+      await center.setQuickReply(false);
+      await center.setDnd(on: true, startHour: 21, endHour: 6);
+      await center.setEnabled(false);
+
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getInt('notif_stall_seconds'), 45);
+      expect(prefs.getBool('notif_watch_only'), isTrue);
+      expect(prefs.getBool('notif_quick_reply'), isFalse);
+      expect(prefs.getBool('notif_dnd_on'), isTrue);
+      expect(prefs.getInt('notif_dnd_start'), 21);
+      expect(prefs.getInt('notif_dnd_end'), 6);
+      expect(prefs.getBool('notif_enabled'), isFalse);
+    });
+
+    test('setDnd 是部分更新：只传 startHour 时其余字段不动', () async {
+      SharedPreferences.setMockInitialValues({});
+      await center.load();
+
+      await center.setDnd(startHour: 21);
+
+      expect(center.dndStartHour, 21);
+      expect(center.dndEndHour, 8, reason: '没传的字段不能被顺手改成别的值');
+      expect(center.dndEnabled, isFalse);
+    });
+
+    test('load 幂等：第二次调用不会把用户刚改的值拉回旧值', () async {
+      SharedPreferences.setMockInitialValues({});
+      await center.load();
+      await center.setStallSeconds(45);
+
+      await center.load(); // loaded == true，应当直接返回
+
+      expect(center.stallSeconds, 45);
+    });
+
+    test('setter 会通知监听者（界面得跟着变）', () async {
+      SharedPreferences.setMockInitialValues({});
+      await center.load();
+
+      var notified = 0;
+      void listener() => notified += 1;
+      center.addListener(listener);
+      await center.setStallSeconds(45);
+      center.removeListener(listener);
+
+      expect(notified, greaterThan(0));
+    });
   });
 }
