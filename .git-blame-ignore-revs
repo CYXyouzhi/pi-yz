@@ -1,0 +1,16 @@
+# 整仓格式化提交：让 `git blame` 与 GitHub 的 blame 视图跳过它。
+#
+# 为什么需要这个文件：`dart format` 一次动了 88 个文件，如果不过滤，
+# 每个函数的「最后修改者」都会显示成那次格式提交，真正的作者与时间就查不到了。
+#
+# 用法：GitHub 会**自动**读取本文件；本地用
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+# 或在命令行加 `--ignore-revs-file .git-blame-ignore-revs`。
+#
+# 约定：以后再有纯格式提交，把它的完整 hash 追加到下面（新的放最上面），
+# 一行一个 hash，注释行以 # 开头。
+#
+# 注意格式：**每行只能是一个 hash**，不能在同一行写说明（解析器会把整行当成修订名）。
+# 说明写在注释里。
+
+7685fb0af60f457e17d85a253ed1bbc01e1f887a
