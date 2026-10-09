@@ -64,6 +64,11 @@ class ChatReducer {
     historyTotal = 0;
     historyHasMore = false;
     historyStart = 0;
+    // 本轮计时也要清：reset 会在**换会话**时被调用（server_store.openSession），
+    // 留着上一个会话的打点，新会话的活动条会显示一条假的活动时长
+    //（与「换会话后标题栏消失」是同一类问题：派生状态没跟着会话一起重置）。
+    runStartedAt = null;
+    lastRunMs = 0;
   }
 
   ToolRun? toolRunOf(String? toolCallId) =>
