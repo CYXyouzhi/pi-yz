@@ -24,18 +24,24 @@
 
 ## 进度
 
-| 文件 | 行数（拆前）| 状态 |
-|---|---|---|
-| `lib/server/server_types.dart` | 1268 | ✅ 完成 |
-| `lib/ui/server/settings_page.dart` | 1472 | ✅ 875 行（8 个分组抽了 7 个；「外观」未能抽出，原因见「踩过的坑⑤」）|
-| `lib/ui/server/config_page.dart` | 1307 | ✅ 811 行（6 个分组抽了 5 个；MCP 分组未抽）|
-| `lib/ui/server/files_page.dart` | 1059 | ✅ 645 行（6 个组件 + 2 个工具函数 + 2 个底部面板）|
-| `lib/ui/server/sessions_page.dart` | 1316 | ✅ **991 行**（减 25%；`_buildSessionRow`/`_buildGroup` 已手工搬）| (旧)雷区，不抽）|
-| `lib/ui/server/conn_page.dart` | 1300 | ✅ **692 行（减 47%）** —— 完成 |
-| `lib/ui/server/chat_page.dart` | 3374 | ✅ **1082 行（减 68%）** —— 完成（余下见 ⑱）|
-| `lib/server/server_store.dart` | 1814 | 🚫 **不动**（「唯一状态源」是架构决策的载体，拆它等于动地基）|
+| 文件 | 行数（拆前，format 前口径）| 现在 | 状态 |
+|---|---|---|---|
+| `lib/server/server_types.dart` | 1268 | barrel 15 行 + `types/` 6 文件 | ✅ 完成 |
+| `lib/ui/server/settings_page.dart` | 1472 | **472** | ✅ 全部分组抽完（「外观」2026-10-09 抽成 `settings/appearance_section.dart`，见成功经验⑦）|
+| `lib/ui/server/config_page.dart` | 1307 | 1058 | ✅ 6 个分组抽了 5 个（MCP 分组未抽）|
+| `lib/ui/server/files_page.dart` | 1059 | 897 | ✅ 完成 |
+| `lib/ui/server/sessions_page.dart` | 1316 | 1249 | ✅ 完成 |
+| `lib/ui/server/conn_page.dart` | 1300 | 632 | ✅ 完成 |
+| `lib/ui/server/chat_page.dart` | 3374 | **1157** | ✅ 完成（余下见 ⑱）|
+| `lib/server/server_store.dart` | 1814 | 1953 | 🚫 **不拆**（「唯一状态源」是架构决策的载体，拆它等于动地基）|
+| `lib/ui/server/chat/widgets.dart` | — | **2655** | ⬜ **现在最大的文件，下一步拆它** |
 
-相关提交：`6138d6d`（server_types）、`8424632`（设置页共用件）
+**行数口径变了，别直接相减**：2026-10-09 全仓 `dart format` 之后，长行被折成多行，
+所有文件都涨了 10~30%（例：settings_page 875 → 990，抽掉外观后才到 472；
+server_store 1814 → 1953）。所以「拆前」与「现在」两列的差值**不是**重构收益。
+收益看的是另一个指标：**改一个分组要动多少行**。
+
+相关提交：`6138d6d`（server_types）、`8424632`（设置页共用件）、`cc33bca`（外观分组）
 
 ## 已完成的两步做了什么
 
@@ -74,6 +80,16 @@ lib/ui/server/settings/widgets.dart   97 行
 所以 8 个调用点一行没改 —— 等分组真正抽出去时再用真正的 `SettingsSection`。
 
 ## 下一步（从这里继续）
+
+> **2026-10-09 更新**：下面这段是当时写给「抽设置页分组」的，那件事已经做完
+> （8 个分组全部抽出，最后一个「外观」的做法见「成功经验⑦」）。
+> **现在最大的文件是 `lib/ui/server/chat/widgets.dart`（2655 行）** —— 它是本轮解耦的
+> 「抽出物集散地」，里面是十几个互相独立的组件（ChatHeader / ChatComposer / MenuTile /
+> ModelChip / 各种 sheet），按同一套约定再分成目录即可。做法参考成功经验⑦。
+>
+> 另外注意：`docs/` 里所有「行数」记录都是 format 前的旧口径，见上面进度表的说明。
+
+（以下为历史记录）
 
 **`settings_page.dart` 的 8 个分组**，按这个模式抽：
 
@@ -598,3 +614,44 @@ AI 配置页「思考等级」「技能与命令」「pi 插件」—— 点折�
 **结果**：`settings_page.dart` 停在 **875 行**（原 1472，减 597 行 / 40%），未达 800 目标。
 差的就是「外观」这 367 行。它仍作为整体留在页面里 —— 至少是**自洽**的
 （三个子分组都在它内部），不是散落状态。
+
+---
+
+## 成功经验⑦：「外观」422 行 + 三层嵌套子分组，怎么一次搬成
+
+「踩过的坑⑤」记的是**失败四次**，这里是它的解法。五条，按重要性排：
+
+**① 边界用括号配对算，不要用「标记行」**
+失败过的做法：拿 `SizedBox(height: NeuSpace.n20)`、或「下一个方法定义」当边界 ——
+前者在外观块内部就出现多次（切早/切晚），后者会匹配到注释行与参数换行，只摘到一行签名。
+这次：从 `if (_expanded.contains(<该分组 key>)) ...[` 那一行起，对 `[` / `]` 做计数直到归零，
+终点自动出来。定位那一行时也要**语义唯一**（同时满足「含 `_expanded.contains(`」与
+「同一处出现 `settings.appearance`」两个条件），而不是单纯找标题字符串。
+
+**② 搬运时保留一个「同名同形的私有包装」**
+失败过的做法：边搬边重排参数（把 `_section(t, KEY, icon:)` 改写成
+`SettingsSection(title: KEY, open: ..., onToggle: ...)`），于是尾部括号反复错位。
+这次：在新组件里也定义 `_section(title, {icon, summary})`（内部读 `isOpen` / `onToggle`），
+**只把第一个参数 `t,` 删掉** —— 其余 420 行一个字不动。调用点因此不用重排，
+后续 `dart format` 顺手把缩进对齐。
+
+**③ 依赖面先探清再动手**（一条命令）
+`sed -n '起,止p' 文件 | grep -oE '_[a-zA-Z]+' | sort | uniq -c | sort -rn`
+这次一次量出：整块只依赖 6 个 State 成员（`_section` / `_expanded` / `_isOpen` / `_toggle` /
+`_pickStuckSeconds` / `_testNotification`），且后两个只依赖 `NotificationCenter` 单例、
+不碰父级状态 —— 所以能直接跟着搬走，不必往父级加回调。
+
+**④ 守卫要跟着组件一起走**
+`fold_gating_test` 三处都要改：`sectionCalls`（组件版 `_section` 少了一个 `t` 参数）、
+`hasGate`（门控从 `_expanded.contains` 变成 `isOpen`）、设置页的 companion 列表。
+**顺序别反**：先跑测试 → 守卫报「一个分组头都没解析到」→ 再改守卫；
+反过来容易把「守卫已失效」当成「守卫通过」。
+
+**⑤ 收尾清单**（`analyze` 会提示，但先知道更好）
+删掉页面里完成使命的 `_section` 薄包装；删掉只被这块用到的 import
+（这次是 `collapsible_text` / `native_bridge` / `notification_center`）。
+
+**验证顺序**：`dart format` → `flutter analyze`（0 issue）→ `flutter test`（含 3 个 golden 基线，
+它们能证明「渲染逐像素没变」）→ **真机复验折叠交互**（外观展开 + 子分组展开各一次）。
+
+结果：`settings_page.dart` 990 → **472 行**，新增 `settings/appearance_section.dart` 544 行（`cc33bca`）。
