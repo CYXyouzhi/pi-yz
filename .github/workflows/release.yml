@@ -1,0 +1,135 @@
+# 发布自动化：打 tag（v*）或手动触发 → 构建 APK → 建 Release。
+#
+# ## 为什么密钥要绕一圈从 Secrets 还原
+#
+# 签名材料（`android/key.properties` 与 `*.jks`）由 .gitignore 挡在仓库外 —— 这是对的：
+# 一旦进了仓库，任何人都能签出包来冒充你更新 App。所以 CI 的做法是：把 jks 内容
+# base64 后放进 Secret，构建前还原到 .gitignore 挡着的位置。还原出来的文件
+# 只存在于这次 runner 上，不会被带进任何产物。
+#
+# ## 没有 Secret 时的行为（刻意如此）
+#
+# 照常构建、上传 workflow artifact，但**不创建 Release**。
+# 因为 build.gradle.kts 在没有 key.properties 时会退回 debug 签名，而 debug 签名的包
+# 一旦发出去，用户装了之后**后续版本再也覆盖不上**（签名不一致，系统直接拒绝安装）。
+# 与其发一个「装得上但永远更新不了」的包，不如只留构建产物、不发 Release。
+#
+# ## 触发方式
+#
+#   · push tag v0.3.0            → 构建 + 发 Release
+#   · 手动跑（填 tag）             → 同上，用于补发
+#   · 手动跑（不填 tag）           → 只构建，产物在 workflow artifact 里
+
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: '要发布的版本号（如 v0.3.0）。留空则只构建、不创建 Release'
+        required: false
+        default: ''
+
+permissions:
+  contents: write # 创建 Release 需要
+
+jobs:
+  apk:
+    name: 构建并发布 APK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: 装依赖
+        run: flutter pub get
+
+      # tag 与 pubspec 的版本必须一致：否则用户下载的包装起来是 v0.2.0，
+      # 而 Release 页面写着 v0.3.0 —— 出问题时连「对面是哪个版本」都问不清。
+      - name: 校验 tag 与 pubspec 版本一致
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF_NAME}"
+          PUB=$(grep -E '^version:' pubspec.yaml | head -1 | awk '{print $2}' | cut -d+ -f1)
+          if [ "v$PUB" != "$TAG" ]; then
+            echo "::error::tag 是 $TAG，但 pubspec.yaml 里写的是 $PUB —— 发布出去的包内部版本会对不上"
+            exit 1
+          fi
+          echo "版本一致：$TAG"
+
+      # secrets 不能在 `if:` 里直接判断（Actions 的限制），所以先读进 env、
+      # 再输出一个布尔值给后面的 step 用。
+      - name: 检查签名材料是否齐全
+        id: signing
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEY_PROPS: ${{ secrets.ANDROID_KEY_PROPERTIES }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ] && [ -n "$KEY_PROPS" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::没有配 ANDROID_KEYSTORE_BASE64 / ANDROID_KEY_PROPERTIES，会退回 debug 签名，因此不创建 Release"
+          fi
+
+      # 密钥内容不往日志里打（GitHub 会打码，但没必要冒这个险）
+      - name: 还原签名材料
+        if: steps.signing.outputs.ready == 'true'
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEY_PROPS: ${{ secrets.ANDROID_KEY_PROPERTIES }}
+        run: |
+          set -euo pipefail
+          mkdir -p android/app
+          printf '%s' "$KEYSTORE_B64" | base64 -d > android/app/pi-yz-release.jks
+          printf '%s\n' "$KEY_PROPS" > android/key.properties
+          echo "签名材料已还原到 .gitignore 挡着的两个位置"
+
+      - name: 构建（分架构 + universal）
+        run: |
+          flutter build apk --release --split-per-abi
+          flutter build apk --release
+
+      - name: 整理产物（文件名带版本与架构，下载者一眼能对上）
+        id: pack
+        run: |
+          set -euo pipefail
+          VERSION=$(grep -E '^version:' pubspec.yaml | head -1 | awk '{print $2}' | cut -d+ -f1)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          mkdir -p artifacts
+          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk   "artifacts/pi-yz-$VERSION-arm64-v8a.apk"
+          cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk "artifacts/pi-yz-$VERSION-armeabi-v7a.apk"
+          cp build/app/outputs/flutter-apk/app-x86_64-release.apk      "artifacts/pi-yz-$VERSION-x86_64.apk"
+          cp build/app/outputs/flutter-apk/app-release.apk             "artifacts/pi-yz-$VERSION-universal.apk"
+          ls -lh artifacts/
+
+      - name: 上传构建产物（不管发不发布都留一份）
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk-${{ steps.pack.outputs.version }}
+          path: artifacts/*.apk
+
+      - name: 创建 Release
+        if: steps.signing.outputs.ready == 'true' && (startsWith(github.ref, 'refs/tags/v') || inputs.tag != '')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ inputs.tag || github.ref_name }}
+        run: |
+          set -euo pipefail
+          gh release create "$TAG" \
+            --title "pi-yz $TAG" \
+            --generate-notes \
+            artifacts/*.apk
+          echo "已发布 $TAG"
