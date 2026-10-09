@@ -82,6 +82,15 @@ class _ServerChatPageState extends State<ServerChatPage> {
   /// （标题栏在本 widget 内，setState 直接生效 —— 不像底部导航栏那样要走全局开关。）
   bool _headerCollapsed = false;
 
+  /// 上一次渲染时的会话 id。
+  ///
+  /// 用来在**换会话时重置滚动派生状态**：`_headerCollapsed` / `_atBottom` 只在
+  /// `_onScroll`（滚动监听）里更新，而新建/切到一个只有一两条消息的会话时
+  /// 列表根本没有可滚区间、一行滚动事件都不会发 —— 于是上一个会话留下的
+  /// 「标题栏已收起」就一直生效，新会话顶部干干净净没有标题栏，也点不到
+  /// 会话信息/新建会话。2026-10-09 实测：滚过长会话 → 新建会话 → 标题栏不见了。
+  String? _lastSessionId;
+
   // ==================== 按键条（手机打不出的那些键） ====================
 
   /// 按键条是否显示。点输入框左侧的 ⌘ 按钮切换 ——
@@ -627,6 +636,14 @@ class _ServerChatPageState extends State<ServerChatPage> {
       listenable: _store,
       builder: (context, _) {
         final chat = _store.chat;
+        // 会话换了：滚动派生状态属于上一个会话的位置，必须重置。
+        // 在这里直接赋值（不 setState）—— 本次 build 马上就会用到新值，
+        // 再触发一轮重建是多余的。
+        if (_store.currentSessionId != _lastSessionId) {
+          _lastSessionId = _store.currentSessionId;
+          _headerCollapsed = false;
+          _atBottom = true;
+        }
         return PopScope(
           // 手机上返回键应该先收起命令面板，而不是直接把 App 退掉
           // （实测：面板打开时按返回，直接退到了系统设置页）
