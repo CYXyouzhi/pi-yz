@@ -28,7 +28,7 @@
 |---|---|---|---|
 | `lib/server/server_types.dart` | 1268 | barrel 15 行 + `types/` 6 文件 | ✅ 完成 |
 | `lib/ui/server/settings_page.dart` | 1472 | **472** | ✅ 全部分组抽完（「外观」2026-10-09 抽成 `settings/appearance_section.dart`，见成功经验⑦）|
-| `lib/ui/server/config_page.dart` | 1307 | 1058 | ✅ 6 个分组抽了 5 个（MCP 分组未抽）|
+| `lib/ui/server/config_page.dart` | 1307 | **669** | ✅ 全抽完（MCP 2026-10-09 抽成 `config/mcp_section.dart`，见坑⑨）|
 | `lib/ui/server/files_page.dart` | 1059 | 897 | ✅ 完成 |
 | `lib/ui/server/sessions_page.dart` | 1316 | 1249 | ✅ 完成 |
 | `lib/ui/server/conn_page.dart` | 1300 | 632 | ✅ 完成 |
@@ -686,3 +686,25 @@ message_area / composer / key_bar / sheets，足够覆盖各新文件的代表�
 它们能证明「渲染逐像素没变」）→ **真机复验折叠交互**（外观展开 + 子分组展开各一次）。
 
 结果：`settings_page.dart` 990 → **472 行**，新增 `settings/appearance_section.dart` 544 行（`cc33bca`）。
+
+---
+
+## 踩过的坑⑨：这次抽 MCP 分组踩的两个新坑（2026-10-09）
+
+**① State 的方法搬进 StatelessWidget 后，`context` 与 `mounted` 会凭空消失**
+    `_addMcpServer()` / `_removeMcpServer(server)` 原本是 State 的方法，函数体里直接用
+    `context` 和 `mounted`（State 自带）。搬进无状态组件后这两样都没有了 —— analyze 一次
+    报出 8 处。改法：给方法加 `BuildContext context` 参数并在调用点传进去，
+    `mounted` 换成 `context.mounted`。
+    **排查提示**：analyze 报 `Undefined name 'context'` 时，先看这段代码是不是从 State 里搬出来的。
+
+**② 花括号配对删块时，务必忽略「命名参数的 `{}`」**
+    删页面里那个 `_section(...)` 包装时我用 `{`/`}` 计数找结尾，结果函数签名里的
+    `{IconId icon = ..., String? summary, String? stateKey}` 让深度提前归零 —— 只删掉 3 行、
+    留下残骸；修残骸时又多删了一行收尾。好在 analyze 立刻报错、问题没有流出去。
+    **正确做法**：配对前把参数列表的 `{}` 剔除（一个简单的办法是先跳过「首个 `{` 之前
+    的 `(...)` 段」，或只对 `if`/`for` 这类语句做配对），删完立刻跑 analyze 确认。
+
+**顺带一条正面经验**：抽分组时若某个辅助函数**被页面和组件同时需要**（这次是
+`_dialogField`），把它提成共享顶层函数（放到该功能的 `widgets.dart`）比「让组件反过来
+依赖页面」干净得多 —— 后者会制造循环 import。
