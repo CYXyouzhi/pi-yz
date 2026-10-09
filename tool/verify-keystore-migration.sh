@@ -209,6 +209,9 @@ class H(http.server.BaseHTTPRequestHandler):
     def log_message(self, *a): pass
 socketserver.TCPServer.allow_reuse_address = True
 with socketserver.TCPServer(('0.0.0.0', PORT), H) as s:
+    # 这一行是脚本判定「就绪」的依据（配合 python -u 免缓冲）。
+    # 别删：删了就变成「永远报未就绪」，而请求其实正常 —— 输出会说谎。
+    print(f'listening on {PORT}', flush=True)
     s.serve_forever()
 PYEOF
 
