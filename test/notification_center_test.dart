@@ -6,8 +6,10 @@
 // 实机部分只负责证明「通知这条路通」与「设置项真的在界面上」。
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pi_yz/server/notification_center.dart';
+import 'package:pi_yz/server/server_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -300,6 +302,122 @@ void main() {
       center.removeListener(listener);
 
       expect(notified, greaterThan(0));
+    });
+  });
+
+  // 「接线」部分：attach / detach / 原生通道。
+  //
+  // 判定逻辑（该不该提醒、文案）在上面的 group 里是纯函数，已经测干净了；
+  // 这里管「有没有真的把定时器和监听接上去、又有没有真的收回」——
+  // 定时器没收掉是踩过的坑：单测报 pending timer，真机上壳重建一次多一个。
+  group('⑩ 接线：attach / detach / 原生通道', () {
+    final center = NotificationCenter.instance;
+    const channel = MethodChannel('pi_yz/native');
+    late List<MethodCall> native;
+
+    /// 用例可改的返回值
+    bool permitted = true;
+    String? launchSessionId;
+
+    setUp(() {
+      native = <MethodCall>[];
+      permitted = true;
+      launchSessionId = null;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (call) async {
+            native.add(call);
+            return switch (call.method) {
+              'permission' => permitted,
+              'consumeLaunchSession' => launchSessionId,
+              _ => null,
+            };
+          });
+    });
+
+    tearDown(() {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, null);
+      center.detach(); // 保证定时器被收掉，否则 flutter_test 会报 pending timer
+      center.onOpenSessionRequested = null;
+    });
+
+    test('attach 会起「每 5 秒查一次卡住」的定时器；detach 必须把它收掉', () async {
+      final store = ServerStore();
+      center.attach(store);
+
+      final before = center.debugTickCount;
+      await Future<void>.delayed(const Duration(milliseconds: 5600));
+      expect(
+        center.debugTickCount,
+        greaterThan(before),
+        reason: 'attach 之后定时器应当每 5 秒跑一次',
+      );
+
+      center.detach();
+      final afterDetach = center.debugTickCount;
+      await Future<void>.delayed(const Duration(milliseconds: 5600));
+      expect(
+        center.debugTickCount,
+        afterDetach,
+        reason: 'detach 没取消定时器的话会一直挂着 —— 真机上壳重建一次就多一个',
+      );
+
+      store.dispose();
+    });
+
+    test('handleResume：没有通知权限时什么都不做（不去问原生要会话）', () async {
+      final store = ServerStore();
+      center.attach(store);
+      permitted = false;
+
+      await center.handleResume();
+
+      expect(
+        native.map((c) => c.method),
+        isNot(contains('consumeLaunchSession')),
+        reason: '没权限就别去问原生要会话 id',
+      );
+      store.dispose();
+    });
+
+    test('handleResume：原生给了会话 id → 打开它并请求界面跳过去', () async {
+      final store = ServerStore();
+      var opened = 0;
+      center.attach(store);
+      center.onOpenSessionRequested = () => opened += 1;
+      launchSessionId = 's-99';
+
+      await center.handleResume();
+
+      expect(native.map((c) => c.method), contains('consumeLaunchSession'));
+      expect(opened, 1, reason: '不请求跳转的话，用户点了通知还停在原页面');
+      store.dispose();
+    });
+
+    test('handleResume：原生没给出会话 id 时不动界面', () async {
+      final store = ServerStore();
+      var opened = 0;
+      center.attach(store);
+      center.onOpenSessionRequested = () => opened += 1;
+      launchSessionId = null;
+
+      await center.handleResume();
+
+      expect(opened, 0);
+      store.dispose();
+    });
+
+    test('handleResume：原生调用抛异常时不崩（老版本没这个接口）', () async {
+      final store = ServerStore();
+      center.attach(store);
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (call) async {
+            if (call.method == 'permission') return true;
+            throw PlatformException(code: 'unavailable');
+          });
+
+      await expectLater(center.handleResume(), completes);
+      store.dispose();
     });
   });
 }

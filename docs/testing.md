@@ -78,6 +78,7 @@ final store = ServerStore(
 | **SSE 推完要 close** | 报 `Connection closed while receiving data` | 不 close 时 response 没人引用、连接被提前回收 |
 | **`AppPrefs.load()` 是幂等的** | 第二个用例改 mock 值不生效 | 「默认值」断言必须放在最前面 |
 | **fire-and-forget 请求还在飞就断开** | `HttpException: Connection closed…` | 收尾用 `await Future.delayed(80ms)` 再 disconnect |
+| **mock 原生通道时方法名照自己的记忆写** | 例如写成 `hasPermission`，而实现里是 `permission` → 权限恒为 false、用例全在提前返回 → **假绿** | 先 `grep` 实现里真正的 `invokeMethod('...')` 名字再写 mock |
 
 另外两条小的：
 
