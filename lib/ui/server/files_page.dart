@@ -307,6 +307,7 @@ class _WorkspaceFilesPageState extends State<WorkspaceFilesPage> {
   Widget build(BuildContext context) {
     // 物理返回键（Android 三键/手势）：还能上一级就上一级，到顶了才退出页面。
     // 文件浏览器在手机上的返回语义就是这个，跟「进来一次就得一路退出去」不同。
+    // 头部左上角的「<」不归它管 —— 那个必须直接退出页面（见下面用 pop() 的原因）。
     return PopScope(
       canPop: _listing?.parent == null,
       onPopInvokedWithResult: (didPop, _) {
@@ -330,7 +331,12 @@ class _WorkspaceFilesPageState extends State<WorkspaceFilesPage> {
               child: Row(
                 children: [
                   NeuPressable(
-                    onTap: () => Navigator.of(context).maybePop(),
+                    // 必须 pop() ，不能 maybePop()：下面 build() 里的 PopScope 把
+                    // canPop 定成「列表没有上一级」，有上一级时 maybePop() 会被它
+                    // 拦成 _goUp() —— 于是这个「<」在深目录里根本不是「退出页面」，
+                    // 而是和右边那个 ⌄ 干同一件事：实测从 Desktop\1 点它只是往上
+                    // 退一层，要一直退到 C:\Users\YOUZHI 才能关掉页面。
+                    onTap: () => Navigator.of(context).pop(),
                     radius: 12,
                     child: const Padding(
                       padding: EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n12),
