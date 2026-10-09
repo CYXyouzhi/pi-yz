@@ -77,14 +77,20 @@ List<({String title, String? stateKey})> sectionCalls(String src) {
     if (src.substring(lineStart, m.start).trimLeft().startsWith('//')) continue;
 
     final args = argumentsOf(src, m.end - 1);
-    if (args.length < 2) continue;
+    if (args.isEmpty) continue;
+    // `_section` 现在有两种签名，都要认：
+    //   · 页面里：`_section(t, <TITLE>, ...)` —— 第一个参数是 NeuTokens
+    //   · 组件里：`_section(<TITLE>, ...)`    —— t 由组件自己 context.neu 取，不传了
+    // 所以先看第一个参数是不是 `t`，再决定 title 取第几个。
+    final titleIndex = args[0].trim() == 't' ? 1 : 0;
+    if (args.length <= titleIndex) continue;
     // `stateKey:` 常和说明性注释挤在同一个片段里（注释行也是换行分隔的），
     // 所以这里用正则找，而不是看片段开头。
-    final tail = args.skip(2).join(',');
+    final tail = args.skip(titleIndex + 1).join(',');
     final keyMatch = RegExp("stateKey:\\s*('[^']*'|\"[^\"]*\")")
         .firstMatch(tail);
     final stateKey = keyMatch?.group(1);
-    calls.add((title: args[1].trim(), stateKey: stateKey));
+    calls.add((title: args[titleIndex].trim(), stateKey: stateKey));
   }
   return calls;
 }
@@ -132,8 +138,13 @@ List<String> neuSectionTitles(String src) {
 /// 直接 `contains` 会因为换行和结尾逗号而漏判（第一版就漏了，把设置页
 /// 五个本来有门控的分组全报成了缺失）。
 bool hasGate(String src, String key) {
+  // 两种写法都要认：
+  //   · 页面里直接查父级 Set：`_expanded.contains(<KEY>)`
+  //   · 组件里收的是回调：`isOpen(<KEY>)`
+  //     （外观分组搬进 settings/appearance_section.dart 之后用的就是这种，
+  //      门控跟着一起搬走了 —— 所以搜索范围也必须包含组件文件）
   final pattern = RegExp(
-    r'_expanded\.contains\(\s*' + RegExp.escape(key) + r'\s*,?\s*\)',
+    r'(?:_expanded\.contains|isOpen)\(\s*' + RegExp.escape(key) + r'\s*,?\s*\)',
   );
   return pattern.hasMatch(src);
 }
@@ -150,18 +161,22 @@ List<String> stateKeys(String src) =>
 /// 必须**成对**：组件里的 `NeuSection(title: KEY)` 承诺可折叠，
 /// 对应的门控 `_expanded.contains(KEY)` 只在该页面的源码里。
 /// 拿 A 页的组件去 B 页找门控必然找不到，所以不能写成一个大列表。
-const pages = <String, ({String page, String companion})>{
+const pages = <String, ({String page, List<String> companions})>{
   '设置页': (
     page: 'lib/ui/server/settings_page.dart',
-    companion: 'lib/ui/server/settings/widgets.dart',
+    companions: [
+      'lib/ui/server/settings/widgets.dart',
+      // 外观分组 2026-10-09 从页面搬到了这里：门控也一并搬成了 `isOpen(...)`
+      'lib/ui/server/settings/appearance_section.dart',
+    ],
   ),
   '连接页': (
     page: 'lib/ui/server/conn_page.dart',
-    companion: 'lib/ui/server/conn/widgets.dart',
+    companions: ['lib/ui/server/conn/widgets.dart'],
   ),
   'AI 配置页': (
     page: 'lib/ui/server/config_page.dart',
-    companion: 'lib/ui/server/config/widgets.dart',
+    companions: ['lib/ui/server/config/widgets.dart'],
   ),
 };
 
@@ -174,26 +189,32 @@ void main() {
         src = File(spec.page).readAsStringSync();
       });
 
-      test('每个分组头的键都出现在 _expanded.contains(...) 里', () {
-        // 「承诺可折叠」现在有两种落点：
+      test('每个分组头的键都出现在 _expanded.contains(...) / isOpen(...) 里', () {
+        // 「承诺可折叠」现在有三种落点，都要看，否则拆完组件守卫就形同虚设：
         //   · 页面里的 `_section(t, <KEY>, ...)`（老写法，还剩少量）
-        //   · 组件的 `NeuSection(title: <KEY>, ...)`（重构后搬过去的）
-        // 两种都要看，否则拆完组件守卫就形同虚设。
+        //   · 组件里的 `_section(<KEY>, ...)`（搬出去后少了一个 t 参数）
+        //   · 组件的 `NeuSection(title: <KEY>, ...)`
         final keys = <String>{};
-        for (final call in sectionCalls(src)) {
-          // 显式给了 stateKey 的分组，门控键就是 stateKey、与标题无关
-          // （标题里带计数，不能拿来当键），交给下面那条测试管。
-          if (call.stateKey == null) keys.add(call.title);
-        }
-        for (final path in [spec.companion]) {
+        final sources = <String, String>{spec.page: src};
+        for (final path in spec.companions) {
           if (!File(path).existsSync()) continue;
-          keys.addAll(neuSectionTitles(File(path).readAsStringSync()));
+          sources[path] = File(path).readAsStringSync();
+        }
+        for (final s in sources.values) {
+          for (final call in sectionCalls(s)) {
+            // 显式给了 stateKey 的分组，门控键就是 stateKey、与标题无关
+            // （标题里带计数，不能拿来当键），交给下面那条测试管。
+            if (call.stateKey == null) keys.add(call.title);
+          }
+          keys.addAll(neuSectionTitles(s));
         }
 
         expect(keys, isNotEmpty, reason: '一个分组头都没解析到，说明解析逻辑失效了');
 
-        // 门控只看本页 —— 展开状态存在页面的 `_expanded` 里，不在组件里
-        final missing = keys.where((k) => !hasGate(src, k)).toList();
+        // 门控可能在页面里（`_expanded.contains`），也可能跟着组件一起搬走（`isOpen`）
+        final missing = keys
+            .where((k) => !sources.values.any((s) => hasGate(s, k)))
+            .toList();
 
         expect(
           missing,
@@ -231,7 +252,7 @@ void main() {
     // 只是**喂给 _expanded 的不是同一个值**。所以单独加这条。
     final files = <String>[
       ...pages.values.map((s) => s.page),
-      ...pages.values.map((s) => s.companion),
+      ...pages.values.expand((s) => s.companions),
     ];
     for (final path in files) {
       if (!File(path).existsSync()) continue;
