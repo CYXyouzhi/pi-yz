@@ -1,0 +1,13 @@
+# issue 模板的额外配置。
+#
+# 目的：把「安全漏洞」和「用法问题」引到正确的入口，别让它们混进普通 bug 报告 ——
+# 安全问题的细节早一点私下说，比挂在公开 issue 里好。
+
+blank_issues_enabled: true
+contact_links:
+  - name: 安全问题
+    url: https://github.com/CYXyouzhi/pi-yz/blob/main/SECURITY.md
+    about: 先看 SECURITY.md —— 保护了什么、保护不了什么，以及怎么报告漏洞
+  - name: 连不上 / 配对失败 / 端口占用
+    url: https://github.com/CYXyouzhi/pi-yz/blob/main/server/README.md
+    about: server/README.md 的「排错」一节覆盖了大部分连接问题

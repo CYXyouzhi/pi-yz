@@ -18,6 +18,31 @@
                               └─────────────┘
 ```
 
+## 三步跑起来
+
+需要 **Node ≥ 20.6**（电脑上），手机装 APK。
+
+```bash
+# 1. 电脑：起服务端（会打印 token 和 6 位配对码）
+cd server && npm install && npm start
+
+# 2. 手机：从 Releases 下 arm64-v8a 那个包装上
+#    （不确定自己手机是什么架构就下 universal）
+
+# 3. App 里点「连接」→「配对」，填电脑上打印的那 6 位码
+```
+
+Windows 上直接双击 `server/start.cmd` 也行。细节（端口、防火墙、异地使用、
+排错）见 [server/README.md](server/README.md)。
+
+## 现在到哪了
+
+进度、已知问题、下一步都记在 [ROADMAP.md](ROADMAP.md) —— 只维护那一个地方，
+README 不重复写（两处写同一件事，必然有一处先过期）。
+
+最近一轮做完的：token 改用 Android Keystore 加密存储（含旧数据迁移）、
+真机包从 56.5 MiB 降到 21.5 MiB、服务端可以独立分发了、补齐平板与横屏的布局验证。
+
 ## 目录
 
 ```
@@ -129,11 +154,22 @@ pi 的事件流很大——一次 `ls` 对话原始 296 KB，裁剪后约 30 KB�
 
 ## 状态
 
-能用。但有几处已知不够好：
+**能用，主线功能完整。** 详细进度与已知问题在 [ROADMAP.md](ROADMAP.md)，
+安全边界在 [SECURITY.md](SECURITY.md)。
 
-- `chat_page.dart` 还有 3374 行，是最大的一块
-- `docs/verify/` 里的记录改过名，早先的原始证据已不存在
-- 平板、横屏、320dp 老机型没验证过，只覆盖 360~450dp 竖屏
+最近一次全量验证（2026-10-09）：
+
+| 门禁 | 结果 |
+|---|---|
+| `flutter analyze` | 0 issue |
+| Flutter 用例 | 436 个全过（另有 golden 基线，Windows 上跑） |
+| Node 用例 | 27 个全过（服务端 20 + 插件 7） |
+| 逻辑层覆盖率（`lib/server` + `lib/services`） | 81.0% |
+| 真机 | MuMu / Android 15：token 迁移、平板与横屏、x86_64 release 包均实测通过 |
+
+证据与复现步骤散在 `docs/` 里（[testing.md](docs/testing.md)、
+[threat-model.md](docs/threat-model.md)、[apk-size.md](docs/apk-size.md)、
+[tablet-landscape.md](docs/tablet-landscape.md)）。
 
 ## 许可
 
