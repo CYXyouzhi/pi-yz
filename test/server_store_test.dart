@@ -92,6 +92,11 @@ void main() {
     if (RegExp(r'^/api/sessions/[^/]+$').hasMatch(path)) {
       return reply(req, 200, snapshotJson());
     }
+    // 兜底：其余 /api/* 回一个「空但合法」的对象 —— 让 store 的各种 load*/命令方法
+    // 都能跑完整条代码路径（DTO 都是容错的，空对象解析不会抛）
+    if (path.startsWith('/api/')) {
+      return reply(req, 200, '{}');
+    }
     return reply(req, 404, '{"error":"no such endpoint"}');
   }
 
@@ -127,6 +132,17 @@ void main() {
     ServerTarget(host: '127.0.0.1', port: port, token: 'test-token'),
   );
 
+  /// 收尾：等一小会儿再断线。
+  ///
+  /// 有些方法内部是 fire-and-forget（命令发完顺手刷新列表、拉一次命令清单…），
+  /// 方法 await 返回时请求还在飞；这时 disconnect() 会 `close(force: true)`，
+  /// 把在途请求打断成 HttpException。
+  Future<void> settleThenDisconnect(ServerStore store) async {
+    await Future<void>.delayed(const Duration(milliseconds: 80));
+    await store.disconnect();
+    store.dispose();
+  }
+
   group('连接状态机', () {
     test('connect 成功：状态变已连接、拿到 health、会话列表也拉回来了', () async {
       final store = makeStore();
@@ -143,8 +159,7 @@ void main() {
       expect(store.sessions.single.id, 's1');
       expect(hits, containsAll(['GET /api/health', 'GET /api/sessions']));
 
-      await store.disconnect();
-      store.dispose();
+      await settleThenDisconnect(store);
     });
 
     test('探活失败：状态变 error 并留下人话（不是静默失败）', () async {
@@ -161,8 +176,7 @@ void main() {
       expect(store.errorMessage, isNotNull);
       expect(store.errorMessage, isNotEmpty);
 
-      await store.disconnect();
-      store.dispose();
+      await settleThenDisconnect(store);
     });
 
     test('回落：主地址探不通时自动落到备用地址，并如实标出 isFallback', () async {
@@ -198,8 +212,7 @@ void main() {
         reason: '走的是备用地址，界面必须能如实标出来（否则用户不知道现在走局域网还是 VPN）',
       );
 
-      await store.disconnect();
-      store.dispose();
+      await settleThenDisconnect(store);
     });
 
     test('disconnect：回到未连接，且清掉已连接时的数据', () async {
@@ -236,8 +249,7 @@ void main() {
       expect(store.chat.messages.first.text, contains('快照里的第一条'));
       expect(store.chat.cwd, 'C:/x');
 
-      await store.disconnect();
-      store.dispose();
+      await settleThenDisconnect(store);
     });
 
     test('SSE 事件到达后会被归约进 chat（服务端推 message_start）', () async {
@@ -260,8 +272,7 @@ void main() {
         reason: 'SSE 解析或归约断了：事件没进到 chat 状态里',
       );
 
-      await store.disconnect();
-      store.dispose();
+      await settleThenDisconnect(store);
     });
 
     test('turn-summary 的 404（空会话还没落盘）不该让状态变脏', () async {
@@ -275,8 +286,7 @@ void main() {
       expect(store.state, ServerConnectionState.connected);
       expect(store.errorMessage, isNull);
 
-      await store.disconnect();
-      store.dispose();
+      await settleThenDisconnect(store);
     });
 
     test('loadSessions 在服务端报错时：给出错误态而不是抛到界面', () async {
@@ -295,8 +305,149 @@ void main() {
       expect(store.loadingSessions, isFalse);
       expect(store.sessions, isEmpty);
 
-      await store.disconnect();
-      store.dispose();
+      await settleThenDisconnect(store);
+    });
+  });
+
+  group('其余加载与操作路径（冒烟：不抛、状态不脏）', () {
+    test('loadPool / loadDisk：跑完就回到非加载态', () async {
+      final store = makeStore();
+      await connectStore(store);
+
+      await store.loadPool();
+      expect(store.pool, isEmpty);
+      expect(store.remoteBusy, isFalse);
+
+      await store.loadDisk();
+      expect(store.loadingDisk, isFalse);
+      expect(store.diskError, isNull);
+
+      await settleThenDisconnect(store);
+    });
+
+    test(
+      'loadUsageSummary / loadSessionUsage / loadTurnSummary：空响应也不抛',
+      () async {
+        final store = makeStore();
+        await connectStore(store);
+        await store.openSession('s1');
+
+        await store.loadUsageSummary();
+        await store.loadSessionUsage();
+        await store.loadTurnSummary();
+
+        expect(store.state, ServerConnectionState.connected);
+        await store.disconnect();
+        store.dispose();
+      },
+    );
+
+    test('refreshCommandsIfNeeded：拉一次命令清单，失败也不改连接状态', () async {
+      final store = makeStore();
+      await connectStore(store);
+
+      await store.refreshCommandsIfNeeded();
+
+      expect(store.state, ServerConnectionState.connected);
+      await settleThenDisconnect(store);
+    });
+
+    test('createSession：服务端给了 id 就走通', () async {
+      custom = (req) async {
+        if (req.method == 'POST' && req.uri.path == '/api/sessions') {
+          return reply(req, 200, '{"id":"new-1"}');
+        }
+        return answer(req);
+      };
+      final store = makeStore();
+      await connectStore(store);
+
+      final id = await store.createSession('C:/x');
+      expect(id, anyOf(isNull, 'new-1'));
+
+      await settleThenDisconnect(store);
+    });
+
+    test(
+      'deleteSession / archiveSession / unarchiveSession：不抛且连接状态不变',
+      () async {
+        final store = makeStore();
+        await connectStore(store);
+
+        await store.archiveSession('s1');
+        await store.unarchiveSession('s1');
+        await store.deleteSession('s1');
+
+        expect(store.state, ServerConnectionState.connected);
+        await store.disconnect();
+        store.dispose();
+      },
+    );
+
+    test(
+      'setModel / setThinkingLevel / setSessionName / abort / compact：走命令通道不抛',
+      () async {
+        final store = makeStore();
+        await connectStore(store);
+        await store.openSession('s1');
+
+        await store.setModel('kimi', 'kimi-k2');
+        await store.setThinkingLevel('high');
+        await store.setSessionName('新名字');
+        await store.abort();
+        await store.compact();
+
+        expect(store.state, ServerConnectionState.connected);
+        await store.disconnect();
+        store.dispose();
+      },
+    );
+
+    test('setApiKey / removeApiKey：返回 bool，不抛', () async {
+      final store = makeStore();
+      await connectStore(store);
+
+      expect(await store.setApiKey('kimi', 'sk-test'), isA<bool>());
+      expect(await store.removeApiKey('kimi'), isA<bool>());
+
+      await settleThenDisconnect(store);
+    });
+
+    test('ensureConnected：已经连着就不再探活一次', () async {
+      final store = makeStore();
+      await connectStore(store);
+      final before = hits.length;
+
+      await store.ensureConnected();
+
+      expect(hits.length, before, reason: '已连接时 ensureConnected 不该再发探活请求');
+      await settleThenDisconnect(store);
+    });
+
+    test('exportMarkdownText / closeLiveSession / resumeSync：不抛', () async {
+      final store = makeStore();
+      await connectStore(store);
+      await store.openSession('s1');
+
+      await store.exportMarkdownText();
+      await store.closeLiveSession('s1');
+      await store.resumeSync();
+
+      expect(store.state, ServerConnectionState.connected);
+      await settleThenDisconnect(store);
+    });
+
+    test('loadSessions 之后 visible/archived 两个视图按归档标记分开', () async {
+      final store = makeStore();
+      await connectStore(store);
+      expect(store.visibleSessions.length, store.sessions.length);
+
+      await store.archiveSession('s1');
+      expect(store.isArchived('s1'), isTrue);
+
+      await store.unarchiveSession('s1');
+
+      await settleThenDisconnect(store);
     });
   });
 }

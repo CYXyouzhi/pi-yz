@@ -329,7 +329,7 @@ class ServerStore extends ChangeNotifier {
     // 用户点名要的正是「退到后台不断线」—— 只在回前台重连是不够的，
     // 睡着了的那几个小时里 SSE 和卡住定时器都得继续活着。
     if (AppPrefs.instance.keepAlive) {
-      unawaited(NativeBridge.startKeepAlive());
+      _fireAndForget('启动后台保活', NativeBridge.startKeepAlive());
     }
 
     await loadSessions(refresh: true);
@@ -346,6 +346,21 @@ class ServerStore extends ChangeNotifier {
     if (last.isNotEmpty && currentSessionId == null) {
       await openSession(last);
     }
+  }
+
+  /// fire-and-forget 的统一入口：**必须吞掉异常**。
+  ///
+  /// 这些调用（刷新列表、落缓存、取消订阅、起保活）经常正好撞上「连接被关」——
+  /// 断线、切会话、删会话之后都会。裸 `unawaited` 会让 HttpException 冒成
+  /// **未捕获的异步异常**：控制台一片红，用户侧看起来像「只是断了个网却像崩了」。
+  /// （写 server_store 的测试时被这一点绊住，才发现的。）
+  void _fireAndForget(String what, Future<void>? future) {
+    if (future == null) return;
+    unawaited(
+      future.catchError((Object error) {
+        DebugLog.instance.warn('后台', '$what 没跑完（多半是刚断线）：$error');
+      }),
+    );
   }
 
   Future<void> disconnect({bool silent = false}) async {
@@ -703,7 +718,7 @@ class ServerStore extends ChangeNotifier {
 
     // 不 await cancel：旧连接的取消可能要等网络层，
     // 而新的订阅没必要排队等它
-    unawaited(_events?.cancel());
+    _fireAndForget('取消事件订阅', _events?.cancel());
     DebugLog.instance.info('会话', '订阅事件流 $sessionId');
     _events = client
         .events(sessionId)
@@ -901,7 +916,7 @@ class ServerStore extends ChangeNotifier {
       _notify();
       _bumpSessions();
       // 后台重新扫一遍，保证与服务端一致
-      unawaited(loadSessions(refresh: true));
+      _fireAndForget('刷新会话列表', loadSessions(refresh: true));
       return true;
     } on ServerException catch (error) {
       lastError = error.message;
@@ -942,7 +957,8 @@ class ServerStore extends ChangeNotifier {
           _snapshotTimeout?.cancel();
           _refreshCommands();
           // 落一份离线缓存（不 await：缓存失败不能拖慢界面）
-          unawaited(
+          _fireAndForget(
+            '落离线缓存',
             SessionCache.save(
               sessionId: snapshot.sessionId,
               name: chat.sessionName ?? '',
@@ -970,7 +986,7 @@ class ServerStore extends ChangeNotifier {
           // 归约器认为界面需要刷新
         } else if (event.type == 'agent_settled') {
           // 一次运行结束，重新拉一遍会话列表（标题/时间会变）
-          unawaited(loadSessions(refresh: true));
+          _fireAndForget('刷新会话列表', loadSessions(refresh: true));
         }
         break;
     }
@@ -1199,7 +1215,7 @@ class ServerStore extends ChangeNotifier {
     if (currentSessionId == sessionId) chat.sessionName = trimmed;
     _notify();
     _bumpSessions();
-    unawaited(loadSessions(refresh: true));
+    _fireAndForget('刷新会话列表', loadSessions(refresh: true));
     return true;
   }
 
@@ -1963,8 +1979,8 @@ class ServerStore extends ChangeNotifier {
     _disposed = true;
     _reconnectTimer?.cancel();
     _snapshotTimeout?.cancel();
-    unawaited(_events?.cancel());
-    unawaited(_client?.dispose());
+    _fireAndForget('取消事件订阅', _events?.cancel());
+    _fireAndForget('关闭连接', _client?.dispose());
     sessionsRevision.dispose();
     super.dispose();
   }

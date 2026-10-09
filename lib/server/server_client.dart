@@ -153,6 +153,17 @@ class ServerClient {
       throw ServerException(
         '${explained.reason}（$host:$port）→ ${explained.hint}',
       );
+    } on HttpException catch (error) {
+      // 收发过程中连接被掐断（服务端退了、网断了，或调用方自己断开 —— 删会话、
+      // 切会话、断网都会碰到）。**必须也包成 ServerException**：调用方
+      // （server_store）到处都是 `on ServerException`，漏出去的 HttpException
+      // 会变成未捕获的异步异常（写 server_store 测试时被这一点绊住才发现）。
+      // 文案复用「连不上」那套：对用户来说「连不上」与「连了又断」要做的事一样。
+      DebugLog.instance.error('api', '$method $path 连接被中断：${error.message}');
+      final explained = explainFailure(SocketException(error.message));
+      throw ServerException(
+        '${explained.reason}（$host:$port）→ ${explained.hint}',
+      );
     }
 
     if (response.statusCode != 200) {
