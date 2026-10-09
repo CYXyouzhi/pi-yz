@@ -450,4 +450,226 @@ void main() {
       await settleThenDisconnect(store);
     });
   });
+
+  // 「远程访问」是手机控服务端的入口（出门在外用蜂窝网连家里那台）：
+  // 连上之后状态要能如实反映「正在起 / 已起来 / 起不来」。
+  // 之前 startRemote / stopRemote / loadRemote 三整块都没覆盖。
+  group('远程访问：状态机如实反映服务端的三种状态', () {
+    test('loadRemote：拿到 running 与公网地址', () async {
+      custom = (req) async {
+        if (req.uri.path == '/api/remote') {
+          return reply(
+            req,
+            200,
+            '{"status":"up","running":true,"url":"https://x.trycloudflare.com",'
+            '"provider":"cloudflare","threatModel":["链路加密"]}',
+          );
+        }
+        return answer(req); // 其余路径回默认剧本（health / sessions …），否则连不上
+      };
+
+      final store = makeStore();
+      await connectStore(store);
+      await store.loadRemote();
+
+      expect(store.remote.running, isTrue);
+      expect(store.remote.url, 'https://x.trycloudflare.com');
+      expect(store.remote.providerLabel, isNotEmpty);
+      expect(store.remote.threatModel, contains('链路加密'));
+
+      await settleThenDisconnect(store);
+    });
+
+    test('startRemote：从 starting 轮询到 running 后返回 true、忙碌位归位', () async {
+      var polls = 0;
+      custom = (req) async {
+        if (req.uri.path == '/api/remote/start') {
+          return reply(req, 200, '{"status":"starting","running":false}');
+        }
+        if (req.uri.path == '/api/remote') {
+          polls += 1;
+          // 第一次还是 starting，之后转 running —— 模拟真实的启动过程
+          return reply(
+            req,
+            200,
+            polls >= 2
+                ? '{"status":"up","running":true,"url":"https://y.trycloudflare.com"}'
+                : '{"status":"starting","running":false}',
+          );
+        }
+        return answer(req); // 其余路径回默认剧本（health / sessions …），否则连不上
+      };
+
+      final store = makeStore();
+      await connectStore(store);
+      final ok = await store.startRemote();
+
+      expect(ok, isTrue);
+      expect(store.remote.running, isTrue);
+      expect(store.remoteBusy, isFalse, reason: '起完必须把忙碌位放开，否则按钮一直转圈');
+
+      await settleThenDisconnect(store);
+    });
+
+    test('startRemote 失败：返回 false，状态落到 error 并带上原因', () async {
+      custom = (req) async {
+        if (req.uri.path == '/api/remote/start') {
+          return reply(req, 500, '{"error":"隧道起不来"}');
+        }
+        return answer(req); // 其余路径回默认剧本（health / sessions …），否则连不上
+      };
+
+      final store = makeStore();
+      await connectStore(store);
+      final ok = await store.startRemote();
+
+      expect(ok, isFalse);
+      expect(store.remoteBusy, isFalse, reason: '失败也要放开忙碌位，不然界面卡住');
+      expect(
+        store.remote.status == 'error' || store.lastError != null,
+        isTrue,
+        reason: '失败必须留下人话',
+      );
+
+      await settleThenDisconnect(store);
+    });
+
+    test('stopRemote：状态回到未运行、忙碌位归位', () async {
+      custom = (req) async {
+        if (req.uri.path == '/api/remote/stop') {
+          return reply(req, 200, '{"status":"idle","running":false}');
+        }
+        return answer(req); // 其余路径回默认剧本（health / sessions …），否则连不上
+      };
+
+      final store = makeStore();
+      await connectStore(store);
+      await store.stopRemote();
+
+      expect(store.remote.running, isFalse);
+      expect(store.remoteBusy, isFalse);
+
+      await settleThenDisconnect(store);
+    });
+
+    test('未连接时 startRemote 不该把忙碌位卡住（先 ensureConnected）', () async {
+      final store = makeStore(); // 故意不 connect
+      final ok = await store.startRemote();
+      expect(ok, isFalse);
+      expect(store.remoteBusy, isFalse);
+      expect(store.lastError, isNotNull);
+      store.dispose();
+    });
+  });
+
+  // 「新会话默认模型」：只影响之后新建的会话，当前会话不变。
+  group('默认模型读写', () {
+    test('loadDefaultModel：读回 provider 与 modelId', () async {
+      custom = (req) async {
+        if (req.uri.path == '/api/config/default-model') {
+          return reply(
+            req,
+            200,
+            '{"provider":"anthropic","modelId":"claude-sonnet-4-5"}',
+          );
+        }
+        return answer(req); // 其余路径回默认剧本（health / sessions …），否则连不上
+      };
+
+      final store = makeStore();
+      await connectStore(store);
+      await store.loadDefaultModel();
+
+      expect(store.defaultModelProvider, 'anthropic');
+      expect(store.defaultModelId, 'claude-sonnet-4-5');
+
+      await settleThenDisconnect(store);
+    });
+
+    test('setDefaultModel 成功：本地状态跟着改，且真的 POST 了', () async {
+      custom = (req) async {
+        if (req.uri.path == '/api/config/default-model') {
+          return reply(req, 200, '{"ok":true}');
+        }
+        return answer(req); // 其余路径回默认剧本（health / sessions …），否则连不上
+      };
+
+      final store = makeStore();
+      await connectStore(store);
+      final ok = await store.setDefaultModel('openai', 'gpt-5');
+
+      expect(ok, isTrue);
+      expect(store.defaultModelProvider, 'openai');
+      expect(store.defaultModelId, 'gpt-5');
+      expect(
+        hits,
+        contains('POST /api/config/default-model'),
+        reason: '不能只改本地状态而不写回服务端',
+      );
+
+      await settleThenDisconnect(store);
+    });
+
+    test('setDefaultModel 失败：返回 false 且不改本地状态（回滚语义）', () async {
+      custom = (req) async {
+        if (req.uri.path == '/api/config/default-model') {
+          return reply(req, 500, '{"error":"settings.json 只读"}');
+        }
+        return answer(req); // 其余路径回默认剧本（health / sessions …），否则连不上
+      };
+
+      final store = makeStore();
+      await connectStore(store);
+      final ok = await store.setDefaultModel('openai', 'gpt-5');
+
+      expect(ok, isFalse);
+      expect(
+        store.defaultModelId,
+        isNot('gpt-5'),
+        reason: '写服务端失败就不能显示成已生效，否则用户以为切了其实没切',
+      );
+      expect(store.lastError, isNotNull);
+
+      await settleThenDisconnect(store);
+    });
+  });
+
+  // 草稿是「切走再回来，没发出去的话还在」的保障 —— 完全本地，不需要服务端。
+  group('草稿', () {
+    test('按会话分开存：切会话不会串（串了就会把别人的话发出去）', () {
+      final store = makeStore();
+      store.saveDraft('s1', '给 s1 的半句话');
+      store.saveDraft('s2', '给 s2 的半句话');
+
+      expect(store.draftFor('s1'), '给 s1 的半句话');
+      expect(store.draftFor('s2'), '给 s2 的半句话');
+      store.dispose();
+    });
+
+    test('存空串等于清掉这条草稿', () {
+      final store = makeStore();
+      store.saveDraft('s1', '写了一半');
+      store.saveDraft('s1', '');
+      expect(store.draftFor('s1'), isEmpty);
+      store.dispose();
+    });
+
+    test('没有草稿的会话返回空串（不是 null，界面直接拿去填输入框）', () {
+      final store = makeStore();
+      expect(store.draftFor('never-touched'), isEmpty);
+      expect(store.draftFor(null), isEmpty);
+      store.dispose();
+    });
+
+    test('clearDrafts 报出清了条数，且之后都空了', () {
+      final store = makeStore();
+      store.saveDraft('s1', 'a');
+      store.saveDraft('s2', 'b');
+
+      expect(store.clearDrafts(), 2);
+      expect(store.draftFor('s1'), isEmpty);
+      expect(store.draftFor('s2'), isEmpty);
+      store.dispose();
+    });
+  });
 }

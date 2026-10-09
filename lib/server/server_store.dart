@@ -820,7 +820,12 @@ class ServerStore extends ChangeNotifier {
   /// 不传则让服务端自己挑（有 cloudflared 用 Cloudflare，否则退回 SSH）。
   Future<bool> startRemote({String? prefer}) async {
     final client = _client;
-    if (client == null) return false;
+    if (client == null) {
+      // 不说明原因就是「点了没反应」；与发消息/切模型等路径统一用同一句
+      lastError = I18n.t('ui.1a5741451f');
+      _notify();
+      return false;
+    }
     remoteBusy = true;
     _notify();
     try {
