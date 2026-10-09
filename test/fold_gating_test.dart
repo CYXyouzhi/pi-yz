@@ -176,7 +176,11 @@ const pages = <String, ({String page, List<String> companions})>{
   ),
   'AI 配置页': (
     page: 'lib/ui/server/config_page.dart',
-    companions: ['lib/ui/server/config/widgets.dart'],
+    companions: [
+      'lib/ui/server/config/widgets.dart',
+      // MCP 分组 2026-10-09 搬到这里：门控也一并变成了 `isOpen(...)`
+      'lib/ui/server/config/mcp_section.dart',
+    ],
   ),
 };
 

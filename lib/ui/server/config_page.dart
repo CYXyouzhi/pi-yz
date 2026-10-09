@@ -22,6 +22,7 @@ import '../../theme/neu.dart';
 import '../neu_icons.dart';
 import '../neu_toast.dart';
 import 'provider_login_sheet.dart';
+import 'config/mcp_section.dart';
 
 class ConfigPage extends StatefulWidget {
   const ConfigPage({super.key, required this.store});
@@ -125,9 +126,9 @@ class _ConfigPageState extends State<ConfigPage> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _dialogField(t, providerController, I18n.t('ui.91e8ba4966')),
+              dialogField(t, providerController, I18n.t('ui.91e8ba4966')),
               const SizedBox(height: NeuSpace.n10),
-              _dialogField(t, keyController, 'API Key'),
+              dialogField(t, keyController, 'API Key'),
             ],
           ),
           actions: [
@@ -166,198 +167,6 @@ class _ConfigPageState extends State<ConfigPage> {
       providerController.dispose();
       keyController.dispose();
     }
-  }
-
-  /// MCP 条目的第二行：类型 · target · args
-  /// （写成方法而不是嵌套的三元插值：嵌套同种引号在这种字符串里容易把解析器带沟里）
-  String _mcpSubtitle(McpServerInfo info) {
-    // 中文注释：不只是把 kind 翻一遍，还说明这类 MCP 是干什么的、参数在哪（合同要求“含义/参数/副作用”）
-    final isLocal = info.kind == 'local' || info.kind == 'stdio';
-    final parts = <String>[
-      isLocal ? I18n.t('ui.91977f0940') : I18n.t('ui.1aef0e1818'),
-    ];
-    if (info.target.isNotEmpty) parts.add(info.target);
-    if (info.args.isNotEmpty) parts.add(info.args);
-    if (info.description.isNotEmpty) parts.add(info.description);
-    if (!info.enabled) parts.add(I18n.t('ui.69b0f68457'));
-    return parts.join('\n');
-  }
-
-  /// 添加（或覆盖）一个 MCP 服务器。
-  /// 两种形态：本地 stdio（command + args）/ 远程 http（url）—— 对应 pi 的 mcp.json。
-  Future<void> _addMcpServer() async {
-    final nameController = TextEditingController();
-    final targetController = TextEditingController();
-    final argsController = TextEditingController();
-    final descController = TextEditingController();
-    var scope = 'user';
-    var kind = 'stdio';
-    final t = context.neu;
-    try {
-      final ok = await showDialog<bool>(
-        context: context,
-        builder: (dialogContext) => StatefulBuilder(
-          builder: (dialogContext, setDialogState) => AlertDialog(
-            backgroundColor: t.bg,
-            title: Text(
-              I18n.t('ui.3bd1c146b5'),
-              style: TextStyle(color: t.fg, fontSize: NeuFonts.sectionTitle),
-            ),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _dialogField(t, nameController, I18n.t('ui.5a47c238fb')),
-                  SizedBox(height: NeuSpace.n12),
-                  ChoiceRow(
-                    I18n.t('ui.4705b88497'),
-                    ['user', 'project'],
-                    scope,
-                    (value) {
-                      setDialogState(() => scope = value);
-                    },
-                    labels: {
-                      'user': I18n.t('ui.7b79313922'),
-                      'project': I18n.t('ui.98a5faeeaf'),
-                    },
-                  ),
-                  SizedBox(height: NeuSpace.n12),
-                  ChoiceRow(
-                    I18n.t('ui.226b091218'),
-                    ['stdio', 'http'],
-                    kind,
-                    (value) {
-                      setDialogState(() => kind = value);
-                    },
-                    labels: {
-                      'stdio': I18n.t('ui.904333d474'),
-                      'http': I18n.t('ui.f40bb45c68'),
-                    },
-                  ),
-                  SizedBox(height: NeuSpace.n12),
-                  _dialogField(
-                    t,
-                    targetController,
-                    kind == 'stdio'
-                        ? I18n.t('ui.c2cad6ac24')
-                        : 'url（https://…/mcp）',
-                  ),
-                  if (kind == 'stdio') ...[
-                    SizedBox(height: NeuSpace.n10),
-                    _dialogField(t, argsController, I18n.t('ui.f8d73b6d3b')),
-                  ],
-                  SizedBox(height: NeuSpace.n10),
-                  _dialogField(t, descController, I18n.t('ui.a9f32d22fd')),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(false),
-                child: Text(
-                  I18n.t('common.cancel'),
-                  style: TextStyle(color: t.muted),
-                ),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(true),
-                child: Text(
-                  I18n.t('common.save'),
-                  style: TextStyle(color: t.accentInk),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-      if (ok != true || !mounted) return;
-
-      final name = nameController.text.trim();
-      if (name.isEmpty) {
-        NeuToast.show(
-          context,
-          message: I18n.t('ui.e20009713c'),
-          icon: IconId.warn,
-        );
-        return;
-      }
-      final target = targetController.text.trim();
-      if (target.isEmpty) {
-        NeuToast.show(
-          context,
-          message: kind == 'stdio'
-              ? I18n.t('ui.079283b6b1')
-              : I18n.t('ui.61d5eeff77'),
-          icon: IconId.warn,
-        );
-        return;
-      }
-      final config = <String, dynamic>{
-        if (kind == 'stdio') 'command': target else 'url': target,
-        if (kind == 'stdio' && argsController.text.trim().isNotEmpty)
-          'args': argsController.text.trim().split(RegExp(r'\s+')),
-        if (descController.text.trim().isNotEmpty)
-          'description': descController.text.trim(),
-      };
-      final saved = await _store.saveMcpServer(
-        name: name,
-        scope: scope,
-        config: config,
-      );
-      if (saved) await _load();
-    } finally {
-      nameController.dispose();
-      targetController.dispose();
-      argsController.dispose();
-      descController.dispose();
-    }
-  }
-
-  Future<void> _removeMcpServer(McpServerInfo server) async {
-    final t = context.neu;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: t.bg,
-        title: Text(
-          I18n.t('ui.269830c1e6'),
-          style: TextStyle(color: t.fg, fontSize: NeuFonts.sectionTitle),
-        ),
-        content: Text(
-          // ignore: prefer_interpolation_to_compose_strings
-          '${I18n.tp('ui.af094ee50d', {'scope': server.scope == 'project' ? I18n.t('ui.98a5faeeaf') : I18n.t('ui.7b79313922'), 'name': server.name})}'
-          '${I18n.t('ui.2e8c13741c')}',
-          style: TextStyle(
-            color: t.muted,
-            fontSize: NeuFonts.bodyMid,
-            height: 1.6,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(
-              I18n.t('common.cancel'),
-              style: TextStyle(color: t.muted),
-            ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(
-              I18n.t('common.delete'),
-              style: TextStyle(color: t.danger),
-            ),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !mounted) return;
-    final removed = await _store.removeMcpServer(
-      server.name,
-      scope: server.scope,
-    );
-    if (removed) await _load();
   }
 
   /// 一排二选一的 chips（作用域 / 类型）
@@ -401,26 +210,6 @@ class _ConfigPageState extends State<ConfigPage> {
     final ok = await _store.removeApiKey(provider);
     if (ok && mounted) await _load();
   }
-
-  Widget _dialogField(
-    NeuTokens t,
-    TextEditingController controller,
-    String hint,
-  ) => NeuInset(
-    radius: NeuRadii.sm,
-    padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n12),
-    child: TextField(
-      controller: controller,
-      style: TextStyle(fontSize: NeuFonts.bodyMid, color: t.fg),
-      decoration: InputDecoration(
-        isDense: true,
-        border: InputBorder.none,
-        hintText: hint,
-        hintStyle: TextStyle(fontSize: NeuFonts.bodySmall, color: t.muted),
-        contentPadding: const EdgeInsets.symmetric(vertical: NeuSpace.n12),
-      ),
-    ),
-  );
 
   @override
   Widget build(BuildContext context) {
@@ -609,176 +398,13 @@ class _ConfigPageState extends State<ConfigPage> {
                         : _expanded.add(k);
                   }),
                 ),
-                _section(t, I18n.t('ui.d7911f414c'), icon: IconId.server),
-                if (_expanded.contains(I18n.t('ui.d7911f414c'))) ...[
-                  NeuRaised(
-                    radius: NeuRadii.md,
-                    level: NeuLevel.small,
-                    padding: const EdgeInsets.all(NeuSpace.n6),
-                    child: Column(
-                      children: [
-                        if (_mcp.isEmpty)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: NeuSpace.n12,
-                            ),
-                            child: Center(
-                              child: Text(
-                                I18n.t('ui.5ab2668c03'),
-                                style: TextStyle(
-                                  fontSize: NeuFonts.small,
-                                  color: t.muted,
-                                ),
-                              ),
-                            ),
-                          )
-                        else
-                          for (var i = 0; i < _mcp.length; i++) ...[
-                            if (i > 0) Container(height: 1, color: t.border),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: NeuSpace.n10,
-                                vertical: NeuSpace.n8,
-                              ),
-                              child: Row(
-                                children: [
-                                  NeuIcon(
-                                    _mcp[i].kind == 'remote'
-                                        ? IconId.download
-                                        : IconId.server,
-                                    size: 15,
-                                    color: _mcp[i].enabled
-                                        ? t.accentInk
-                                        : t.muted,
-                                  ),
-                                  const SizedBox(width: NeuSpace.n10),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Flexible(
-                                              child: Text(
-                                                _mcp[i].name,
-                                                maxLines: 2,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: TextStyle(
-                                                  fontSize: NeuFonts.bodySmall,
-                                                  color: _mcp[i].enabled
-                                                      ? t.fg
-                                                      : t.muted,
-                                                ),
-                                              ),
-                                            ),
-                                            SizedBox(width: NeuSpace.n6),
-                                            Text(
-                                              _mcp[i].scope == 'project'
-                                                  ? I18n.t('ui.98a5faeeaf')
-                                                  : I18n.t('ui.7b79313922'),
-                                              style: TextStyle(
-                                                fontSize: NeuFonts.tiny,
-                                                color: t.muted,
-                                              ),
-                                            ),
-                                            if (!_mcp[i].enabled) ...[
-                                              SizedBox(width: NeuSpace.n6),
-                                              Text(
-                                                I18n.t('ui.69b0f68457'),
-                                                style: TextStyle(
-                                                  fontSize: NeuFonts.tiny,
-                                                  color: t.warn,
-                                                ),
-                                              ),
-                                            ],
-                                          ],
-                                        ),
-                                        Text(
-                                          _mcpSubtitle(_mcp[i]),
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
-                                            fontSize: NeuFonts.badge,
-                                            color: t.muted,
-                                            height: 1.4,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  // 启用/停用：pi 侧 enabled:false = 保留条目但不连接
-                                  NeuPressable(
-                                    onTap: () async {
-                                      final ok = await _store
-                                          .setMcpServerEnabled(
-                                            _mcp[i].name,
-                                            scope: _mcp[i].scope,
-                                            enabled: !_mcp[i].enabled,
-                                          );
-                                      if (ok) await _load();
-                                    },
-                                    radius: 10,
-                                    padding: EdgeInsets.all(NeuSpace.n6),
-                                    child: Text(
-                                      _mcp[i].enabled
-                                          ? I18n.t('ui.5c56a88945')
-                                          : I18n.t('ui.7854b52a88'),
-                                      style: TextStyle(
-                                        fontSize: NeuFonts.badge,
-                                        color: t.accentInk,
-                                      ),
-                                    ),
-                                  ),
-                                  NeuPressable(
-                                    onTap: () => _removeMcpServer(_mcp[i]),
-                                    radius: 10,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: NeuSpace.n13,
-                                      vertical: NeuSpace.n13,
-                                    ),
-                                    child: NeuIcon(
-                                      IconId.trash,
-                                      size: 14,
-                                      color: t.danger,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        if (_mcp.isNotEmpty)
-                          Container(height: 1, color: t.border),
-                        NeuPressable(
-                          onTap: _addMcpServer,
-                          flat: true,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: NeuSpace.n13,
-                            vertical: NeuSpace.n13,
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              NeuIcon(
-                                IconId.plus,
-                                size: 15,
-                                color: t.accentInk,
-                              ),
-                              SizedBox(width: NeuSpace.n8),
-                              Text(
-                                I18n.t('ui.3bd1c146b5'),
-                                style: TextStyle(
-                                  fontSize: NeuFonts.bodyMid,
-                                  color: t.accentInk,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                McpSection(
+                  store: _store,
+                  servers: _mcp,
+                  isOpen: _isOpen,
+                  onToggle: _toggleGroup,
+                  onChanged: _load,
+                ),
               ],
             );
           },
@@ -894,7 +520,7 @@ class _ConfigPageState extends State<ConfigPage> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _dialogField(t, sourceController, I18n.t('ui.ae38520cd9')),
+                dialogField(t, sourceController, I18n.t('ui.ae38520cd9')),
                 SizedBox(height: NeuSpace.n12),
                 ChoiceRow(
                   I18n.t('ui.df011658c3'),
@@ -1032,27 +658,12 @@ class _ConfigPageState extends State<ConfigPage> {
 
   void _openGroup(String key) => setState(() => _expanded.add(key));
 
-  Widget _section(
-    NeuTokens t,
-    String title, {
-    IconId icon = IconId.circle,
-    String? summary,
-    String? stateKey,
-  }) {
-    final key = stateKey ?? title;
-    final open = _expanded.contains(key);
-    return ConfigSection(
-      title: title,
-      icon: icon,
-      summary: summary,
-      open: open,
-      onToggle: () => setState(() {
-        if (open) {
-          _expanded.remove(key);
-        } else {
-          _expanded.add(key);
-        }
-      }),
-    );
-  }
+  /// 供抽出去的组件使用：切换某个分组的展开态。
+  void _toggleGroup(String key) => setState(() {
+    if (_expanded.contains(key)) {
+      _expanded.remove(key);
+    } else {
+      _expanded.add(key);
+    }
+  });
 }

@@ -106,3 +106,27 @@ class ChoiceRow extends StatelessWidget {
     );
   }
 }
+
+/// 对话框里的单行输入壳子（MCP 添加 / 凭据添加 / 安装包来源都用它）。
+///
+/// 从 config_page 提上来的原因：抽 MCP 分组时它被页面和组件同时需要，
+/// 留在页面里会让组件反过来依赖页面。
+Widget dialogField(
+  NeuTokens t,
+  TextEditingController controller,
+  String hint,
+) => NeuInset(
+  radius: NeuRadii.sm,
+  padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n12),
+  child: TextField(
+    controller: controller,
+    style: TextStyle(fontSize: NeuFonts.bodyMid, color: t.fg),
+    decoration: InputDecoration(
+      isDense: true,
+      border: InputBorder.none,
+      hintText: hint,
+      hintStyle: TextStyle(fontSize: NeuFonts.bodySmall, color: t.muted),
+      contentPadding: const EdgeInsets.symmetric(vertical: NeuSpace.n12),
+    ),
+  ),
+);
