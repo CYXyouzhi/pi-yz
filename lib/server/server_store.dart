@@ -96,6 +96,22 @@ class ServerEndpoint {
 }
 
 class ServerStore extends ChangeNotifier {
+  /// 测试注入点：默认走真实的 `ServerClient`。
+  ///
+  /// 为什么值得开这个口子：`connect()` 里原来是直接 `new ServerClient(...)`，
+  /// 于是「主地址探活失败 → 回落备用地址」—— 这条最需要测的路径 ——
+  /// **在测试里根本构造不出来**（`test/server_endpoint_test.dart` 的注释里记着
+  /// 这个遗憾，当时的判断是「为了测试改生产结构不划算」）。
+  /// 现在 server_store 还有 800+ 行没有覆盖，这个口子是把 loopback 假服务端
+  /// 接进来的唯一办法；生产路径的构造参数与行为完全不变。
+
+  ServerStore({ServerClient Function(ServerEndpoint endpoint)? clientFactory})
+    : _clientBuilder = clientFactory;
+
+  /// 字段名故意与参数名不同：同名（哪怕只差下划线前缀）会触发
+  /// `prefer_initializing_formals` —— 而私有字段又不能当命名参数，绕不开。
+  final ServerClient Function(ServerEndpoint endpoint)? _clientBuilder;
+
   ServerClient? _client;
   StreamSubscription<ServerEvent>? _events;
   Timer? _reconnectTimer;
@@ -249,12 +265,14 @@ class ServerStore extends ChangeNotifier {
     HealthInfo? healthResult;
     ServerEndpoint? connectedVia;
     for (final endpoint in newTarget.candidates) {
-      final candidate = ServerClient(
-        host: endpoint.host,
-        port: endpoint.port,
-        token: newTarget.token,
-        secure: endpoint.secure,
-      );
+      final candidate =
+          _clientBuilder?.call(endpoint) ??
+          ServerClient(
+            host: endpoint.host,
+            port: endpoint.port,
+            token: newTarget.token,
+            secure: endpoint.secure,
+          );
       try {
         // 5 秒硬超时：这是「探活」不是「干活」。主地址不可达时（出门在外的
         // 常态）必须很快判定失败才能落到备用地址，否则用户得盯着「连接中…」
