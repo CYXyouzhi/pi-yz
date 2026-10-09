@@ -932,23 +932,29 @@ class I18n {
     'common.select': ('选择', 'Select'),
   };
 
-  /// 当前是否中文（跟随系统时看 Locale）
+  /// 当前是否中文（跟随系统时看平台 Locale）。
+  ///
+  /// **为什么忽略 `context`**（2026-10-09 MuMu 实测后改）：
+  /// 这个参数原先走 `Localizations.localeOf(context)`，但 `MaterialApp`
+  /// （lib/main.dart）没配 `supportedLocales` —— Flutter 的默认支持集只有
+  /// `[en_US]`，解析结果恒为 en_US。于是 25 处带 `context:` 的调用在中文界面上
+  /// 一律取英文，而 880 多处不带的重走平台 Locale 取中文，同一个设置页里中英混排
+  /// （截图里「Font size (whole app)」和「默认工作区路径」并排）。
+  ///
+  /// 现在只认一个真源：`AppPrefs.lang`（用户显式选的界面语言）→ 平台 Locale。
+  /// 保留参数是为了不动那 25 个调用点的签名。
   static bool isZh(BuildContext? context) {
     final lang = AppPrefs.instance.lang;
     if (lang == 'zh') return true;
     if (lang == 'en') return false;
-    String code;
-    if (context != null) {
-      code = Localizations.localeOf(context).languageCode;
-    } else {
-      try {
-        code = WidgetsBinding.instance.platformDispatcher.locale.languageCode;
-      } catch (_) {
-        // 纯 Dart 单测里 binding 未初始化，按默认中文处理
-        code = 'zh';
-      }
+    try {
+      // context 刻意不参与判定：它承载的 Localizations 结果不可信，见上面的说明。
+      return WidgetsBinding.instance.platformDispatcher.locale.languageCode
+          .startsWith('zh');
+    } catch (_) {
+      // 纯 Dart 单测里 binding 未初始化，按默认中文处理
+      return true;
     }
-    return code.startsWith('zh');
   }
 
   /// 取文案；找不到就返回 key（让漏翻一眼可见，而不是静默显示中文）
