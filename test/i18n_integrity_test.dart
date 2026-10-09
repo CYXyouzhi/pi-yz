@@ -42,13 +42,16 @@ void main() {
 
     // 扫描本身要有效。若正则在某次重构后失配，这个断言会先炸，
     // 而不是让下面那条「missing 为空」变成永远成立的假绿灯。
-    expect(referenced.length, greaterThan(100),
-        reason: '只扫到 ${referenced.length} 个 key，扫描逻辑可能已失效');
+    expect(
+      referenced.length,
+      greaterThan(100),
+      reason: '只扫到 ${referenced.length} 个 key，扫描逻辑可能已失效',
+    );
 
-    final missing = referenced.where((k) => !known.contains(k)).toList()..sort();
+    final missing = referenced.where((k) => !known.contains(k)).toList()
+      ..sort();
 
-    expect(missing, isEmpty,
-        reason: '这些 key 没有登记，运行时会原样显示成 key 字符串：$missing');
+    expect(missing, isEmpty, reason: '这些 key 没有登记，运行时会原样显示成 key 字符串：$missing');
   });
 
   test('中英两侧的空格化占位符必须一致', () {
@@ -59,12 +62,17 @@ void main() {
       final zh = placeholder.allMatches(v.$1).map((m) => m.group(1)!).toSet();
       final en = placeholder.allMatches(v.$2).map((m) => m.group(1)!).toSet();
       if (!setEquals(zh, en)) {
-        mismatched.add('$key: zh=${zh.toList()..sort()} en=${en.toList()..sort()}');
+        mismatched.add(
+          '$key: zh=${zh.toList()..sort()} en=${en.toList()..sort()}',
+        );
       }
     });
 
-    expect(mismatched, isEmpty,
-        reason: '占位符不一致会让 tp() 替换不完整或抛错：\n${mismatched.join('\n')}');
+    expect(
+      mismatched,
+      isEmpty,
+      reason: '占位符不一致会让 tp() 替换不完整或抛错：\n${mismatched.join('\n')}',
+    );
   });
 
   test('没有中栏或英栏为空的条目（不假装翻过）', () {

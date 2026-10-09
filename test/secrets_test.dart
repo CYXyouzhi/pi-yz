@@ -26,8 +26,11 @@ void main() {
     test('原串本身不出现在脱敏结果里', () {
       const token = 'sk-live-abcdefghijklmnopqrstuvwxyz';
       expect(maskToken(token).contains(token), isFalse);
-      expect(maskToken(token).contains('sk-live'), isFalse,
-          reason: '前缀超过 2 个字符就不该露出来');
+      expect(
+        maskToken(token).contains('sk-live'),
+        isFalse,
+        reason: '前缀超过 2 个字符就不该露出来',
+      );
     });
   });
 }

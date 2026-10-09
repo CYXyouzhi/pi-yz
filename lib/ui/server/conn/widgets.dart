@@ -13,7 +13,12 @@ import '../../neu_toast.dart';
 
 /// _cmdRow 的组件化版本。
 class CmdRow extends StatelessWidget {
-  const CmdRow({super.key, required this.command, required this.label, required this.onCopy});
+  const CmdRow({
+    super.key,
+    required this.command,
+    required this.label,
+    required this.onCopy,
+  });
 
   final String command;
   final String label;
@@ -23,28 +28,36 @@ class CmdRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = context.neu;
     return NeuPressable(
-        onTap: () => onCopy(command, label),
-        radius: NeuRadii.sm,
-        padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                command,
-                style: TextStyle(fontSize: NeuFonts.sub, color: t.accentInk),
-              ),
+      onTap: () => onCopy(command, label),
+      radius: NeuRadii.sm,
+      padding: const EdgeInsets.symmetric(
+        horizontal: NeuSpace.n13,
+        vertical: NeuSpace.n13,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              command,
+              style: TextStyle(fontSize: NeuFonts.sub, color: t.accentInk),
             ),
-            const SizedBox(width: NeuSpace.n8),
-            NeuIcon(IconId.copy, size: 14, color: t.muted),
-          ],
-        ),
-      );
+          ),
+          const SizedBox(width: NeuSpace.n8),
+          NeuIcon(IconId.copy, size: 14, color: t.muted),
+        ],
+      ),
+    );
   }
 }
 
 /// _tunnelOption 的组件化版本。
 class TunnelOption extends StatelessWidget {
-  const TunnelOption({super.key, required this.value, required this.current, required this.onPick});
+  const TunnelOption({
+    super.key,
+    required this.value,
+    required this.current,
+    required this.onPick,
+  });
 
   final String value;
   final String current;
@@ -54,58 +67,75 @@ class TunnelOption extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = context.neu;
     final selected = current == value;
-      final isCf = value == 'cloudflare';
-      final label = I18n.t(isCf ? 'remote.optCloudflare' : 'remote.optSsh');
-      final hint = I18n.t(isCf ? 'remote.optCloudflareHint' : 'remote.optSshHint');
-      return NeuPressable(
-        onTap: () => onPick(value),
-        radius: NeuRadii.sm,
-        // 选中 = 按进去（设计稿 .wsg-item.active 的那套语义）
-        flat: !selected,
-        alwaysInset: selected,
-        padding:
-            const EdgeInsets.symmetric(horizontal: NeuSpace.n10, vertical: NeuSpace.n10),
-        child: Row(
-          children: [
-            Container(
-              width: 14,
-              height: 14,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: selected ? t.accentInk : t.muted, width: 2),
+    final isCf = value == 'cloudflare';
+    final label = I18n.t(isCf ? 'remote.optCloudflare' : 'remote.optSsh');
+    final hint = I18n.t(
+      isCf ? 'remote.optCloudflareHint' : 'remote.optSshHint',
+    );
+    return NeuPressable(
+      onTap: () => onPick(value),
+      radius: NeuRadii.sm,
+      // 选中 = 按进去（设计稿 .wsg-item.active 的那套语义）
+      flat: !selected,
+      alwaysInset: selected,
+      padding: const EdgeInsets.symmetric(
+        horizontal: NeuSpace.n10,
+        vertical: NeuSpace.n10,
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 14,
+            height: 14,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: selected ? t.accentInk : t.muted,
+                width: 2,
               ),
-              child: selected
-                  ? Center(
-                      child: Container(
-                        width: 6,
-                        height: 6,
-                        decoration:
-                            BoxDecoration(shape: BoxShape.circle, color: t.accentInk),
+            ),
+            child: selected
+                ? Center(
+                    child: Container(
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: t.accentInk,
                       ),
-                    )
-                  : null,
+                    ),
+                  )
+                : null,
+          ),
+          const SizedBox(width: NeuSpace.n8),
+          // 名称不允许被压掉（它是选项的主信息），说明文字才让位
+          Text(
+            label,
+            maxLines: 1,
+            style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.fg),
+          ),
+          const SizedBox(width: NeuSpace.n8),
+          Expanded(
+            child: Text(
+              hint,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: NeuFonts.label, color: t.muted),
             ),
-            const SizedBox(width: NeuSpace.n8),
-            // 名称不允许被压掉（它是选项的主信息），说明文字才让位
-            Text(label,
-                maxLines: 1,
-                style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.fg)),
-            const SizedBox(width: NeuSpace.n8),
-            Expanded(
-              child: Text(hint,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: NeuFonts.label, color: t.muted)),
-            ),
-          ],
-        ),
-      );
+          ),
+        ],
+      ),
+    );
   }
 }
 
 /// _ownToolSection 的组件化版本。
 class OwnToolSection extends StatelessWidget {
-  const OwnToolSection({super.key, required this.ownRemote, required this.onSave});
+  const OwnToolSection({
+    super.key,
+    required this.ownRemote,
+    required this.onSave,
+  });
 
   final TextEditingController? ownRemote;
   final Future<void> Function(String raw) onSave;
@@ -114,40 +144,56 @@ class OwnToolSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = context.neu;
     return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(I18n.t('remote.ownTitle'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          I18n.t('remote.ownTitle'),
+          style: TextStyle(
+            fontSize: NeuFonts.bodySmall,
+            fontWeight: FontWeight.w700,
+            color: t.fg,
+          ),
+        ),
+        const SizedBox(height: NeuSpace.n2),
+        Text(
+          I18n.t('remote.ownHint'),
+          style: TextStyle(
+            fontSize: NeuFonts.label,
+            height: 1.5,
+            color: t.muted,
+          ),
+        ),
+        const SizedBox(height: NeuSpace.n8),
+        TextField(
+          controller: ownRemote,
+          style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.fg),
+          decoration: InputDecoration(
+            hintText: I18n.t('remote.ownPlaceholder'),
+            hintStyle: TextStyle(fontSize: NeuFonts.label, color: t.muted),
+            isDense: true,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(NeuRadii.sm),
+            ),
+          ),
+          onSubmitted: onSave,
+        ),
+        const SizedBox(height: NeuSpace.n8),
+        NeuPressable(
+          onTap: () => onSave(ownRemote?.text ?? ''),
+          radius: NeuRadii.sm,
+          padding: EdgeInsets.symmetric(vertical: NeuSpace.n10),
+          child: Center(
+            child: Text(
+              I18n.t('remote.ownSave'),
               style: TextStyle(
-                  fontSize: NeuFonts.bodySmall,
-                  fontWeight: FontWeight.w700,
-                  color: t.fg)),
-          const SizedBox(height: NeuSpace.n2),
-          Text(I18n.t('remote.ownHint'),
-              style: TextStyle(fontSize: NeuFonts.label, height: 1.5, color: t.muted)),
-          const SizedBox(height: NeuSpace.n8),
-          TextField(
-            controller: ownRemote,
-            style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.fg),
-            decoration: InputDecoration(
-              hintText: I18n.t('remote.ownPlaceholder'),
-              hintStyle: TextStyle(fontSize: NeuFonts.label, color: t.muted),
-              isDense: true,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(NeuRadii.sm)),
-            ),
-            onSubmitted: onSave,
-          ),
-          const SizedBox(height: NeuSpace.n8),
-          NeuPressable(
-            onTap: () => onSave(ownRemote?.text ?? ''),
-            radius: NeuRadii.sm,
-            padding: EdgeInsets.symmetric(vertical: NeuSpace.n10),
-            child: Center(
-              child: Text(I18n.t('remote.ownSave'),
-                  style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.accentInk)),
+                fontSize: NeuFonts.bodySmall,
+                color: t.accentInk,
+              ),
             ),
           ),
-        ],
-      );
+        ),
+      ],
+    );
   }
 }
 
@@ -170,7 +216,10 @@ class ConnPageHeader extends StatelessWidget {
               onTap: () => Navigator.of(context).maybePop(),
               radius: 12,
               child: const Padding(
-                padding: EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n12),
+                padding: EdgeInsets.symmetric(
+                  horizontal: NeuSpace.n12,
+                  vertical: NeuSpace.n12,
+                ),
                 child: NeuIcon(IconId.chevronLeft, size: 16),
               ),
             ),
@@ -252,7 +301,10 @@ class QuickConnectSection extends StatelessWidget {
           NeuPressable(
             onTap: scanning ? null : onScan,
             radius: NeuRadii.md,
-            padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
+            padding: const EdgeInsets.symmetric(
+              horizontal: NeuSpace.n13,
+              vertical: NeuSpace.n13,
+            ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -279,7 +331,10 @@ class QuickConnectSection extends StatelessWidget {
           NeuPressable(
             onTap: onDiagnose,
             radius: NeuRadii.md,
-            padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
+            padding: const EdgeInsets.symmetric(
+              horizontal: NeuSpace.n13,
+              vertical: NeuSpace.n13,
+            ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -301,7 +356,11 @@ class QuickConnectSection extends StatelessWidget {
               padding: const EdgeInsets.only(top: NeuSpace.n8),
               child: Text(
                 scanNote!,
-                style: TextStyle(fontSize: NeuFonts.label, height: 1.6, color: t.onBgDim),
+                style: TextStyle(
+                  fontSize: NeuFonts.label,
+                  height: 1.6,
+                  color: t.onBgDim,
+                ),
               ),
             ),
           for (final server in found)
@@ -309,7 +368,10 @@ class QuickConnectSection extends StatelessWidget {
               padding: const EdgeInsets.only(top: NeuSpace.n8),
               child: NeuPressable(
                 onTap: () => onUseDiscovered(server),
-                padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: NeuSpace.n12,
+                  vertical: NeuSpace.n10,
+                ),
                 child: Row(
                   children: [
                     NeuIcon(IconId.server, size: 16, color: t.accentInk),
@@ -318,19 +380,32 @@ class QuickConnectSection extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(server.name,
-                              style: TextStyle(fontSize: NeuFonts.bodyMid, color: t.fg)),
+                          Text(
+                            server.name,
+                            style: TextStyle(
+                              fontSize: NeuFonts.bodyMid,
+                              color: t.fg,
+                            ),
+                          ),
                           Text(
                             '${server.endpoint} · pi ${server.piVersion}'
                             '${server.pairingOpen ? I18n.t('ui.b4912bca07') : I18n.t('ui.3b07ed0da7')}',
-                            style: TextStyle(fontSize: NeuFonts.label, color: t.muted),
+                            style: TextStyle(
+                              fontSize: NeuFonts.label,
+                              color: t.muted,
+                            ),
                           ),
                         ],
                       ),
                     ),
                     Text(
-                      server.pairingOpen ? I18n.t('ui.e33ff6aad6') : I18n.t('ui.fad7c8a21f'),
-                      style: TextStyle(fontSize: NeuFonts.sub, color: t.accentInk),
+                      server.pairingOpen
+                          ? I18n.t('ui.e33ff6aad6')
+                          : I18n.t('ui.fad7c8a21f'),
+                      style: TextStyle(
+                        fontSize: NeuFonts.sub,
+                        color: t.accentInk,
+                      ),
                     ),
                   ],
                 ),
@@ -377,7 +452,10 @@ class ConnectionActions extends StatelessWidget {
         NeuPressable(
           onTap: onNew,
           radius: NeuRadii.md,
-          padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
+          padding: const EdgeInsets.symmetric(
+            horizontal: NeuSpace.n13,
+            vertical: NeuSpace.n13,
+          ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -386,7 +464,10 @@ class ConnectionActions extends StatelessWidget {
               Text(
                 I18n.t('conn.manualAdd'),
                 style: TextStyle(
-                    fontSize: NeuFonts.bodyTight, color: t.accentInk, fontWeight: FontWeight.w600),
+                  fontSize: NeuFonts.bodyTight,
+                  color: t.accentInk,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
@@ -395,14 +476,19 @@ class ConnectionActions extends StatelessWidget {
         NeuPressable(
           onTap: onDiagnose,
           radius: NeuRadii.md,
-          padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
+          padding: const EdgeInsets.symmetric(
+            horizontal: NeuSpace.n13,
+            vertical: NeuSpace.n13,
+          ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               NeuIcon(IconId.info, size: 15, color: t.muted),
               SizedBox(width: NeuSpace.n7),
-              Text(I18n.t('ui.d0bacac615'),
-                  style: TextStyle(fontSize: NeuFonts.bodyMid, color: t.muted)),
+              Text(
+                I18n.t('ui.d0bacac615'),
+                style: TextStyle(fontSize: NeuFonts.bodyMid, color: t.muted),
+              ),
             ],
           ),
         ),
@@ -438,9 +524,14 @@ class ServerStartupGuide extends StatelessWidget {
             children: [
               NeuIcon(IconId.terminal, size: 15, color: t.accentInk),
               SizedBox(width: NeuSpace.n8),
-              Text(I18n.t('ui.fb75dd5ecd'),
-                  style: TextStyle(
-                      fontSize: NeuFonts.bodyMid, fontWeight: FontWeight.w700, color: t.fg)),
+              Text(
+                I18n.t('ui.fb75dd5ecd'),
+                style: TextStyle(
+                  fontSize: NeuFonts.bodyMid,
+                  fontWeight: FontWeight.w700,
+                  color: t.fg,
+                ),
+              ),
             ],
           ),
           SizedBox(height: NeuSpace.n10),
@@ -448,7 +539,11 @@ class ServerStartupGuide extends StatelessWidget {
             // ignore: prefer_interpolation_to_compose_strings
             '${I18n.t('ui.da96bf7843')}'
             '${I18n.t('ui.e28ad37f63')}',
-            style: TextStyle(fontSize: NeuFonts.label, height: 1.7, color: t.onBgDim),
+            style: TextStyle(
+              fontSize: NeuFonts.label,
+              height: 1.7,
+              color: t.onBgDim,
+            ),
           ),
           SizedBox(height: NeuSpace.n6),
           CmdRow(
@@ -459,7 +554,11 @@ class ServerStartupGuide extends StatelessWidget {
           SizedBox(height: NeuSpace.n10),
           Text(
             I18n.t('ui.282652e49f'),
-            style: TextStyle(fontSize: NeuFonts.label, height: 1.7, color: t.onBgDim),
+            style: TextStyle(
+              fontSize: NeuFonts.label,
+              height: 1.7,
+              color: t.onBgDim,
+            ),
           ),
           SizedBox(height: NeuSpace.n6),
           CmdRow(
@@ -472,7 +571,11 @@ class ServerStartupGuide extends StatelessWidget {
             // ignore: prefer_interpolation_to_compose_strings
             '${I18n.t('ui.e2c2055ec7')}'
             '${I18n.t('ui.44d23ca46b')}',
-            style: TextStyle(fontSize: NeuFonts.label, height: 1.7, color: t.onBgDim),
+            style: TextStyle(
+              fontSize: NeuFonts.label,
+              height: 1.7,
+              color: t.onBgDim,
+            ),
           ),
         ],
       ),
@@ -536,13 +639,21 @@ class SavedProfilesSection extends StatelessWidget {
             NeuPressable(
               onTap: onNew,
               radius: 10,
-              padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n14, vertical: NeuSpace.n10),
+              padding: const EdgeInsets.symmetric(
+                horizontal: NeuSpace.n14,
+                vertical: NeuSpace.n10,
+              ),
               child: Row(
                 children: [
                   NeuIcon(IconId.plus, size: 13, color: t.accentInk),
                   SizedBox(width: NeuSpace.n4),
-                  Text(I18n.t('ui.66ab5e9f24'),
-                      style: TextStyle(fontSize: NeuFonts.sub, color: t.accentInk)),
+                  Text(
+                    I18n.t('ui.66ab5e9f24'),
+                    style: TextStyle(
+                      fontSize: NeuFonts.sub,
+                      color: t.accentInk,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -554,15 +665,20 @@ class SavedProfilesSection extends StatelessWidget {
           if (profiles.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: NeuSpace.n6),
-              child: Text(I18n.t('conn.noSavedYet'),
-                  style: TextStyle(fontSize: NeuFonts.label, color: t.muted)),
+              child: Text(
+                I18n.t('conn.noSavedYet'),
+                style: TextStyle(fontSize: NeuFonts.label, color: t.muted),
+              ),
             ),
           for (final profile in profiles)
             NeuPressable(
               flat: editingId != profile.id,
               alwaysInset: editingId == profile.id,
               onTap: () => onSwitchTo(profile),
-              padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n10),
+              padding: const EdgeInsets.symmetric(
+                horizontal: NeuSpace.n12,
+                vertical: NeuSpace.n10,
+              ),
               margin: const EdgeInsets.only(bottom: NeuSpace.n6),
               child: Row(
                 children: [
@@ -573,14 +689,22 @@ class SavedProfilesSection extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          profile.name.trim().isEmpty ? I18n.t('ui.7f0425a8a6') : profile.name,
+                          profile.name.trim().isEmpty
+                              ? I18n.t('ui.7f0425a8a6')
+                              : profile.name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: NeuFonts.bodyMid, color: t.fg),
+                          style: TextStyle(
+                            fontSize: NeuFonts.bodyMid,
+                            color: t.fg,
+                          ),
                         ),
                         Text(
                           profile.endpoint,
-                          style: TextStyle(fontSize: NeuFonts.label, color: t.muted),
+                          style: TextStyle(
+                            fontSize: NeuFonts.label,
+                            color: t.muted,
+                          ),
                         ),
                       ],
                     ),
@@ -592,7 +716,10 @@ class SavedProfilesSection extends StatelessWidget {
                     onTap: () => onEdit(profile),
                     radius: 10,
                     child: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n10),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: NeuSpace.n13,
+                        vertical: NeuSpace.n10,
+                      ),
                       child: NeuIcon(IconId.pen, size: 14),
                     ),
                   ),
@@ -601,7 +728,10 @@ class SavedProfilesSection extends StatelessWidget {
                     onTap: () => onDelete(profile),
                     radius: 10,
                     child: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n10),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: NeuSpace.n13,
+                        vertical: NeuSpace.n10,
+                      ),
                       child: NeuIcon(IconId.trash, size: 14),
                     ),
                   ),
@@ -658,12 +788,12 @@ class RemoteAccessCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.neu;
-      // RepaintBoundary：这块是页面上最大的阴影图层（NeuRaised + 内部一堆
-      // NeuPressable，每个都带两个大 blur 的 BoxShadow）。不隔离的话，
-      // 滚动时它会跟着视口一起重绘 —— 实测用户反映「手指滑、画面跟不上」。
-      // 隔离后滚动只移动已画好的图层，不再重新做高斯模糊。
-      return RepaintBoundary(
-        child: ListenableBuilder(
+    // RepaintBoundary：这块是页面上最大的阴影图层（NeuRaised + 内部一堆
+    // NeuPressable，每个都带两个大 blur 的 BoxShadow）。不隔离的话，
+    // 滚动时它会跟着视口一起重绘 —— 实测用户反映「手指滑、画面跟不上」。
+    // 隔离后滚动只移动已画好的图层，不再重新做高斯模糊。
+    return RepaintBoundary(
+      child: ListenableBuilder(
         listenable: store,
         builder: (context, _) {
           final r = store.remote;
@@ -686,18 +816,28 @@ class RemoteAccessCard extends StatelessWidget {
                       ),
                     ),
                     SizedBox(width: NeuSpace.n8),
-                    Text(I18n.t('ui.0959028680'),
-                        style: TextStyle(
-                            fontSize: NeuFonts.bodyTight, fontWeight: FontWeight.w700, color: t.fg)),
+                    Text(
+                      I18n.t('ui.0959028680'),
+                      style: TextStyle(
+                        fontSize: NeuFonts.bodyTight,
+                        fontWeight: FontWeight.w700,
+                        color: t.fg,
+                      ),
+                    ),
                     SizedBox(width: NeuSpace.n8),
                     Expanded(
                       child: Text(
                         up
-                            ? I18n.tp('ui.bb06dd8151', {'provider': r.providerLabel})
-                            : (starting ? I18n.t('ui.592ff57b9b') : I18n.t('ui.ea4a363d8f')),
+                            ? I18n.tp('ui.bb06dd8151', {
+                                'provider': r.providerLabel,
+                              })
+                            : (starting
+                                  ? I18n.t('ui.592ff57b9b')
+                                  : I18n.t('ui.ea4a363d8f')),
                         style: TextStyle(
-                            fontSize: NeuFonts.small,
-                            color: up ? t.success : t.muted),
+                          fontSize: NeuFonts.small,
+                          color: up ? t.success : t.muted,
+                        ),
                       ),
                     ),
                     if (starting)
@@ -712,11 +852,18 @@ class RemoteAccessCard extends StatelessWidget {
                       await Clipboard.setData(ClipboardData(text: r.url));
                       // 这里用的是 builder 的 context，判断也要用它的 mounted
                       if (!context.mounted) return;
-                      NeuToast.show(context, message: I18n.t('ui.d988ff0fb5'), icon: IconId.check);
+                      NeuToast.show(
+                        context,
+                        message: I18n.t('ui.d988ff0fb5'),
+                        icon: IconId.check,
+                      );
                     },
                     child: Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n10, vertical: NeuSpace.n9),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: NeuSpace.n10,
+                        vertical: NeuSpace.n9,
+                      ),
                       decoration: BoxDecoration(
                         color: t.well,
                         borderRadius: BorderRadius.circular(NeuRadii.sm),
@@ -724,7 +871,10 @@ class RemoteAccessCard extends StatelessWidget {
                       child: Text(
                         r.url,
                         style: TextStyle(
-                            fontSize: NeuFonts.sub, color: t.accentInk, fontFamily: 'monospace'),
+                          fontSize: NeuFonts.sub,
+                          color: t.accentInk,
+                          fontFamily: 'monospace',
+                        ),
                       ),
                     ),
                   ),
@@ -739,8 +889,13 @@ class RemoteAccessCard extends StatelessWidget {
                           radius: NeuRadii.sm,
                           padding: EdgeInsets.symmetric(vertical: NeuSpace.n10),
                           child: Center(
-                            child: Text(I18n.t('ui.bd939b977d'),
-                                style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.accentInk)),
+                            child: Text(
+                              I18n.t('ui.bd939b977d'),
+                              style: TextStyle(
+                                fontSize: NeuFonts.bodySmall,
+                                color: t.accentInk,
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -750,15 +905,22 @@ class RemoteAccessCard extends StatelessWidget {
                           onTap: () async {
                             await store.stopRemote();
                             if (!context.mounted) return;
-                            NeuToast.show(context,
-                                message: I18n.t('ui.1b730b15b4'),
-                                icon: IconId.check);
+                            NeuToast.show(
+                              context,
+                              message: I18n.t('ui.1b730b15b4'),
+                              icon: IconId.check,
+                            );
                           },
                           radius: NeuRadii.sm,
                           padding: EdgeInsets.symmetric(vertical: NeuSpace.n10),
                           child: Center(
-                            child: Text(I18n.t('ui.e21425f183'),
-                                style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.danger)),
+                            child: Text(
+                              I18n.t('ui.e21425f183'),
+                              style: TextStyle(
+                                fontSize: NeuFonts.bodySmall,
+                                color: t.danger,
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -768,25 +930,38 @@ class RemoteAccessCard extends StatelessWidget {
                   SizedBox(height: NeuSpace.n6),
                   Text(
                     I18n.t('ui.b645389837'),
-                    style: TextStyle(fontSize: NeuFonts.label, height: 1.5, color: t.muted),
+                    style: TextStyle(
+                      fontSize: NeuFonts.label,
+                      height: 1.5,
+                      color: t.muted,
+                    ),
                   ),
                   if (r.error.isNotEmpty) ...[
                     const SizedBox(height: NeuSpace.n8),
                     Text(
                       r.error,
-                      style: TextStyle(fontSize: NeuFonts.label, height: 1.5, color: t.danger),
+                      style: TextStyle(
+                        fontSize: NeuFonts.label,
+                        height: 1.5,
+                        color: t.danger,
+                      ),
                     ),
                   ],
                   const SizedBox(height: NeuSpace.n10),
                   // ── ① 让 App 开一条隧道：选走哪条道 ──
-                  Text(I18n.t('remote.managedTitle'),
-                      style: TextStyle(
-                          fontSize: NeuFonts.bodySmall,
-                          fontWeight: FontWeight.w700,
-                          color: t.fg)),
+                  Text(
+                    I18n.t('remote.managedTitle'),
+                    style: TextStyle(
+                      fontSize: NeuFonts.bodySmall,
+                      fontWeight: FontWeight.w700,
+                      color: t.fg,
+                    ),
+                  ),
                   const SizedBox(height: NeuSpace.n2),
-                  Text(I18n.t('remote.managedHint'),
-                      style: TextStyle(fontSize: NeuFonts.label, color: t.muted)),
+                  Text(
+                    I18n.t('remote.managedHint'),
+                    style: TextStyle(fontSize: NeuFonts.label, color: t.muted),
+                  ),
                   const SizedBox(height: NeuSpace.n6),
                   TunnelOption(
                     value: 'cloudflare',
@@ -804,11 +979,17 @@ class RemoteAccessCard extends StatelessWidget {
                     onTap: starting
                         ? null
                         : () async {
-                            final ok = await store.startRemote(prefer: tunnelPref);
+                            final ok = await store.startRemote(
+                              prefer: tunnelPref,
+                            );
                             if (!context.mounted) return;
                             NeuToast.show(
                               context,
-                              message: ok ? I18n.t('ui.3fc0cf9dc3') : I18n.tp('ui.54e7e0babb', {'error': store.remote.error}),
+                              message: ok
+                                  ? I18n.t('ui.3fc0cf9dc3')
+                                  : I18n.tp('ui.54e7e0babb', {
+                                      'error': store.remote.error,
+                                    }),
                               icon: ok ? IconId.check : IconId.warn,
                             );
                           },
@@ -816,8 +997,13 @@ class RemoteAccessCard extends StatelessWidget {
                     padding: EdgeInsets.symmetric(vertical: NeuSpace.n11),
                     child: Center(
                       child: Text(
-                        starting ? I18n.t('ui.18a16fa829') : I18n.t('ui.d89ca63cd0'),
-                        style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.accentInk),
+                        starting
+                            ? I18n.t('ui.18a16fa829')
+                            : I18n.t('ui.d89ca63cd0'),
+                        style: TextStyle(
+                          fontSize: NeuFonts.bodySmall,
+                          color: t.accentInk,
+                        ),
                       ),
                     ),
                   ),
@@ -836,34 +1022,45 @@ class RemoteAccessCard extends StatelessWidget {
                     children: [
                       NeuIcon(IconId.info, size: 13, color: t.muted),
                       SizedBox(width: NeuSpace.n6),
-                      Text(I18n.t('ui.cead89f9f1'),
-                          style: TextStyle(fontSize: NeuFonts.label, color: t.muted)),
+                      Text(
+                        I18n.t('ui.cead89f9f1'),
+                        style: TextStyle(
+                          fontSize: NeuFonts.label,
+                          color: t.muted,
+                        ),
+                      ),
                       const SizedBox(width: NeuSpace.n4),
-                      NeuIcon(showThreat ? IconId.chevronDown : IconId.chevronRight,
-                          size: 12, color: t.muted),
+                      NeuIcon(
+                        showThreat ? IconId.chevronDown : IconId.chevronRight,
+                        size: 12,
+                        color: t.muted,
+                      ),
                     ],
                   ),
                 ),
                 if (showThreat) ...[
                   SizedBox(height: NeuSpace.n8),
-                  for (final line in (r.threatModel.isEmpty
-                      ? [
-                          I18n.t('ui.5a54a90ba5'),
-                        ]
-                      : r.threatModel))
+                  for (final line
+                      in (r.threatModel.isEmpty
+                          ? [I18n.t('ui.5a54a90ba5')]
+                          : r.threatModel))
                     Padding(
                       padding: const EdgeInsets.only(bottom: NeuSpace.n5),
-                      child: Text('· $line',
-                          style: TextStyle(
-                              fontSize: NeuFonts.label, height: 1.5, color: t.muted)),
+                      child: Text(
+                        '· $line',
+                        style: TextStyle(
+                          fontSize: NeuFonts.label,
+                          height: 1.5,
+                          color: t.muted,
+                        ),
+                      ),
                     ),
                 ],
               ],
             ),
           );
         },
-        ),
-      );
-  
-}
+      ),
+    );
+  }
 }

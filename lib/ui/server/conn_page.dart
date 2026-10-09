@@ -87,7 +87,8 @@ class _ServerConnPageState extends State<ServerConnPage> {
     if (!mounted) return;
     setState(() {
       _profiles = profiles;
-      final active = profiles.where((p) => p.id == activeId).firstOrNull ??
+      final active =
+          profiles.where((p) => p.id == activeId).firstOrNull ??
           profiles.firstOrNull;
       // 只用于「已保存」列表里当前项的高亮：表单已搬进 conn_edit_page，
       // 这里不再回填任何输入框
@@ -112,7 +113,9 @@ class _ServerConnPageState extends State<ServerConnPage> {
       _found = const [];
       _scanNote = null;
     });
-    final list = await LanDiscovery.scan(onNote: (note) => debugPrint('[scan] $note'));
+    final list = await LanDiscovery.scan(
+      onNote: (note) => debugPrint('[scan] $note'),
+    );
     if (!mounted) return;
     setState(() {
       _scanning = false;
@@ -143,14 +146,22 @@ class _ServerConnPageState extends State<ServerConnPage> {
       if (!mounted) return;
       if (outcome.ok) {
         pairedToken = outcome.token;
-        NeuToast.show(context, message: I18n.t('ui.4a3d8c1f0b'), icon: IconId.check);
+        NeuToast.show(
+          context,
+          message: I18n.t('ui.4a3d8c1f0b'),
+          icon: IconId.check,
+        );
       } else {
         NeuToast.show(context, message: outcome.message, icon: IconId.warn);
       }
     } else {
       // 配对窗口没开：不再只弹一句「重启服务端」，而是把子页面打开、
       // 并在里面直接给出 token 的三个来源（那就写在那儿）。
-      NeuToast.show(context, message: I18n.t('ui.4fa10ed005'), icon: IconId.info);
+      NeuToast.show(
+        context,
+        message: I18n.t('ui.4fa10ed005'),
+        icon: IconId.info,
+      );
       await Future<void>.delayed(const Duration(milliseconds: 600));
       if (!mounted) return;
     }
@@ -196,26 +207,34 @@ class _ServerConnPageState extends State<ServerConnPage> {
       _profiles = next;
       _editingId = result.id;
     });
-    await _store.connect(ServerTarget(
-      host: result.host,
-      port: result.port,
-      token: result.token,
-      defaultCwd: result.defaultCwd,
-      secure: result.secure,
-      fallbackHost: result.fallbackHost,
-      fallbackPort: result.fallbackPort,
-      fallbackSecure: result.fallbackSecure,
-    ));
+    await _store.connect(
+      ServerTarget(
+        host: result.host,
+        port: result.port,
+        token: result.token,
+        defaultCwd: result.defaultCwd,
+        secure: result.secure,
+        fallbackHost: result.fallbackHost,
+        fallbackPort: result.fallbackPort,
+        fallbackSecure: result.fallbackSecure,
+      ),
+    );
     if (!mounted) return false;
     if (_store.isConnected) {
-      NeuToast.show(context,
-          message: I18n.tp('ui.e02ef1e216', {'endpoint': result.endpoint}),
-          icon: IconId.check);
+      NeuToast.show(
+        context,
+        message: I18n.tp('ui.e02ef1e216', {'endpoint': result.endpoint}),
+        icon: IconId.check,
+      );
       return true;
     }
-    NeuToast.show(context,
-        message: I18n.tp('ui.3550a72e44', {'e': _store.errorMessage ?? I18n.t('ui.31bbcc36d8')}),
-        icon: IconId.warn);
+    NeuToast.show(
+      context,
+      message: I18n.tp('ui.3550a72e44', {
+        'e': _store.errorMessage ?? I18n.t('ui.31bbcc36d8'),
+      }),
+      icon: IconId.warn,
+    );
     return false;
   }
 
@@ -226,8 +245,10 @@ class _ServerConnPageState extends State<ServerConnPage> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: context.neu.bg,
-        title: Text(I18n.t('ui.e2a075395d'),
-            style: TextStyle(color: context.neu.fg, fontSize: NeuFonts.heading)),
+        title: Text(
+          I18n.t('ui.e2a075395d'),
+          style: TextStyle(color: context.neu.fg, fontSize: NeuFonts.heading),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -235,7 +256,11 @@ class _ServerConnPageState extends State<ServerConnPage> {
             Text(
               '${I18n.t('ui.1d11df355d')}'
               '${I18n.tp('ui.506c0b7cbf', {'name': server.name, 'endpoint': server.endpoint, 'version': server.piVersion})}',
-              style: TextStyle(color: context.neu.muted, fontSize: NeuFonts.sub, height: 1.6),
+              style: TextStyle(
+                color: context.neu.muted,
+                fontSize: NeuFonts.sub,
+                height: 1.6,
+              ),
             ),
             const SizedBox(height: NeuSpace.n10),
             TextField(
@@ -250,11 +275,18 @@ class _ServerConnPageState extends State<ServerConnPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: Text(I18n.t('common.cancel'), style: TextStyle(color: context.neu.muted)),
+            child: Text(
+              I18n.t('common.cancel'),
+              style: TextStyle(color: context.neu.muted),
+            ),
           ),
           TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(controller.text.trim()),
-            child: Text(I18n.t('ui.e33ff6aad6'), style: TextStyle(color: context.neu.accentInk)),
+            onPressed: () =>
+                Navigator.of(dialogContext).pop(controller.text.trim()),
+            child: Text(
+              I18n.t('ui.e33ff6aad6'),
+              style: TextStyle(color: context.neu.accentInk),
+            ),
           ),
         ],
       ),
@@ -265,19 +297,25 @@ class _ServerConnPageState extends State<ServerConnPage> {
   Future<void> _switchTo(ServerProfile profile) async {
     setState(() => _editingId = profile.id);
     await ServerProfileStore.saveActiveId(profile.id);
-    await _store.connect(ServerTarget(
-      host: profile.host,
-      port: profile.port,
-      token: profile.token,
-      defaultCwd: profile.defaultCwd,
-      secure: profile.secure,
-      fallbackHost: profile.fallbackHost,
-      fallbackPort: profile.fallbackPort,
-      fallbackSecure: profile.fallbackSecure,
-    ));
+    await _store.connect(
+      ServerTarget(
+        host: profile.host,
+        port: profile.port,
+        token: profile.token,
+        defaultCwd: profile.defaultCwd,
+        secure: profile.secure,
+        fallbackHost: profile.fallbackHost,
+        fallbackPort: profile.fallbackPort,
+        fallbackSecure: profile.fallbackSecure,
+      ),
+    );
     if (!mounted) return;
     if (_store.isConnected) {
-      NeuToast.show(context, message: I18n.tp('ui.8480b01bc7', {'name': profile.displayName}), icon: IconId.check);
+      NeuToast.show(
+        context,
+        message: I18n.tp('ui.8480b01bc7', {'name': profile.displayName}),
+        icon: IconId.check,
+      );
       widget.onConnected?.call();
     } else {
       NeuToast.show(
@@ -294,7 +332,11 @@ class _ServerConnPageState extends State<ServerConnPage> {
   Future<void> _openDiagnose() async {
     final target = _store.target;
     if (target == null) {
-      NeuToast.show(context, message: I18n.t('conn.diagnoseNeedsTarget'), icon: IconId.warn);
+      NeuToast.show(
+        context,
+        message: I18n.t('conn.diagnoseNeedsTarget'),
+        icon: IconId.warn,
+      );
       return;
     }
     await Navigator.of(context).push(
@@ -312,7 +354,11 @@ class _ServerConnPageState extends State<ServerConnPage> {
   Future<void> _copy(String text, String label) async {
     await Clipboard.setData(ClipboardData(text: text));
     if (!mounted) return;
-    NeuToast.show(context, message: I18n.tp('ui.eb2ee57cb4', {'label': label}), icon: IconId.check);
+    NeuToast.show(
+      context,
+      message: I18n.tp('ui.eb2ee57cb4', {'label': label}),
+      icon: IconId.check,
+    );
   }
 
   @override
@@ -328,14 +374,23 @@ class _ServerConnPageState extends State<ServerConnPage> {
             // 页面上再没有任何返回入口（只剩系统返回手势），
             // 用户会以为「页面卡住了」。
             const Padding(
-              padding: EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n8, NeuSpace.n18, 0),
+              padding: EdgeInsets.fromLTRB(
+                NeuSpace.n18,
+                NeuSpace.n8,
+                NeuSpace.n18,
+                0,
+              ),
               child: ConnPageHeader(),
             ),
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n4, NeuSpace.n18, 28),
+                padding: const EdgeInsets.fromLTRB(
+                  NeuSpace.n18,
+                  NeuSpace.n4,
+                  NeuSpace.n18,
+                  28,
+                ),
                 children: [
-
                   // ---- 远程访问（task-18）：不在同一局域网也能连 ----
                   RemoteAccessCard(
                     store: _store,
@@ -343,7 +398,8 @@ class _ServerConnPageState extends State<ServerConnPage> {
                     ownRemote: _ownRemote,
                     showThreat: _showThreat,
                     onPickTunnel: (v) => setState(() => _tunnelPref = v),
-                    onToggleThreat: () => setState(() => _showThreat = !_showThreat),
+                    onToggleThreat: () =>
+                        setState(() => _showThreat = !_showThreat),
                     onUseAddress: _useRemoteAddress,
                     onSaveOwnAddress: _saveOwnAddress,
                   ),
@@ -455,7 +511,11 @@ class _ServerConnPageState extends State<ServerConnPage> {
     final withScheme = url.contains('://') ? url : 'http://$url';
     final parsed = Uri.tryParse(withScheme);
     if (parsed == null || parsed.host.isEmpty) {
-      NeuToast.show(context, message: I18n.tp('ui.3bff752a5d', {'url': url}), icon: IconId.warn);
+      NeuToast.show(
+        context,
+        message: I18n.tp('ui.3bff752a5d', {'url': url}),
+        icon: IconId.warn,
+      );
       return;
     }
     // 页面已无内联表单，token 只能来自「当前已连的那条」。
@@ -463,7 +523,11 @@ class _ServerConnPageState extends State<ServerConnPage> {
     // 所以下面会给一句提示把他引到新增/配对那条路。
     final token = _store.target?.token ?? '';
     if (token.isEmpty) {
-      NeuToast.show(context, message: I18n.t('ui.8e72a51181'), icon: IconId.warn);
+      NeuToast.show(
+        context,
+        message: I18n.t('ui.8e72a51181'),
+        icon: IconId.warn,
+      );
       return;
     }
 
@@ -501,29 +565,42 @@ class _ServerConnPageState extends State<ServerConnPage> {
 
     // 只存不切：告诉用户存到哪去了，否则他会以为按钮没生效
     if (!switchTo) {
-      NeuToast.show(context, message: I18n.t('remote.ownSaved'), icon: IconId.check);
+      NeuToast.show(
+        context,
+        message: I18n.t('remote.ownSaved'),
+        icon: IconId.check,
+      );
       return;
     }
 
-    await _store.connect(ServerTarget(
-      host: profile.host,
-      port: profile.port,
-      token: profile.token,
-      defaultCwd: profile.defaultCwd,
-      secure: profile.secure,
-      fallbackHost: profile.fallbackHost,
-      fallbackPort: profile.fallbackPort,
-      fallbackSecure: profile.fallbackSecure,
-    ));
+    await _store.connect(
+      ServerTarget(
+        host: profile.host,
+        port: profile.port,
+        token: profile.token,
+        defaultCwd: profile.defaultCwd,
+        secure: profile.secure,
+        fallbackHost: profile.fallbackHost,
+        fallbackPort: profile.fallbackPort,
+        fallbackSecure: profile.fallbackSecure,
+      ),
+    );
     if (!mounted) return;
     if (_store.isConnected) {
-      NeuToast.show(context,
-          message: I18n.tp('ui.e02ef1e216', {'endpoint': profile.endpoint}), icon: IconId.check);
+      NeuToast.show(
+        context,
+        message: I18n.tp('ui.e02ef1e216', {'endpoint': profile.endpoint}),
+        icon: IconId.check,
+      );
       widget.onConnected?.call();
     } else {
-      NeuToast.show(context,
-          message: I18n.tp('ui.3550a72e44', {'e': _store.errorMessage ?? I18n.t('ui.31bbcc36d8')}),
-              icon: IconId.warn);
+      NeuToast.show(
+        context,
+        message: I18n.tp('ui.3550a72e44', {
+          'e': _store.errorMessage ?? I18n.t('ui.31bbcc36d8'),
+        }),
+        icon: IconId.warn,
+      );
     }
   }
 
@@ -549,7 +626,6 @@ class _ServerConnPageState extends State<ServerConnPage> {
     if (!mounted) return;
     setState(() => _ownRemote.clear());
   }
-
 
   /// 折叠分组的薄包装，复用 [NeuSection]（三套折叠各写各的正是
   /// 「有的地方点了能收、有的地方点了没反应」的根源）。

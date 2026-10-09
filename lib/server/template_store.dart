@@ -32,7 +32,10 @@ class TemplateStore {
       try {
         final decoded = jsonDecode(raw);
         if (decoded is List) {
-          _items = decoded.whereType<String>().where((s) => s.trim().isNotEmpty).toList();
+          _items = decoded
+              .whereType<String>()
+              .where((s) => s.trim().isNotEmpty)
+              .toList();
         }
       } catch (_) {
         // 数据坏了就当空的，不因为一条坏数据让整个输入区起不来

@@ -13,7 +13,11 @@ import 'neu_icons.dart';
 /// 下一次按键用掉后自动解除**。这也是设计稿里 `Ctrl` / `Alt` 键帽会「亮」的原因：
 /// 用户需要看见自己刚锁定了什么。
 class ModifierState {
-  const ModifierState({this.ctrl = false, this.alt = false, this.shift = false});
+  const ModifierState({
+    this.ctrl = false,
+    this.alt = false,
+    this.shift = false,
+  });
 
   final bool ctrl;
   final bool alt;
@@ -21,9 +25,12 @@ class ModifierState {
 
   bool get any => ctrl || alt || shift;
 
-  ModifierState toggleCtrl() => ModifierState(ctrl: !ctrl, alt: alt, shift: shift);
-  ModifierState toggleAlt() => ModifierState(ctrl: ctrl, alt: !alt, shift: shift);
-  ModifierState toggleShift() => ModifierState(ctrl: ctrl, alt: alt, shift: !shift);
+  ModifierState toggleCtrl() =>
+      ModifierState(ctrl: !ctrl, alt: alt, shift: shift);
+  ModifierState toggleAlt() =>
+      ModifierState(ctrl: ctrl, alt: !alt, shift: shift);
+  ModifierState toggleShift() =>
+      ModifierState(ctrl: ctrl, alt: alt, shift: !shift);
   ModifierState cleared() => const ModifierState();
 }
 
@@ -92,7 +99,12 @@ class NeuKeyBar extends StatelessWidget {
       child: !visible
           ? const SizedBox(width: double.infinity)
           : Padding(
-              padding: EdgeInsets.fromLTRB(NeuSpace.n18, 0, NeuSpace.n18, NeuSpace.n9 + bottom),
+              padding: EdgeInsets.fromLTRB(
+                NeuSpace.n18,
+                0,
+                NeuSpace.n18,
+                NeuSpace.n9 + bottom,
+              ),
               child: NeuInset(
                 radius: NeuRadii.md,
                 padding: EdgeInsets.symmetric(
@@ -114,12 +126,12 @@ class NeuKeyBar extends StatelessWidget {
   void _emit(String data) => onKey(data);
 
   /// 编码一个「受修饰键影响」的键，并在用完后解除粘滞。
-  void _emitWithModifiers(String Function({bool shift, bool alt, bool ctrl}) build) {
-    onKey(build(
-      shift: modifiers.shift,
-      alt: modifiers.alt,
-      ctrl: modifiers.ctrl,
-    ));
+  void _emitWithModifiers(
+    String Function({bool shift, bool alt, bool ctrl}) build,
+  ) {
+    onKey(
+      build(shift: modifiers.shift, alt: modifiers.alt, ctrl: modifiers.ctrl),
+    );
     if (modifiers.any) onModifiersChanged(modifiers.cleared());
   }
 
@@ -143,7 +155,8 @@ class _MiniRow extends StatelessWidget {
     // 4/4/3/3/3/3 让这两格从 55.7 变 66.8 逻辑宽，键帽需要约 42.5，留 6 逻辑余量。
     return Row(
       children: [
-        Expanded(flex: 4,
+        Expanded(
+          flex: 4,
           child: _KeyCap(
             kbd: 'Esc',
             label: I18n.t('ui.def9e98b60'),
@@ -153,28 +166,32 @@ class _MiniRow extends StatelessWidget {
             },
           ),
         ),
-        Expanded(flex: 4,
+        Expanded(
+          flex: 4,
           child: _KeyCap(
             kbd: 'Tab',
             label: I18n.t('ui.4cb4f622a9'),
             onTap: () => bar._emit(KeyEncoder.tab),
           ),
         ),
-        Expanded(flex: 3,
+        Expanded(
+          flex: 3,
           child: _KeyCap(
             kbd: '↑',
             label: I18n.t('ui.1facbf7790'),
             onTap: () => bar._emitWithModifiers(KeyEncoder.up),
           ),
         ),
-        Expanded(flex: 3,
+        Expanded(
+          flex: 3,
           child: _KeyCap(
             kbd: '↓',
             label: I18n.t('ui.3c81db078c'),
             onTap: () => bar._emitWithModifiers(KeyEncoder.down),
           ),
         ),
-        Expanded(flex: 3,
+        Expanded(
+          flex: 3,
           child: _KeyCap(
             kbd: '▤',
             label: I18n.t('ui.a8b0c20416'),
@@ -182,7 +199,8 @@ class _MiniRow extends StatelessWidget {
           ),
         ),
         if (bar.onCommands != null)
-          Expanded(flex: 3,
+          Expanded(
+            flex: 3,
             child: _KeyCap(
               kbd: '/',
               label: I18n.t('common.command'),
@@ -269,102 +287,108 @@ class _FullPanel extends StatelessWidget {
         SizedBox(height: NeuSpace.n5),
 
         // ── 四列三行：12 个终端键 ──
-        Row(children: [
-          Expanded(
-            child: _KeyCap(
-              kbd: 'Esc',
-              label: I18n.t('ui.c3992269b4'),
-              onTap: () => bar._emit(KeyEncoder.esc),
+        Row(
+          children: [
+            Expanded(
+              child: _KeyCap(
+                kbd: 'Esc',
+                label: I18n.t('ui.c3992269b4'),
+                onTap: () => bar._emit(KeyEncoder.esc),
+              ),
             ),
-          ),
-          Expanded(
-            child: _KeyCap(
-              kbd: 'Tab',
-              label: I18n.t('ui.4cb4f622a9'),
-              onTap: () => bar._emit(KeyEncoder.tab),
+            Expanded(
+              child: _KeyCap(
+                kbd: 'Tab',
+                label: I18n.t('ui.4cb4f622a9'),
+                onTap: () => bar._emit(KeyEncoder.tab),
+              ),
             ),
-          ),
-          Expanded(
-            child: bar.onEnter != null
-                ? _KeyCap(
-                    kbd: '⏎',
-                    label: I18n.t('ui.1535fcfa4c'),
-                    onTap: bar.onEnter!,
-                  )
-                : _KeyCap(
-                    kbd: '⇤',
-                    label: I18n.t('ui.123adf145e'),
-                    onTap: () => bar._emit(KeyEncoder.shiftTab),
-                  ),
-          ),
-          Expanded(
-            child: _KeyCap(
-              kbd: '^C',
-              label: I18n.t('ui.d8d7ca77e9'),
-              onTap: () => bar._emit(KeyEncoder.ctrlLetter('c')!),
+            Expanded(
+              child: bar.onEnter != null
+                  ? _KeyCap(
+                      kbd: '⏎',
+                      label: I18n.t('ui.1535fcfa4c'),
+                      onTap: bar.onEnter!,
+                    )
+                  : _KeyCap(
+                      kbd: '⇤',
+                      label: I18n.t('ui.123adf145e'),
+                      onTap: () => bar._emit(KeyEncoder.shiftTab),
+                    ),
             ),
-          ),
-        ]),
-        Row(children: [
-          Expanded(
-            child: _KeyCap(
-              kbd: '↑',
-              label: I18n.t('ui.af767b7e4a'),
-              onTap: () => bar._emitWithModifiers(KeyEncoder.up),
+            Expanded(
+              child: _KeyCap(
+                kbd: '^C',
+                label: I18n.t('ui.d8d7ca77e9'),
+                onTap: () => bar._emit(KeyEncoder.ctrlLetter('c')!),
+              ),
             ),
-          ),
-          Expanded(
-            child: _KeyCap(
-              kbd: '↓',
-              label: I18n.t('ui.3850a186c3'),
-              onTap: () => bar._emitWithModifiers(KeyEncoder.down),
+          ],
+        ),
+        Row(
+          children: [
+            Expanded(
+              child: _KeyCap(
+                kbd: '↑',
+                label: I18n.t('ui.af767b7e4a'),
+                onTap: () => bar._emitWithModifiers(KeyEncoder.up),
+              ),
             ),
-          ),
-          Expanded(
-            child: _KeyCap(
-              kbd: '←',
-              label: I18n.t('ui.d2aff14178'),
-              onTap: () => bar._emitWithModifiers(KeyEncoder.left),
+            Expanded(
+              child: _KeyCap(
+                kbd: '↓',
+                label: I18n.t('ui.3850a186c3'),
+                onTap: () => bar._emitWithModifiers(KeyEncoder.down),
+              ),
             ),
-          ),
-          Expanded(
-            child: _KeyCap(
-              kbd: '→',
-              label: I18n.t('ui.4d9c32c23d'),
-              onTap: () => bar._emitWithModifiers(KeyEncoder.right),
+            Expanded(
+              child: _KeyCap(
+                kbd: '←',
+                label: I18n.t('ui.d2aff14178'),
+                onTap: () => bar._emitWithModifiers(KeyEncoder.left),
+              ),
             ),
-          ),
-        ]),
-        Row(children: [
-          Expanded(
-            child: _KeyCap(
-              kbd: 'PgUp',
-              label: I18n.t('ui.6c7b1c13e5'),
-              onTap: () => bar._emitWithModifiers(KeyEncoder.pageUp),
+            Expanded(
+              child: _KeyCap(
+                kbd: '→',
+                label: I18n.t('ui.4d9c32c23d'),
+                onTap: () => bar._emitWithModifiers(KeyEncoder.right),
+              ),
             ),
-          ),
-          Expanded(
-            child: _KeyCap(
-              kbd: 'PgDn',
-              label: I18n.t('ui.821d4333ad'),
-              onTap: () => bar._emitWithModifiers(KeyEncoder.pageDown),
+          ],
+        ),
+        Row(
+          children: [
+            Expanded(
+              child: _KeyCap(
+                kbd: 'PgUp',
+                label: I18n.t('ui.6c7b1c13e5'),
+                onTap: () => bar._emitWithModifiers(KeyEncoder.pageUp),
+              ),
             ),
-          ),
-          Expanded(
-            child: _KeyCap(
-              kbd: 'Home',
-              label: I18n.t('ui.f422e88af6'),
-              onTap: () => bar._emitWithModifiers(KeyEncoder.home),
+            Expanded(
+              child: _KeyCap(
+                kbd: 'PgDn',
+                label: I18n.t('ui.821d4333ad'),
+                onTap: () => bar._emitWithModifiers(KeyEncoder.pageDown),
+              ),
             ),
-          ),
-          Expanded(
-            child: _KeyCap(
-              kbd: 'End',
-              label: I18n.t('ui.e8567f144b'),
-              onTap: () => bar._emitWithModifiers(KeyEncoder.end),
+            Expanded(
+              child: _KeyCap(
+                kbd: 'Home',
+                label: I18n.t('ui.f422e88af6'),
+                onTap: () => bar._emitWithModifiers(KeyEncoder.home),
+              ),
             ),
-          ),
-        ]),
+            Expanded(
+              child: _KeyCap(
+                kbd: 'End',
+                label: I18n.t('ui.e8567f144b'),
+                onTap: () => bar._emitWithModifiers(KeyEncoder.end),
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -401,8 +425,16 @@ class _ModKey extends StatelessWidget {
             boxShadow: active
                 ? null
                 : [
-                    BoxShadow(color: t.nmLo, offset: const Offset(2, 2), blurRadius: 4),
-                    BoxShadow(color: t.nmHi, offset: const Offset(-2, -2), blurRadius: 4),
+                    BoxShadow(
+                      color: t.nmLo,
+                      offset: const Offset(2, 2),
+                      blurRadius: 4,
+                    ),
+                    BoxShadow(
+                      color: t.nmHi,
+                      offset: const Offset(-2, -2),
+                      blurRadius: 4,
+                    ),
                   ],
           ),
           child: Center(
@@ -499,15 +531,19 @@ class _KeyCapState extends State<_KeyCap> {
                   FittedBox(
                     fit: BoxFit.scaleDown,
                     child: // kbd：键帽本体（在凹槽里隆起）
-                        AnimatedContainer(
+                    AnimatedContainer(
                       duration: NeuMotion.micro,
                       curve: NeuMotion.out,
                       constraints: const BoxConstraints(minWidth: 22),
                       height: 22,
-                      padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: NeuSpace.n6,
+                      ),
                       decoration: BoxDecoration(
                         color: _hit ? t.accent : null,
-                        gradient: _hit ? null : NeuDecorations.raisedGradient(t),
+                        gradient: _hit
+                            ? null
+                            : NeuDecorations.raisedGradient(t),
                         borderRadius: BorderRadius.circular(7),
                         boxShadow: _hit
                             ? null

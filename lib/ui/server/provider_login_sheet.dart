@@ -52,13 +52,15 @@ class _ProviderLoginSheetState extends State<ProviderLoginSheet> {
     final taskId = await widget.store.beginLogin(provider.id, option.type);
     if (!mounted) return;
     if (taskId == null) return;
-    await Navigator.of(context).push(MaterialPageRoute<void>(
-      builder: (_) => LoginProgressPage(
-        store: widget.store,
-        taskId: taskId,
-        providerName: provider.name,
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => LoginProgressPage(
+          store: widget.store,
+          taskId: taskId,
+          providerName: provider.name,
+        ),
       ),
-    ));
+    );
     if (!mounted) return;
     await _load();
     widget.onLoggedIn?.call();
@@ -68,18 +70,28 @@ class _ProviderLoginSheetState extends State<ProviderLoginSheet> {
   Widget build(BuildContext context) {
     final t = context.neu;
     // 未配置的排在前面：登录页的主要用途是「补一个还没配的」
-    final providers = [..._providers]..sort((a, b) {
+    final providers = [..._providers]
+      ..sort((a, b) {
         if (a.configured != b.configured) return a.configured ? 1 : -1;
         return a.name.compareTo(b.name);
       });
 
     return Container(
-      constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.8),
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.sizeOf(context).height * 0.8,
+      ),
       decoration: BoxDecoration(
         color: t.bg,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(NeuRadii.lg)),
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(NeuRadii.lg),
+        ),
       ),
-      padding: const EdgeInsets.fromLTRB(NeuSpace.n16, NeuSpace.n10, NeuSpace.n16, NeuSpace.n18),
+      padding: const EdgeInsets.fromLTRB(
+        NeuSpace.n16,
+        NeuSpace.n10,
+        NeuSpace.n16,
+        NeuSpace.n18,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -95,39 +107,75 @@ class _ProviderLoginSheetState extends State<ProviderLoginSheet> {
             ),
           ),
           SizedBox(height: NeuSpace.n14),
-          Text(I18n.t('ui.4be9b33847'),
-              style: TextStyle(
-                  fontSize: NeuFonts.sectionTitle, fontWeight: FontWeight.w700, color: t.onBg)),
+          Text(
+            I18n.t('ui.4be9b33847'),
+            style: TextStyle(
+              fontSize: NeuFonts.sectionTitle,
+              fontWeight: FontWeight.w700,
+              color: t.onBg,
+            ),
+          ),
           SizedBox(height: NeuSpace.n4),
           Text(
             I18n.t('ui.bdd04225f4'),
-            style: TextStyle(fontSize: NeuFonts.label, color: t.muted, height: 1.6),
+            style: TextStyle(
+              fontSize: NeuFonts.label,
+              color: t.muted,
+              height: 1.6,
+            ),
           ),
           SizedBox(height: NeuSpace.n12),
           Flexible(
             child: _loading
-                ? Center(child: Text(I18n.t('ui.054235bdc7'), style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.muted)))
+                ? Center(
+                    child: Text(
+                      I18n.t('ui.054235bdc7'),
+                      style: TextStyle(
+                        fontSize: NeuFonts.bodySmall,
+                        color: t.muted,
+                      ),
+                    ),
+                  )
                 : ListView.separated(
                     shrinkWrap: true,
                     itemCount: providers.length,
-                    separatorBuilder: (_, _) => Container(height: 1, color: t.border),
+                    separatorBuilder: (_, _) =>
+                        Container(height: 1, color: t.border),
                     itemBuilder: (context, index) {
                       final provider = providers[index];
                       return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: NeuSpace.n8),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: NeuSpace.n8,
+                        ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
                               children: [
-                                Text(provider.name,
-                                    style: TextStyle(fontSize: NeuFonts.bodyMid, color: t.fg)),
+                                Text(
+                                  provider.name,
+                                  style: TextStyle(
+                                    fontSize: NeuFonts.bodyMid,
+                                    color: t.fg,
+                                  ),
+                                ),
                                 const SizedBox(width: NeuSpace.n6),
-                                Text(provider.id, style: TextStyle(fontSize: NeuFonts.micro, color: t.muted)),
+                                Text(
+                                  provider.id,
+                                  style: TextStyle(
+                                    fontSize: NeuFonts.micro,
+                                    color: t.muted,
+                                  ),
+                                ),
                                 if (provider.configured) ...[
                                   SizedBox(width: NeuSpace.n6),
-                                  Text(I18n.t('ui.da208e9c74'),
-                                      style: TextStyle(fontSize: NeuFonts.tiny, color: t.success)),
+                                  Text(
+                                    I18n.t('ui.da208e9c74'),
+                                    style: TextStyle(
+                                      fontSize: NeuFonts.tiny,
+                                      color: t.success,
+                                    ),
+                                  ),
                                 ],
                               ],
                             ),
@@ -138,14 +186,25 @@ class _ProviderLoginSheetState extends State<ProviderLoginSheet> {
                               children: [
                                 for (final option in provider.auth)
                                   NeuPressable(
-                                    onTap: option.interactive ? () => _start(provider, option) : null,
+                                    onTap: option.interactive
+                                        ? () => _start(provider, option)
+                                        : null,
                                     radius: NeuRadii.sm,
-                                    padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n11, vertical: NeuSpace.n7),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: NeuSpace.n11,
+                                      vertical: NeuSpace.n7,
+                                    ),
                                     child: Text(
-                                      option.interactive ? option.label : I18n.tp('ui.72a5d6bddc', {'label': option.label}),
+                                      option.interactive
+                                          ? option.label
+                                          : I18n.tp('ui.72a5d6bddc', {
+                                              'label': option.label,
+                                            }),
                                       style: TextStyle(
                                         fontSize: NeuFonts.label,
-                                        color: option.interactive ? t.accentInk : t.muted,
+                                        color: option.interactive
+                                            ? t.accentInk
+                                            : t.muted,
                                       ),
                                     ),
                                   ),
@@ -185,6 +244,7 @@ class _LoginProgressPageState extends State<LoginProgressPage> {
   LoginStatus? _status;
   final List<Map<String, dynamic>> _log = [];
   final TextEditingController _answer = TextEditingController();
+
   /// 已提交过的那条提示（按内容记，因为同一轮里可能连着来好几条提示；
   /// 只比 type 会误判：select 提交后紧接着的 manual_code 也会显示「已提交」）
   String? _answeredPrompt;
@@ -217,9 +277,17 @@ class _LoginProgressPageState extends State<LoginProgressPage> {
     if (status.isFinished) {
       _timer?.cancel();
       if (status.state == 'done') {
-        NeuToast.show(context, message: I18n.tp('ui.a236b08a33', {'name': widget.providerName}), icon: IconId.check);
+        NeuToast.show(
+          context,
+          message: I18n.tp('ui.a236b08a33', {'name': widget.providerName}),
+          icon: IconId.check,
+        );
       } else if (status.state == 'error') {
-        NeuToast.show(context, message: I18n.tp('ui.ba23cee4eb', {'error': status.error}), icon: IconId.warn);
+        NeuToast.show(
+          context,
+          message: I18n.tp('ui.ba23cee4eb', {'error': status.error}),
+          icon: IconId.warn,
+        );
       }
     }
   }
@@ -246,7 +314,11 @@ class _LoginProgressPageState extends State<LoginProgressPage> {
   Future<void> _copy(String text, String label) async {
     await Clipboard.setData(ClipboardData(text: text));
     if (!mounted) return;
-    NeuToast.show(context, message: I18n.tp('ui.eb2ee57cb4', {'label': label}), icon: IconId.check);
+    NeuToast.show(
+      context,
+      message: I18n.tp('ui.eb2ee57cb4', {'label': label}),
+      icon: IconId.check,
+    );
   }
 
   @override
@@ -262,14 +334,22 @@ class _LoginProgressPageState extends State<LoginProgressPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(NeuSpace.n14, NeuSpace.n10, NeuSpace.n14, NeuSpace.n6),
+              padding: const EdgeInsets.fromLTRB(
+                NeuSpace.n14,
+                NeuSpace.n10,
+                NeuSpace.n14,
+                NeuSpace.n6,
+              ),
               child: Row(
                 children: [
                   NeuPressable(
                     onTap: _cancel,
                     radius: 12,
                     child: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n12),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: NeuSpace.n12,
+                        vertical: NeuSpace.n12,
+                      ),
                       child: NeuIcon(IconId.chevronLeft, size: 16),
                     ),
                   ),
@@ -278,9 +358,16 @@ class _LoginProgressPageState extends State<LoginProgressPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(I18n.tp('ui.c0fdf79953', {'name': widget.providerName}),
-                            style: TextStyle(
-                                fontSize: NeuFonts.heading, fontWeight: FontWeight.w700, color: t.onBg)),
+                        Text(
+                          I18n.tp('ui.c0fdf79953', {
+                            'name': widget.providerName,
+                          }),
+                          style: TextStyle(
+                            fontSize: NeuFonts.heading,
+                            fontWeight: FontWeight.w700,
+                            color: t.onBg,
+                          ),
+                        ),
                         Text(
                           switch (status?.state) {
                             'done' => I18n.t('ui.fad5222ca0'),
@@ -289,7 +376,10 @@ class _LoginProgressPageState extends State<LoginProgressPage> {
                             'prompt' => I18n.t('ui.9b5fb84bb2'),
                             _ => I18n.t('ui.435a51e1a2'),
                           },
-                          style: TextStyle(fontSize: NeuFonts.label, color: t.muted),
+                          style: TextStyle(
+                            fontSize: NeuFonts.label,
+                            color: t.muted,
+                          ),
                         ),
                       ],
                     ),
@@ -298,15 +388,29 @@ class _LoginProgressPageState extends State<LoginProgressPage> {
                     NeuPressable(
                       onTap: _cancel,
                       radius: NeuRadii.sm,
-                      padding: EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n8),
-                      child: Text(I18n.t('common.cancel'), style: TextStyle(fontSize: NeuFonts.sub, color: t.danger)),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: NeuSpace.n12,
+                        vertical: NeuSpace.n8,
+                      ),
+                      child: Text(
+                        I18n.t('common.cancel'),
+                        style: TextStyle(
+                          fontSize: NeuFonts.sub,
+                          color: t.danger,
+                        ),
+                      ),
                     ),
                 ],
               ),
             ),
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(NeuSpace.n16, NeuSpace.n6, NeuSpace.n16, NeuSpace.n20),
+                padding: const EdgeInsets.fromLTRB(
+                  NeuSpace.n16,
+                  NeuSpace.n6,
+                  NeuSpace.n16,
+                  NeuSpace.n20,
+                ),
                 children: [
                   // ① 服务端推来的信息：授权链接 / 设备码 / 进度
                   for (final event in _log) _eventCard(t, event),
@@ -317,7 +421,13 @@ class _LoginProgressPageState extends State<LoginProgressPage> {
                   if (status?.state == 'done')
                     _note(t, I18n.t('ui.eeab2a93eb')),
                   if (status?.state == 'error')
-                    _note(t, I18n.tp('ui.c6729a8150', {'e': status?.error ?? I18n.t('ui.31bbcc36d8')}), danger: true),
+                    _note(
+                      t,
+                      I18n.tp('ui.c6729a8150', {
+                        'e': status?.error ?? I18n.t('ui.31bbcc36d8'),
+                      }),
+                      danger: true,
+                    ),
                 ],
               ),
             ),
@@ -328,12 +438,16 @@ class _LoginProgressPageState extends State<LoginProgressPage> {
   }
 
   Widget _note(NeuTokens t, String text, {bool danger = false}) => Padding(
-        padding: const EdgeInsets.only(top: NeuSpace.n12),
-        child: Text(
-          text,
-          style: TextStyle(fontSize: NeuFonts.sub, color: danger ? t.danger : t.muted, height: 1.7),
-        ),
-      );
+    padding: const EdgeInsets.only(top: NeuSpace.n12),
+    child: Text(
+      text,
+      style: TextStyle(
+        fontSize: NeuFonts.sub,
+        color: danger ? t.danger : t.muted,
+        height: 1.7,
+      ),
+    ),
+  );
 
   Widget _eventCard(NeuTokens t, Map<String, dynamic> event) {
     final type = event['type'] as String? ?? 'info';
@@ -351,7 +465,12 @@ class _LoginProgressPageState extends State<LoginProgressPage> {
     }
     if (type == 'auth_url') {
       final url = event['url'] as String? ?? '';
-      return _linkCard(t, I18n.t('ui.fc9ce61bab'), url, event['instructions'] as String?);
+      return _linkCard(
+        t,
+        I18n.t('ui.fc9ce61bab'),
+        url,
+        event['instructions'] as String?,
+      );
     }
     if (type == 'device_code') {
       final code = event['userCode'] as String? ?? '';
@@ -366,7 +485,13 @@ class _LoginProgressPageState extends State<LoginProgressPage> {
     return const SizedBox.shrink();
   }
 
-  Widget _linkCard(NeuTokens t, String title, String url, String? hint, {String? extra}) {
+  Widget _linkCard(
+    NeuTokens t,
+    String title,
+    String url,
+    String? hint, {
+    String? extra,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: NeuSpace.n12),
       child: NeuRaised(
@@ -376,13 +501,33 @@ class _LoginProgressPageState extends State<LoginProgressPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title,
-                style: TextStyle(fontSize: NeuFonts.sub, fontWeight: FontWeight.w700, color: t.accentInk)),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: NeuFonts.sub,
+                fontWeight: FontWeight.w700,
+                color: t.accentInk,
+              ),
+            ),
             const SizedBox(height: NeuSpace.n6),
-            SelectableText(url, style: TextStyle(fontSize: NeuFonts.label, color: t.fg, height: 1.5)),
+            SelectableText(
+              url,
+              style: TextStyle(
+                fontSize: NeuFonts.label,
+                color: t.fg,
+                height: 1.5,
+              ),
+            ),
             if (hint != null) ...[
               const SizedBox(height: NeuSpace.n6),
-              Text(hint, style: TextStyle(fontSize: NeuFonts.label, color: t.muted, height: 1.6)),
+              Text(
+                hint,
+                style: TextStyle(
+                  fontSize: NeuFonts.label,
+                  color: t.muted,
+                  height: 1.6,
+                ),
+              ),
             ],
             SizedBox(height: NeuSpace.n10),
             Row(
@@ -390,16 +535,34 @@ class _LoginProgressPageState extends State<LoginProgressPage> {
                 NeuPressable(
                   onTap: () => _copy(url, I18n.t('ui.bfe68d5844')),
                   radius: NeuRadii.sm,
-                  padding: EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n8),
-                  child: Text(I18n.t('ui.879058ce06'), style: TextStyle(fontSize: NeuFonts.small, color: t.accentInk)),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: NeuSpace.n12,
+                    vertical: NeuSpace.n8,
+                  ),
+                  child: Text(
+                    I18n.t('ui.879058ce06'),
+                    style: TextStyle(
+                      fontSize: NeuFonts.small,
+                      color: t.accentInk,
+                    ),
+                  ),
                 ),
                 if (extra != null) ...[
                   SizedBox(width: NeuSpace.n8),
                   NeuPressable(
                     onTap: () => _copy(extra, I18n.t('ui.42861ce8c8')),
                     radius: NeuRadii.sm,
-                    padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n8),
-                    child: Text(I18n.t('ui.f7959bcdd0'), style: TextStyle(fontSize: NeuFonts.small, color: t.accentInk)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: NeuSpace.n12,
+                      vertical: NeuSpace.n8,
+                    ),
+                    child: Text(
+                      I18n.t('ui.f7959bcdd0'),
+                      style: TextStyle(
+                        fontSize: NeuFonts.small,
+                        color: t.accentInk,
+                      ),
+                    ),
                   ),
                 ],
               ],
@@ -419,7 +582,14 @@ class _LoginProgressPageState extends State<LoginProgressPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(prompt.message, style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.fg, height: 1.6)),
+          Text(
+            prompt.message,
+            style: TextStyle(
+              fontSize: NeuFonts.bodySmall,
+              color: t.fg,
+              height: 1.6,
+            ),
+          ),
           const SizedBox(height: NeuSpace.n10),
           if (isSelect)
             Wrap(
@@ -430,14 +600,25 @@ class _LoginProgressPageState extends State<LoginProgressPage> {
                   NeuPressable(
                     onTap: _submitting ? null : () => _submit(option.id),
                     radius: NeuRadii.sm,
-                    padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n9),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: NeuSpace.n12,
+                      vertical: NeuSpace.n9,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(option.label, style: TextStyle(fontSize: NeuFonts.sub, color: t.fg)),
+                        Text(
+                          option.label,
+                          style: TextStyle(fontSize: NeuFonts.sub, color: t.fg),
+                        ),
                         if (option.description != null)
-                          Text(option.description!,
-                              style: TextStyle(fontSize: NeuFonts.micro, color: t.muted)),
+                          Text(
+                            option.description!,
+                            style: TextStyle(
+                              fontSize: NeuFonts.micro,
+                              color: t.muted,
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -449,7 +630,11 @@ class _LoginProgressPageState extends State<LoginProgressPage> {
               obscureText: prompt.type == 'secret',
               style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.fg),
               decoration: InputDecoration(
-                hintText: prompt.placeholder ?? (prompt.type == 'secret' ? I18n.t('ui.21587f0de2') : I18n.t('common.input')),
+                hintText:
+                    prompt.placeholder ??
+                    (prompt.type == 'secret'
+                        ? I18n.t('ui.21587f0de2')
+                        : I18n.t('common.input')),
                 hintStyle: TextStyle(fontSize: NeuFonts.small, color: t.muted),
                 isDense: true,
               ),
@@ -458,14 +643,29 @@ class _LoginProgressPageState extends State<LoginProgressPage> {
             Row(
               children: [
                 NeuPressable(
-                  onTap: _submitting ? null : () => _submit(_answer.text.trim()),
+                  onTap: _submitting
+                      ? null
+                      : () => _submit(_answer.text.trim()),
                   radius: NeuRadii.sm,
-                  padding: EdgeInsets.symmetric(horizontal: NeuSpace.n14, vertical: NeuSpace.n9),
-                  child: Text(I18n.t('ui.939d5345ad'), style: TextStyle(fontSize: NeuFonts.sub, color: t.accentInk)),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: NeuSpace.n14,
+                    vertical: NeuSpace.n9,
+                  ),
+                  child: Text(
+                    I18n.t('ui.939d5345ad'),
+                    style: TextStyle(
+                      fontSize: NeuFonts.sub,
+                      color: t.accentInk,
+                    ),
+                  ),
                 ),
-                if (_answeredPrompt != null && _answeredPrompt == prompt.message) ...[
+                if (_answeredPrompt != null &&
+                    _answeredPrompt == prompt.message) ...[
                   SizedBox(width: NeuSpace.n10),
-                  Text(I18n.t('ui.e2410daedf'), style: TextStyle(fontSize: NeuFonts.label, color: t.muted)),
+                  Text(
+                    I18n.t('ui.e2410daedf'),
+                    style: TextStyle(fontSize: NeuFonts.label, color: t.muted),
+                  ),
                 ],
               ],
             ),

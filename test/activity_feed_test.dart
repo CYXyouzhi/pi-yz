@@ -48,7 +48,10 @@ void main() {
     });
 
     test('grep 取 pattern', () {
-      expect(toolSummary('ffgrep', {'pattern': 'cacheShownAt'}), 'cacheShownAt');
+      expect(
+        toolSummary('ffgrep', {'pattern': 'cacheShownAt'}),
+        'cacheShownAt',
+      );
     });
 
     test('参数名不认识时取第一个非空字符串', () {
@@ -69,11 +72,18 @@ void main() {
         }),
         '水果偏好',
       );
-      expect(toolSummary('pick', {'options': ['苹果', '香蕉']}), '苹果');
+      expect(
+        toolSummary('pick', {
+          'options': ['苹果', '香蕉'],
+        }),
+        '苹果',
+      );
     });
 
     test('多行命令折成一行并截断', () {
-      final s = toolSummary('bash', {'command': 'echo a\necho b\n${'x' * 200}'});
+      final s = toolSummary('bash', {
+        'command': 'echo a\necho b\n${'x' * 200}',
+      });
       expect(s.contains('\n'), isFalse);
       expect(s.endsWith('…'), isTrue);
       expect(s.length, lessThanOrEqualTo(91));
@@ -84,7 +94,10 @@ void main() {
     test('用户 / 思考 / 工具 / 回复各出一条', () {
       final chat = ChatReducer();
       final call = PiToolCall(
-          id: 't1', name: 'bash', arguments: {'command': 'ls'});
+        id: 't1',
+        name: 'bash',
+        arguments: {'command': 'ls'},
+      );
       chat.messages.addAll([
         msg('m1', 'user', text: '跑一下测试', at: 1000),
         msg('m2', 'assistant', thinking: '先看看目录', at: 1100, calls: [call]),
@@ -104,9 +117,7 @@ void main() {
 
     test('纯工具轮的空文本不出「回复」条目', () {
       final chat = ChatReducer();
-      chat.messages.add(
-        msg('m1', 'assistant', text: '   ', at: 1000),
-      );
+      chat.messages.add(msg('m1', 'assistant', text: '   ', at: 1000));
       expect(buildActivity(chat, now: 1500).items, isEmpty);
     });
 
@@ -123,7 +134,10 @@ void main() {
       final chat = ChatReducer();
       final c1 = PiToolCall(id: 't1', name: 'read', arguments: {'path': 'a'});
       final c2 = PiToolCall(
-          id: 't2', name: 'bash', arguments: {'command': 'sleep 30'});
+        id: 't2',
+        name: 'bash',
+        arguments: {'command': 'sleep 30'},
+      );
       chat.messages.addAll([
         msg('m1', 'assistant', thinking: '想想', at: 1000, calls: [c1]),
         msg('m2', 'assistant', at: 1100, calls: [c2]),
@@ -140,7 +154,11 @@ void main() {
 
     test('全跑完 → 当前动作退回最后一条思考/回复', () {
       final chat = ChatReducer();
-      final c1 = PiToolCall(id: 't1', name: 'bash', arguments: {'command': 'ls'});
+      final c1 = PiToolCall(
+        id: 't1',
+        name: 'bash',
+        arguments: {'command': 'ls'},
+      );
       chat.messages.add(msg('m1', 'assistant', at: 1000, calls: [c1]));
       chat.tools['t1'] = ToolRun(id: 't1', name: 'bash')
         ..status = ToolStatus.done;
@@ -153,8 +171,11 @@ void main() {
 
     test('工具出错会标出来', () {
       final chat = ChatReducer();
-      final c1 =
-          PiToolCall(id: 't1', name: 'bash', arguments: {'command': 'boom'});
+      final c1 = PiToolCall(
+        id: 't1',
+        name: 'bash',
+        arguments: {'command': 'boom'},
+      );
       chat.messages.add(msg('m1', 'assistant', at: 1000, calls: [c1]));
       chat.tools['t1'] = ToolRun(id: 't1', name: 'bash')
         ..status = ToolStatus.error;
@@ -165,11 +186,18 @@ void main() {
 
     test('文件数按路径去重', () {
       final chat = ChatReducer();
-      chat.messages.add(msg('m1', 'assistant', at: 1000, calls: [
-        PiToolCall(id: 't1', name: 'read', arguments: {'path': 'a.dart'}),
-        PiToolCall(id: 't2', name: 'edit', arguments: {'path': 'a.dart'}),
-        PiToolCall(id: 't3', name: 'write', arguments: {'path': 'b.dart'}),
-      ]));
+      chat.messages.add(
+        msg(
+          'm1',
+          'assistant',
+          at: 1000,
+          calls: [
+            PiToolCall(id: 't1', name: 'read', arguments: {'path': 'a.dart'}),
+            PiToolCall(id: 't2', name: 'edit', arguments: {'path': 'a.dart'}),
+            PiToolCall(id: 't3', name: 'write', arguments: {'path': 'b.dart'}),
+          ],
+        ),
+      );
       expect(buildActivity(chat, now: 2000).fileCount, 2);
     });
   });
@@ -200,8 +228,9 @@ void main() {
 
     test('token 速度 = 本轮输出 / 秒数；不足 1 秒或没 token 时给 0', () {
       final chat = ChatReducer()..isRunning = true;
-      chat.messages.add(msg('m1', 'assistant', at: 1000,
-          usage: const PiUsage(output: 600)));
+      chat.messages.add(
+        msg('m1', 'assistant', at: 1000, usage: const PiUsage(output: 600)),
+      );
       final snap = buildActivity(chat, now: 11000, runStartedAt: 1000);
       expect(snap.outputTokens, 600);
       expect(snap.tokensPerSecond, closeTo(60, 0.01));
@@ -229,10 +258,15 @@ void main() {
       // 上一轮：两次工具调用
       chat.messages.addAll([
         msg('m1', 'user', text: '第一轮', at: 1000),
-        msg('m2', 'assistant', at: 1100, calls: [
-          PiToolCall(id: 'a1', name: 'bash', arguments: {'command': 'ls'}),
-          PiToolCall(id: 'a2', name: 'read', arguments: {'path': 'x.dart'}),
-        ]),
+        msg(
+          'm2',
+          'assistant',
+          at: 1100,
+          calls: [
+            PiToolCall(id: 'a1', name: 'bash', arguments: {'command': 'ls'}),
+            PiToolCall(id: 'a2', name: 'read', arguments: {'path': 'x.dart'}),
+          ],
+        ),
         // 本轮：只发了一句话，没有任何工具调用
         msg('m3', 'user', text: '谢谢', at: 5000),
         msg('m4', 'assistant', text: '不客气', at: 5100),
@@ -248,14 +282,24 @@ void main() {
       final chat = ChatReducer();
       chat.messages.addAll([
         msg('m1', 'user', text: '第一轮', at: 1000),
-        msg('m2', 'assistant', at: 1100, calls: [
-          PiToolCall(id: 'a1', name: 'bash', arguments: {'command': 'ls'}),
-        ]),
+        msg(
+          'm2',
+          'assistant',
+          at: 1100,
+          calls: [
+            PiToolCall(id: 'a1', name: 'bash', arguments: {'command': 'ls'}),
+          ],
+        ),
         msg('m3', 'user', text: '再来', at: 5000),
-        msg('m4', 'assistant', at: 5100, calls: [
-          PiToolCall(id: 'b1', name: 'bash', arguments: {'command': 'pwd'}),
-          PiToolCall(id: 'b2', name: 'write', arguments: {'path': 'y.dart'}),
-        ]),
+        msg(
+          'm4',
+          'assistant',
+          at: 5100,
+          calls: [
+            PiToolCall(id: 'b1', name: 'bash', arguments: {'command': 'pwd'}),
+            PiToolCall(id: 'b2', name: 'write', arguments: {'path': 'y.dart'}),
+          ],
+        ),
       ]);
       final snap = buildActivity(chat, now: 9000);
       expect(snap.toolCount, 2);

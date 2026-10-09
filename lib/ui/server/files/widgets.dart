@@ -68,13 +68,16 @@ class GitRow extends StatelessWidget {
     final statusColor = change.status == '??'
         ? t.accentInk
         : change.status.contains('D')
-            ? t.danger
-            : t.success;
+        ? t.danger
+        : t.success;
 
     return NeuPressable(
       flat: true,
       onTap: () => onShowDiff(change.path),
-      padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n10, vertical: NeuSpace.n10),
+      padding: const EdgeInsets.symmetric(
+        horizontal: NeuSpace.n10,
+        vertical: NeuSpace.n10,
+      ),
       child: Row(
         children: [
           Container(
@@ -107,7 +110,12 @@ class GitRow extends StatelessWidget {
 
 /// 一个 worktree：主工作树不能删；其它可以删、可以「用它开会话」
 class WorktreeRow extends StatelessWidget {
-  const WorktreeRow(this.wt, {super.key, required this.onOpenSession, required this.onRemove});
+  const WorktreeRow(
+    this.wt, {
+    super.key,
+    required this.onOpenSession,
+    required this.onRemove,
+  });
 
   final WorktreeInfo wt;
   final void Function(String dir) onOpenSession;
@@ -116,58 +124,91 @@ class WorktreeRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.neu;
-      final short =
-          wt.path.replaceAll('\\', '/').split('/').where((s) => s.isNotEmpty).lastOrNull ?? wt.path;
-      final branch = wt.branch ?? (wt.detached ? '(detached)' : I18n.t('ui.a3645c3f66'));
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n10, vertical: NeuSpace.n8),
-        child: Row(
-          children: [
-            NeuIcon(IconId.folder, size: 15, color: wt.isMain ? t.accentInk : t.muted),
-            const SizedBox(width: NeuSpace.n10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(short,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.fg)),
+    final short =
+        wt.path
+            .replaceAll('\\', '/')
+            .split('/')
+            .where((s) => s.isNotEmpty)
+            .lastOrNull ??
+        wt.path;
+    final branch =
+        wt.branch ?? (wt.detached ? '(detached)' : I18n.t('ui.a3645c3f66'));
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: NeuSpace.n10,
+        vertical: NeuSpace.n8,
+      ),
+      child: Row(
+        children: [
+          NeuIcon(
+            IconId.folder,
+            size: 15,
+            color: wt.isMain ? t.accentInk : t.muted,
+          ),
+          const SizedBox(width: NeuSpace.n10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        short,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: NeuFonts.bodySmall,
+                          color: t.fg,
+                        ),
                       ),
-                      if (wt.isMain) ...[
-                        SizedBox(width: NeuSpace.n6),
-                        Text(I18n.t('ui.36e8fd3177'), style: TextStyle(fontSize: NeuFonts.tiny, color: t.accentInk)),
-                      ],
+                    ),
+                    if (wt.isMain) ...[
+                      SizedBox(width: NeuSpace.n6),
+                      Text(
+                        I18n.t('ui.36e8fd3177'),
+                        style: TextStyle(
+                          fontSize: NeuFonts.tiny,
+                          color: t.accentInk,
+                        ),
+                      ),
                     ],
-                  ),
-                  Text(
-                    '$branch · ${wt.path}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: NeuFonts.micro, color: t.muted),
-                  ),
-                ],
-              ),
+                  ],
+                ),
+                Text(
+                  '$branch · ${wt.path}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: NeuFonts.micro, color: t.muted),
+                ),
+              ],
             ),
+          ),
+          NeuPressable(
+            onTap: () => onOpenSession(wt.path),
+            radius: 10,
+            padding: EdgeInsets.symmetric(
+              horizontal: NeuSpace.n13,
+              vertical: NeuSpace.n13,
+            ),
+            child: Text(
+              I18n.t('ui.c33f0e7bb9'),
+              style: TextStyle(fontSize: NeuFonts.badge, color: t.accentInk),
+            ),
+          ),
+          if (!wt.isMain)
             NeuPressable(
-              onTap: () => onOpenSession(wt.path),
+              onTap: () => onRemove(wt),
               radius: 10,
-              padding: EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
-              child: Text(I18n.t('ui.c33f0e7bb9'), style: TextStyle(fontSize: NeuFonts.badge, color: t.accentInk)),
-            ),
-            if (!wt.isMain)
-              NeuPressable(
-                onTap: () => onRemove(wt),
-                radius: 10,
-                padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
-                child: NeuIcon(IconId.trash, size: 14, color: t.danger),
+              padding: const EdgeInsets.symmetric(
+                horizontal: NeuSpace.n13,
+                vertical: NeuSpace.n13,
               ),
-          ],
-        ),
-      );
+              child: NeuIcon(IconId.trash, size: 14, color: t.danger),
+            ),
+        ],
+      ),
+    );
   }
 }
 
@@ -181,53 +222,61 @@ class Breadcrumb extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.neu;
-      final parts =
-          path.replaceAll('\\', '/').split('/').where((s) => s.isNotEmpty).toList();
-      if (parts.isEmpty) return const SizedBox.shrink();
+    final parts = path
+        .replaceAll('\\', '/')
+        .split('/')
+        .where((s) => s.isNotEmpty)
+        .toList();
+    if (parts.isEmpty) return const SizedBox.shrink();
 
-      final segments = <(String, String)>[];
-      var acc = '';
-      for (var i = 0; i < parts.length; i++) {
-        acc = i == 0 ? parts[i] : '$acc/${parts[i]}';
-        segments.add((parts[i], acc));
-      }
+    final segments = <(String, String)>[];
+    var acc = '';
+    for (var i = 0; i < parts.length; i++) {
+      acc = i == 0 ? parts[i] : '$acc/${parts[i]}';
+      segments.add((parts[i], acc));
+    }
 
-      return SizedBox(
-        height: 22,
-        child: ListView.builder(
-          scrollDirection: Axis.horizontal,
-          itemCount: segments.length,
-          itemBuilder: (context, i) {
-            final seg = segments[i];
-            final last = i == segments.length - 1;
-            return Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (i > 0)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n1),
-                    child: Text('/',
-                        style: TextStyle(fontSize: NeuFonts.label, color: t.muted)),
-                  ),
-                NeuPressable(
-                  // 当前目录不可点（点了没意义）
-                  onTap: last ? null : () => onOpenDir(seg.$2),
-                  radius: 6,
-                  padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n4, vertical: NeuSpace.n2),
+    return SizedBox(
+      height: 22,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: segments.length,
+        itemBuilder: (context, i) {
+          final seg = segments[i];
+          final last = i == segments.length - 1;
+          return Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (i > 0)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n1),
                   child: Text(
-                    seg.$1,
-                    style: TextStyle(
-                      fontSize: NeuFonts.label,
-                      color: last ? t.fg : t.accentInk,
-                      fontWeight: last ? FontWeight.w600 : FontWeight.w400,
-                    ),
+                    '/',
+                    style: TextStyle(fontSize: NeuFonts.label, color: t.muted),
                   ),
                 ),
-              ],
-            );
-          },
-        ),
-      );
+              NeuPressable(
+                // 当前目录不可点（点了没意义）
+                onTap: last ? null : () => onOpenDir(seg.$2),
+                radius: 6,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: NeuSpace.n4,
+                  vertical: NeuSpace.n2,
+                ),
+                child: Text(
+                  seg.$1,
+                  style: TextStyle(
+                    fontSize: NeuFonts.label,
+                    color: last ? t.fg : t.accentInk,
+                    fontWeight: last ? FontWeight.w600 : FontWeight.w400,
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
   }
 }
 
@@ -237,11 +286,12 @@ String readableSize(int bytes) {
   return '${(bytes / 1024 / 1024).toStringAsFixed(1)} MB';
 }
 
-
 IconId iconForEntry(FileEntry entry) {
   if (entry.isDir) return IconId.folder;
   final n = entry.name.toLowerCase();
-  if (n.endsWith('.md') || n.endsWith('.txt') || n.endsWith('.rst')) return IconId.pen;
+  if (n.endsWith('.md') || n.endsWith('.txt') || n.endsWith('.rst')) {
+    return IconId.pen;
+  }
   if (n.endsWith('.png') ||
       n.endsWith('.jpg') ||
       n.endsWith('.jpeg') ||
@@ -266,7 +316,6 @@ IconId iconForEntry(FileEntry entry) {
   return IconId.bubble;
 }
 
-
 /// 文件/目录列表里的一行（点一下进目录或预览）。
 class FileRow extends StatelessWidget {
   const FileRow(this.entry, {super.key, required this.onEnter});
@@ -277,37 +326,39 @@ class FileRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.neu;
-      return NeuPressable(
-        flat: true,
-        onTap: () => onEnter(entry),
-        // 行高从 10 提到 13：手指点的目标高过 44dp 才不会误触下一行
-        padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n10, vertical: NeuSpace.n13),
-        child: Row(
-          children: [
-            NeuIcon(
-              iconForEntry(entry),
-              size: 16,
-              color: entry.isDir ? t.accentInk : t.muted,
+    return NeuPressable(
+      flat: true,
+      onTap: () => onEnter(entry),
+      // 行高从 10 提到 13：手指点的目标高过 44dp 才不会误触下一行
+      padding: const EdgeInsets.symmetric(
+        horizontal: NeuSpace.n10,
+        vertical: NeuSpace.n13,
+      ),
+      child: Row(
+        children: [
+          NeuIcon(
+            iconForEntry(entry),
+            size: 16,
+            color: entry.isDir ? t.accentInk : t.muted,
+          ),
+          const SizedBox(width: NeuSpace.n10),
+          Expanded(
+            child: Text(
+              entry.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: NeuFonts.bodyMid, color: t.fg),
             ),
-            const SizedBox(width: NeuSpace.n10),
-            Expanded(
-              child: Text(
-                entry.name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: NeuFonts.bodyMid, color: t.fg),
-              ),
+          ),
+          if (!entry.isDir)
+            Text(
+              readableSize(entry.size),
+              style: TextStyle(fontSize: NeuFonts.micro, color: t.muted),
             ),
-            if (!entry.isDir)
-              Text(
-                readableSize(entry.size),
-                style: TextStyle(fontSize: NeuFonts.micro, color: t.muted),
-              ),
-            const SizedBox(width: NeuSpace.n6),
-            NeuIcon(IconId.chevronRight, size: 13, color: t.muted),
-          ],
-        ),
-      );
+          const SizedBox(width: NeuSpace.n6),
+          NeuIcon(IconId.chevronRight, size: 13, color: t.muted),
+        ],
+      ),
+    );
   }
-
 }

@@ -38,7 +38,8 @@ class NeuToast {
     final messenger = ScaffoldMessenger.maybeOf(context);
     if (messenger == null) return;
 
-    final tokens = Theme.of(context).extension<NeuTheme>()?.tokens ??
+    final tokens =
+        Theme.of(context).extension<NeuTheme>()?.tokens ??
         (Theme.of(context).brightness == Brightness.dark
             ? NeuTokens.dark
             : NeuTokens.light);

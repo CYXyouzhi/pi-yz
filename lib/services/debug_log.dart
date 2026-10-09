@@ -18,7 +18,8 @@ class LogEntry {
   /// 形如 `[16:05:31.482] INFO  ssh: connected`
   String get formatted {
     String p2(int v) => v.toString().padLeft(2, '0');
-    final t = '${p2(time.hour)}:${p2(time.minute)}:${p2(time.second)}'
+    final t =
+        '${p2(time.hour)}:${p2(time.minute)}:${p2(time.second)}'
         '.${time.millisecond.toString().padLeft(3, '0')}';
     return '[$t] ${level.name.toUpperCase().padRight(5)} $tag: $message';
   }

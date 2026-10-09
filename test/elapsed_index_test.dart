@@ -11,11 +11,11 @@ import 'package:pi_yz/server/elapsed_index.dart';
 
 /// 造一条消息。`at` 为 null 表示没有时间戳（服务端事件里很常见）。
 ChatMessage msg(int index, {int? at}) => ChatMessage(
-      key: 'k$index',
-      role: index.isEven ? 'user' : 'assistant',
-      text: '第 $index 条',
-      timestamp: at,
-    );
+  key: 'k$index',
+  role: index.isEven ? 'user' : 'assistant',
+  text: '第 $index 条',
+  timestamp: at,
+);
 
 /// 造一个带 n 条消息、每条相隔 step 毫秒的会话，起点 base。
 ChatReducer chatWith(int n, {int base = 1700000000000, int step = 1000}) {
@@ -161,8 +161,11 @@ void main() {
 
     final after = idx.of(chat);
 
-    expect(identical(before, after), isTrue,
-        reason: '索引只看 key 与 timestamp，text 变化不该触发重算');
+    expect(
+      identical(before, after),
+      isTrue,
+      reason: '索引只看 key 与 timestamp，text 变化不该触发重算',
+    );
     expect(idx.misses, 1);
   });
 

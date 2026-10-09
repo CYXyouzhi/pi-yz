@@ -71,7 +71,10 @@ class InfoRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: NeuSpace.n4),
       child: Row(
         children: [
-          Text(label, style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.muted)),
+          Text(
+            label,
+            style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.muted),
+          ),
           const Spacer(),
           Text(
             value,
@@ -98,7 +101,10 @@ class PrefLabel extends StatelessWidget {
     final t = context.neu;
     return Padding(
       padding: const EdgeInsets.only(top: NeuSpace.n12, bottom: NeuSpace.n6),
-      child: Text(text, style: TextStyle(fontSize: NeuFonts.small, color: t.muted)),
+      child: Text(
+        text,
+        style: TextStyle(fontSize: NeuFonts.small, color: t.muted),
+      ),
     );
   }
 }
@@ -121,14 +127,20 @@ class NotifToggle extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Text(label, style: TextStyle(fontSize: NeuFonts.bodyMid, color: t.fg)),
+            child: Text(
+              label,
+              style: TextStyle(fontSize: NeuFonts.bodyMid, color: t.fg),
+            ),
           ),
           NeuPressable(
             onTap: () => onChanged(!value),
             radius: NeuRadii.sm,
             flat: !value,
             alwaysInset: value,
-            padding: EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n7),
+            padding: EdgeInsets.symmetric(
+              horizontal: NeuSpace.n12,
+              vertical: NeuSpace.n7,
+            ),
             child: Text(
               value ? I18n.t('ui.8493205602') : I18n.t('ui.d58a55bcee'),
               style: TextStyle(
@@ -179,7 +191,9 @@ class PrefChips extends StatelessWidget {
                     option.$1,
                     style: TextStyle(
                       fontSize: NeuFonts.sub,
-                      color: (current - option.$2).abs() <= 0.001 ? t.accentInk : t.muted,
+                      color: (current - option.$2).abs() <= 0.001
+                          ? t.accentInk
+                          : t.muted,
                     ),
                   ),
                 ),
@@ -209,7 +223,10 @@ class PrefRow extends StatelessWidget {
     final t = context.neu;
     return NeuRaised(
       radius: NeuRadii.sm,
-      padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n10, vertical: NeuSpace.n6),
+      padding: const EdgeInsets.symmetric(
+        horizontal: NeuSpace.n10,
+        vertical: NeuSpace.n6,
+      ),
       child: Row(
         children: [
           Expanded(
@@ -225,7 +242,10 @@ class PrefRow extends StatelessWidget {
             onTap: onAction,
             radius: 8,
             flat: true,
-            padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n10, vertical: NeuSpace.n5),
+            padding: const EdgeInsets.symmetric(
+              horizontal: NeuSpace.n10,
+              vertical: NeuSpace.n5,
+            ),
             child: Text(
               actionLabel,
               style: TextStyle(fontSize: NeuFonts.sub, color: t.accentInk),

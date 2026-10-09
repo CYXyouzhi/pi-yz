@@ -32,7 +32,8 @@ class ModelRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.neu;
-    final current = chat.model != null &&
+    final current =
+        chat.model != null &&
         chat.model!.provider == model.provider &&
         chat.model!.id == model.id;
 
@@ -44,8 +45,11 @@ class ModelRow extends StatelessWidget {
           : () async {
               // 没有打开的会话就没法切模型 —— 服务端是往会话上设的
               if (store.currentSessionId == null) {
-                NeuToast.show(context,
-                    message: I18n.t('ui.b35af26ccf'), icon: IconId.warn);
+                NeuToast.show(
+                  context,
+                  message: I18n.t('ui.b35af26ccf'),
+                  icon: IconId.warn,
+                );
                 return;
               }
               await store.setModel(model.provider, model.id);
@@ -56,7 +60,10 @@ class ModelRow extends StatelessWidget {
                 icon: IconId.check,
               );
             },
-      padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n10, vertical: NeuSpace.n10),
+      padding: const EdgeInsets.symmetric(
+        horizontal: NeuSpace.n10,
+        vertical: NeuSpace.n10,
+      ),
       child: Row(
         children: [
           Expanded(
@@ -71,10 +78,7 @@ class ModelRow extends StatelessWidget {
                   style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.fg),
                 ),
                 Text(
-                  '${I18n.tp('ui.b7077d029c', {
-                    'provider': model.provider,
-                    'window': model.contextWindow ?? '?',
-                  })}'
+                  '${I18n.tp('ui.b7077d029c', {'provider': model.provider, 'window': model.contextWindow ?? '?'})}'
                   '${model.reasoning ? I18n.t('ui.af181ac8b2') : ''}',
                   style: TextStyle(fontSize: NeuFonts.micro, color: t.muted),
                 ),
@@ -109,7 +113,11 @@ class CommandRow extends StatelessWidget {
             maxLines: 2,
             // 原先靠把宽度从 140 加到 168 来避免截断 —— 名字再长一样会截，加省略号才治本
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: NeuFonts.label, fontFamily: 'monospace', color: t.fg),
+            style: TextStyle(
+              fontSize: NeuFonts.label,
+              fontFamily: 'monospace',
+              color: t.fg,
+            ),
           ),
         ),
         Expanded(
@@ -172,17 +180,25 @@ class CommandGroup extends StatelessWidget {
 
     if (items.isNotEmpty && !groupOpen) {
       return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n10, vertical: NeuSpace.n6),
+        padding: const EdgeInsets.symmetric(
+          horizontal: NeuSpace.n10,
+          vertical: NeuSpace.n6,
+        ),
         child: NeuPressable(
           flat: true,
           onTap: () => onOpen(title),
-          padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n10, vertical: NeuSpace.n10),
+          padding: const EdgeInsets.symmetric(
+            horizontal: NeuSpace.n10,
+            vertical: NeuSpace.n10,
+          ),
           child: Row(
             children: [
               NeuIcon(IconId.chevronRight, size: 13, color: t.muted),
               SizedBox(width: NeuSpace.n6),
-              Text('$title（${items.length}）',
-                  style: TextStyle(fontSize: NeuFonts.sub, color: t.accentInk)),
+              Text(
+                '$title（${items.length}）',
+                style: TextStyle(fontSize: NeuFonts.sub, color: t.accentInk),
+              ),
             ],
           ),
         ),
@@ -191,30 +207,46 @@ class CommandGroup extends StatelessWidget {
 
     if (items.isEmpty) {
       return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n10, vertical: NeuSpace.n10),
+        padding: const EdgeInsets.symmetric(
+          horizontal: NeuSpace.n10,
+          vertical: NeuSpace.n10,
+        ),
         child: Row(
           children: [
-            Text(title, style: TextStyle(fontSize: NeuFonts.sub, color: t.muted)),
+            Text(
+              title,
+              style: TextStyle(fontSize: NeuFonts.sub, color: t.muted),
+            ),
             Spacer(),
-            Text(emptyHint.isEmpty ? I18n.t('ui.b7612b71c0') : emptyHint,
-                style: TextStyle(fontSize: NeuFonts.badge, color: t.muted)),
+            Text(
+              emptyHint.isEmpty ? I18n.t('ui.b7612b71c0') : emptyHint,
+              style: TextStyle(fontSize: NeuFonts.badge, color: t.muted),
+            ),
           ],
         ),
       );
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n10, vertical: NeuSpace.n8),
+      padding: const EdgeInsets.symmetric(
+        horizontal: NeuSpace.n10,
+        vertical: NeuSpace.n8,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Text('$title（${items.length}）',
-                  style: TextStyle(fontSize: NeuFonts.sub, color: t.accentInk)),
+              Text(
+                '$title（${items.length}）',
+                style: TextStyle(fontSize: NeuFonts.sub, color: t.accentInk),
+              ),
               if (tapHint != null) ...[
                 const Spacer(),
-                Text(tapHint!, style: TextStyle(fontSize: NeuFonts.tiny, color: t.muted)),
+                Text(
+                  tapHint!,
+                  style: TextStyle(fontSize: NeuFonts.tiny, color: t.muted),
+                ),
               ],
             ],
           ),
@@ -226,8 +258,10 @@ class CommandGroup extends StatelessWidget {
               child: CommandRow(item, onTapItem),
             ),
           if (items.length > 12)
-            Text(I18n.tp('ui.9030449893', {'n': items.length - 12}),
-                style: TextStyle(fontSize: NeuFonts.micro, color: t.muted)),
+            Text(
+              I18n.tp('ui.9030449893', {'n': items.length - 12}),
+              style: TextStyle(fontSize: NeuFonts.micro, color: t.muted),
+            ),
         ],
       ),
     );

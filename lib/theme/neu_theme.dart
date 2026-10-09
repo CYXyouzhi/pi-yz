@@ -10,7 +10,9 @@ import 'neu.dart';
 /// 由 [NeuCanvas] 负责，Scaffold 保持透明即可。
 ThemeData buildNeuTheme(NeuTokens t, {required Brightness brightness}) {
   final isDark = brightness == Brightness.dark;
-  final base = isDark ? ThemeData.dark(useMaterial3: true) : ThemeData.light(useMaterial3: true);
+  final base = isDark
+      ? ThemeData.dark(useMaterial3: true)
+      : ThemeData.light(useMaterial3: true);
 
   // 文字层级全部映射到 token：设计稿里标题用 ui-rounded、正文用系统字、
   // 数据用等宽字。Android 没有 ui-rounded，标题靠 700 字重维持「更实」的层级差。
@@ -88,7 +90,11 @@ ThemeData buildNeuTheme(NeuTokens t, {required Brightness brightness}) {
 /// **光源是固定的**：设计稿特别说明旧版让光斑漂移是错的 ——
 /// 光一移动，所有阴影的方向就全错了。所以这里只是一幅静态背景。
 class NeuCanvas extends StatelessWidget {
-  const NeuCanvas({super.key, required this.child, this.brightness = Brightness.light});
+  const NeuCanvas({
+    super.key,
+    required this.child,
+    this.brightness = Brightness.light,
+  });
 
   final Widget child;
   final Brightness brightness;
@@ -101,7 +107,10 @@ class NeuCanvas extends StatelessWidget {
       // RepaintBoundary：光源层是静态装饰，交互时不该跟着重绘
       child: RepaintBoundary(
         child: CustomPaint(
-          painter: _OrbPainter(tokens: t, isDark: brightness == Brightness.dark),
+          painter: _OrbPainter(
+            tokens: t,
+            isDark: brightness == Brightness.dark,
+          ),
           child: child,
         ),
       ),

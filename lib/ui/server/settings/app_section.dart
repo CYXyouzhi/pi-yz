@@ -59,13 +59,18 @@ class AppSection extends StatelessWidget {
               final prefs = AppPrefs.instance;
               return NeuRaised(
                 radius: NeuRadii.lg,
-                padding: EdgeInsets.fromLTRB(NeuSpace.n14, NeuSpace.n10, NeuSpace.n14, NeuSpace.n14),
+                padding: EdgeInsets.fromLTRB(
+                  NeuSpace.n14,
+                  NeuSpace.n10,
+                  NeuSpace.n14,
+                  NeuSpace.n14,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    PrefLabel(I18n.t('settings.fontSize', context: context),
-                    ),
-                    PrefChips([
+                    PrefLabel(I18n.t('settings.fontSize', context: context)),
+                    PrefChips(
+                      [
                         (I18n.t('ui.391b8fa9c7'), 0.9),
                         (I18n.t('ui.544fac400d'), 1.0),
                         (I18n.t('ui.ab18e30c0d'), 1.15),
@@ -74,26 +79,40 @@ class AppSection extends StatelessWidget {
                       current: prefs.fontScale,
                       onPick: prefs.setFontScale,
                     ),
-                    PrefLabel(I18n.t('settings.lineHeight', context: context),
-                    ),
-                    PrefChips([(I18n.t('ui.03e59bb33c'), 1.3), (I18n.t('ui.544fac400d'), 1.45), (I18n.t('ui.43e534acf9'), 1.7)],
+                    PrefLabel(I18n.t('settings.lineHeight', context: context)),
+                    PrefChips(
+                      [
+                        (I18n.t('ui.03e59bb33c'), 1.3),
+                        (I18n.t('ui.544fac400d'), 1.45),
+                        (I18n.t('ui.43e534acf9'), 1.7),
+                      ],
                       current: prefs.lineHeight,
                       onPick: prefs.setLineHeight,
                     ),
                     PrefLabel(I18n.t('settings.enter', context: context)),
-                    PrefChips([(I18n.t('ui.2629bdbfad'), 0.0), (I18n.t('ui.63000cee55'), 1.0)],
+                    PrefChips(
+                      [
+                        (I18n.t('ui.2629bdbfad'), 0.0),
+                        (I18n.t('ui.63000cee55'), 1.0),
+                      ],
                       current: prefs.sendWithEnter ? 1.0 : 0.0,
                       onPick: (v) => prefs.setSendWithEnter(v > 0.5),
                     ),
-                    PrefLabel(I18n.t('settings.defaultWorkspace', context: context),
+                    PrefLabel(
+                      I18n.t('settings.defaultWorkspace', context: context),
                     ),
-                    PrefRow(prefs.defaultCwd.isEmpty ? I18n.t('ui.fe2d26a257') : prefs.defaultCwd,
+                    PrefRow(
+                      prefs.defaultCwd.isEmpty
+                          ? I18n.t('ui.fe2d26a257')
+                          : prefs.defaultCwd,
                       actionLabel: I18n.t('common.select'),
                       onAction: () => onPickWorkspace(),
                     ),
-                    PrefLabel(I18n.t('settings.defaultModel', context: context),
+                    PrefLabel(
+                      I18n.t('settings.defaultModel', context: context),
                     ),
-                    PrefRow((store.defaultModelId == null ||
+                    PrefRow(
+                      (store.defaultModelId == null ||
                               store.defaultModelProvider == null)
                           ? I18n.t('ui.56420c43ac')
                           : '${store.defaultModelId} · ${store.defaultModelProvider}',
@@ -123,7 +142,10 @@ class AppSection extends StatelessWidget {
                               Text(
                                 list.isEmpty
                                     ? I18n.t('ui.577d49c54f')
-                                    : I18n.tp('ui.745a442139', {'n': list.length, 'size': sizeLabel}),
+                                    : I18n.tp('ui.745a442139', {
+                                        'n': list.length,
+                                        'size': sizeLabel,
+                                      }),
                                 style: TextStyle(
                                   fontSize: NeuFonts.small,
                                   color: t.muted,
@@ -132,7 +154,8 @@ class AppSection extends StatelessWidget {
                               SizedBox(height: NeuSpace.n6),
                               CollapsibleText(
                                 // 用插值而不是 +：三段的语言不同，拼接位置由每条译文自己决定
-                                text: '${I18n.tp('ui.c97d59e36c', {'n': SessionCache.maxSessions})}'
+                                text:
+                                    '${I18n.tp('ui.c97d59e36c', {'n': SessionCache.maxSessions})}'
                                     '${I18n.tp('ui.3c7de3c73a', {'n': SessionCache.maxMessages})}'
                                     '${I18n.t('ui.6b1e5ff3a1')} ${SessionCache.maxCharsPerSession ~/ 1024} KB'
                                     '${I18n.t('ui.2e2b64d0b1')}',
@@ -144,7 +167,9 @@ class AppSection extends StatelessWidget {
                               ),
                               for (final entry in list)
                                 Padding(
-                                  padding: const EdgeInsets.only(top: NeuSpace.n6),
+                                  padding: const EdgeInsets.only(
+                                    top: NeuSpace.n6,
+                                  ),
                                   child: Row(
                                     children: [
                                       Expanded(
@@ -222,15 +247,16 @@ class AppSection extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: NeuSpace.n10),
-                    PrefLabel(I18n.t('settings.localData', context: context),
-                    ),
+                    PrefLabel(I18n.t('settings.localData', context: context)),
                     Row(
                       children: [
                         Expanded(
                           child: NeuPressable(
                             onTap: () => onClearData(),
                             radius: NeuRadii.sm,
-                            padding: EdgeInsets.symmetric(vertical: NeuSpace.n10),
+                            padding: EdgeInsets.symmetric(
+                              vertical: NeuSpace.n10,
+                            ),
                             child: Center(
                               child: Text(
                                 I18n.t('settings.clear', context: context),
@@ -251,7 +277,9 @@ class AppSection extends StatelessWidget {
                               ),
                             ),
                             radius: NeuRadii.sm,
-                            padding: EdgeInsets.symmetric(vertical: NeuSpace.n10),
+                            padding: EdgeInsets.symmetric(
+                              vertical: NeuSpace.n10,
+                            ),
                             child: Center(
                               child: Text(
                                 I18n.t('settings.logs', context: context),

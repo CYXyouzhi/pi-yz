@@ -9,11 +9,11 @@ import 'package:pi_yz/server/session_cache.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 ChatMessage msg(int index, {String text = ''}) => ChatMessage(
-      key: 'k$index',
-      role: index.isEven ? 'user' : 'assistant',
-      text: text.isEmpty ? '第 $index 条消息' : text,
-      timestamp: 1700000000000 + index,
-    );
+  key: 'k$index',
+  role: index.isEven ? 'user' : 'assistant',
+  text: text.isEmpty ? '第 $index 条消息' : text,
+  timestamp: 1700000000000 + index,
+);
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
@@ -30,7 +30,11 @@ void main() {
     final cached = await SessionCache.load('s1');
     expect(cached, isNotNull);
     expect(cached!.messages.length, SessionCache.maxMessages);
-    expect(cached.droppedCount, 200 - SessionCache.maxMessages, reason: '丢掉的条数要能报出来');
+    expect(
+      cached.droppedCount,
+      200 - SessionCache.maxMessages,
+      reason: '丢掉的条数要能报出来',
+    );
     // 留下的必须是最新的那批：最后一条与原始最后一条一致
     expect(cached.messages.last.text, messages.last.text);
   });
@@ -44,8 +48,10 @@ void main() {
       messages: [msg(0, text: huge)],
     );
     final cached = await SessionCache.load('s2');
-    expect(cached!.messages.single.text.length,
-        lessThanOrEqualTo(SessionCache.maxCharsPerMessage + 20));
+    expect(
+      cached!.messages.single.text.length,
+      lessThanOrEqualTo(SessionCache.maxCharsPerMessage + 20),
+    );
     expect(cached.messages.single.text, endsWith('（离线缓存截断）'));
   });
 
@@ -66,9 +72,24 @@ void main() {
   });
 
   test('同一会话重复保存只占一份，并且排到最前', () async {
-    await SessionCache.save(sessionId: 'a', name: 'A', cwd: '', messages: [msg(1)]);
-    await SessionCache.save(sessionId: 'b', name: 'B', cwd: '', messages: [msg(2)]);
-    await SessionCache.save(sessionId: 'a', name: 'A2', cwd: '', messages: [msg(3), msg(4)]);
+    await SessionCache.save(
+      sessionId: 'a',
+      name: 'A',
+      cwd: '',
+      messages: [msg(1)],
+    );
+    await SessionCache.save(
+      sessionId: 'b',
+      name: 'B',
+      cwd: '',
+      messages: [msg(2)],
+    );
+    await SessionCache.save(
+      sessionId: 'a',
+      name: 'A2',
+      cwd: '',
+      messages: [msg(3), msg(4)],
+    );
 
     final entries = await SessionCache.entries();
     expect(entries.length, 2);
@@ -78,8 +99,18 @@ void main() {
   });
 
   test('清空与单条清除都真的生效', () async {
-    await SessionCache.save(sessionId: 'x', name: '', cwd: '', messages: [msg(1)]);
-    await SessionCache.save(sessionId: 'y', name: '', cwd: '', messages: [msg(2)]);
+    await SessionCache.save(
+      sessionId: 'x',
+      name: '',
+      cwd: '',
+      messages: [msg(1)],
+    );
+    await SessionCache.save(
+      sessionId: 'y',
+      name: '',
+      cwd: '',
+      messages: [msg(2)],
+    );
 
     await SessionCache.removeOne('x');
     expect(await SessionCache.load('x'), isNull);

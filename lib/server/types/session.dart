@@ -4,9 +4,9 @@
 // 所以调用方 import 路径不用改）。
 
 import 'dart:convert';
+
 import '../i18n.dart';
 import 'messages.dart';
-
 
 /// 服务端上的一条会话（列表页用）
 class ServerSession {
@@ -40,7 +40,10 @@ class ServerSession {
 
   /// 工作区显示名：只取路径最后一段
   String get workspaceName {
-    final parts = cwd.replaceAll('\\', '/').split('/').where((s) => s.isNotEmpty);
+    final parts = cwd
+        .replaceAll('\\', '/')
+        .split('/')
+        .where((s) => s.isNotEmpty);
     return parts.isEmpty ? cwd : parts.last;
   }
 
@@ -49,30 +52,29 @@ class ServerSession {
 
   /// 改名后的本地副本（不等服务端列表刷新）
   ServerSession withName(String? newName) => ServerSession(
-        id: id,
-        cwd: cwd,
-        preview: preview,
-        messageCount: messageCount,
-        name: newName,
-        created: created,
-        modified: modified,
-        parentId: parentId,
-      );
+    id: id,
+    cwd: cwd,
+    preview: preview,
+    messageCount: messageCount,
+    name: newName,
+    created: created,
+    modified: modified,
+    parentId: parentId,
+  );
 
   factory ServerSession.fromJson(Map<String, dynamic> json) => ServerSession(
-        id: json['id'] as String,
-        cwd: json['cwd'] as String? ?? '',
-        preview: json['preview'] as String? ?? '',
-        messageCount: (json['messageCount'] as num?)?.toInt() ?? 0,
-        name: json['name'] as String?,
-        created: json['created'] as String?,
-        modified: json['modified'] as String?,
-        parentId: json['parentId'] as String?,
-      );
+    id: json['id'] as String,
+    cwd: json['cwd'] as String? ?? '',
+    preview: json['preview'] as String? ?? '',
+    messageCount: (json['messageCount'] as num?)?.toInt() ?? 0,
+    name: json['name'] as String?,
+    created: json['created'] as String?,
+    modified: json['modified'] as String?,
+    parentId: json['parentId'] as String?,
+  );
 }
 
 /// 模型信息
-
 
 /// 模型信息
 class ModelInfo {
@@ -93,16 +95,15 @@ class ModelInfo {
   String get key => '$provider/$id';
 
   factory ModelInfo.fromJson(Map<String, dynamic> json) => ModelInfo(
-        provider: json['provider'] as String? ?? '',
-        id: json['id'] as String? ?? '',
-        name: json['name'] as String? ?? json['id'] as String? ?? '',
-        contextWindow: (json['contextWindow'] as num?)?.toInt(),
-        reasoning: json['reasoning'] as bool? ?? false,
-      );
+    provider: json['provider'] as String? ?? '',
+    id: json['id'] as String? ?? '',
+    name: json['name'] as String? ?? json['id'] as String? ?? '',
+    contextWindow: (json['contextWindow'] as num?)?.toInt(),
+    reasoning: json['reasoning'] as bool? ?? false,
+  );
 }
 
 /// token 用量
-
 
 /// SSE 首帧：会话当前状态
 class SessionSnapshot {
@@ -142,7 +143,9 @@ class SessionSnapshot {
       messages: PiMessage.listFromJson(json['messages']),
       thinkingLevel: json['thinkingLevel'] as String? ?? 'medium',
       isStreaming: json['isStreaming'] as bool? ?? false,
-      model: rawModel is Map ? ModelInfo.fromJson(rawModel.cast<String, dynamic>()) : null,
+      model: rawModel is Map
+          ? ModelInfo.fromJson(rawModel.cast<String, dynamic>())
+          : null,
       sessionName: json['sessionName'] as String?,
       autoCompactionEnabled: json['autoCompactionEnabled'] as bool? ?? true,
       historyTotal: (json['historyTotal'] as num?)?.toInt() ?? 0,
@@ -152,7 +155,6 @@ class SessionSnapshot {
 }
 
 /// 一条 SSE 事件
-
 
 /// 一条 SSE 事件
 class ServerEvent {
@@ -170,7 +172,6 @@ class ServerEvent {
 }
 
 /// 命令响应
-
 
 /// 命令响应
 class CommandResponse {
@@ -194,7 +195,8 @@ class CommandResponse {
     return b is Map ? b.cast<String, dynamic>() : null;
   }
 
-  factory CommandResponse.fromJson(Map<String, dynamic> json) => CommandResponse(
+  factory CommandResponse.fromJson(Map<String, dynamic> json) =>
+      CommandResponse(
         command: json['command'] as String? ?? '',
         success: json['success'] as bool? ?? false,
         id: json['id'] as String?,
@@ -204,10 +206,10 @@ class CommandResponse {
 
   @override
   String toString() => jsonEncode({
-        'command': command,
-        'success': success,
-        if (error != null) 'error': error,
-      });
+    'command': command,
+    'success': success,
+    if (error != null) 'error': error,
+  });
 }
 
 /// 文件条目（目录列表里的一项）

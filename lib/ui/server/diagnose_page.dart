@@ -62,7 +62,11 @@ class _DiagnosePageState extends State<DiagnosePage> {
     if (report == null) return;
     await Clipboard.setData(ClipboardData(text: report.toText()));
     if (!mounted) return;
-    NeuToast.show(context, message: I18n.t('ui.c92c4d1779'), icon: IconId.check);
+    NeuToast.show(
+      context,
+      message: I18n.t('ui.c92c4d1779'),
+      icon: IconId.check,
+    );
   }
 
   Future<void> _share() async {
@@ -77,7 +81,11 @@ class _DiagnosePageState extends State<DiagnosePage> {
       // 分享面板拉不起来时退回剪贴板，不把用户卡在这里
       await Clipboard.setData(ClipboardData(text: report.toText()));
       if (!mounted) return;
-      NeuToast.show(context, message: I18n.t('ui.0f584a2971'), icon: IconId.info);
+      NeuToast.show(
+        context,
+        message: I18n.t('ui.0f584a2971'),
+        icon: IconId.info,
+      );
     }
   }
 
@@ -89,7 +97,12 @@ class _DiagnosePageState extends State<DiagnosePage> {
       backgroundColor: Colors.transparent,
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n8, NeuSpace.n18, 28),
+          padding: const EdgeInsets.fromLTRB(
+            NeuSpace.n18,
+            NeuSpace.n8,
+            NeuSpace.n18,
+            28,
+          ),
           children: [
             Row(
               children: [
@@ -97,7 +110,10 @@ class _DiagnosePageState extends State<DiagnosePage> {
                   onTap: () => Navigator.of(context).maybePop(),
                   radius: 12,
                   child: const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n12),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: NeuSpace.n12,
+                      vertical: NeuSpace.n12,
+                    ),
                     child: NeuIcon(IconId.chevronLeft, size: 16),
                   ),
                 ),
@@ -132,14 +148,30 @@ class _DiagnosePageState extends State<DiagnosePage> {
                     children: [
                       NeuIcon(IconId.server, size: 15, color: t.accentInk),
                       SizedBox(width: NeuSpace.n8),
-                      Text(I18n.t('ui.a1395a5eec'),
-                          style: TextStyle(fontSize: NeuFonts.bodyMid, fontWeight: FontWeight.w700, color: t.fg)),
+                      Text(
+                        I18n.t('ui.a1395a5eec'),
+                        style: TextStyle(
+                          fontSize: NeuFonts.bodyMid,
+                          fontWeight: FontWeight.w700,
+                          color: t.fg,
+                        ),
+                      ),
                     ],
                   ),
                   SizedBox(height: NeuSpace.n10),
-                  _kv(t, I18n.t('ui.7650487a87'), '${widget.host}:${widget.port}'),
+                  _kv(
+                    t,
+                    I18n.t('ui.7650487a87'),
+                    '${widget.host}:${widget.port}',
+                  ),
                   _kv(t, 'token', maskToken(widget.token)),
-                  _kv(t, I18n.t('ui.96dba48253'), widget.defaultCwd?.isNotEmpty == true ? widget.defaultCwd! : I18n.t('ui.cb8fd1da6d')),
+                  _kv(
+                    t,
+                    I18n.t('ui.96dba48253'),
+                    widget.defaultCwd?.isNotEmpty == true
+                        ? widget.defaultCwd!
+                        : I18n.t('ui.cb8fd1da6d'),
+                  ),
                 ],
               ),
             ),
@@ -170,8 +202,13 @@ class _DiagnosePageState extends State<DiagnosePage> {
                             ),
                           ),
                         ),
-                        Text('${report.elapsed.inMilliseconds} ms',
-                            style: TextStyle(fontSize: NeuFonts.label, color: t.muted)),
+                        Text(
+                          '${report.elapsed.inMilliseconds} ms',
+                          style: TextStyle(
+                            fontSize: NeuFonts.label,
+                            color: t.muted,
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: NeuSpace.n12),
@@ -188,14 +225,24 @@ class _DiagnosePageState extends State<DiagnosePage> {
                   child: NeuPressable(
                     onTap: _running ? null : _run,
                     radius: NeuRadii.md,
-                    padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: NeuSpace.n13,
+                      vertical: NeuSpace.n13,
+                    ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         NeuIcon(IconId.sync, size: 15, color: t.muted),
                         SizedBox(width: NeuSpace.n7),
-                        Text(_running ? I18n.t('ui.6d2374cab5') : I18n.t('ui.eb7b58bbb4'),
-                            style: TextStyle(fontSize: NeuFonts.bodyTight, color: t.muted)),
+                        Text(
+                          _running
+                              ? I18n.t('ui.6d2374cab5')
+                              : I18n.t('ui.eb7b58bbb4'),
+                          style: TextStyle(
+                            fontSize: NeuFonts.bodyTight,
+                            color: t.muted,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -205,14 +252,22 @@ class _DiagnosePageState extends State<DiagnosePage> {
                   child: NeuPressable(
                     onTap: report == null ? null : _copy,
                     radius: NeuRadii.md,
-                    padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: NeuSpace.n13,
+                      vertical: NeuSpace.n13,
+                    ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         NeuIcon(IconId.copy, size: 15, color: t.accentInk),
                         SizedBox(width: NeuSpace.n7),
-                        Text(I18n.t('ui.cde0ad3061'),
-                            style: TextStyle(fontSize: NeuFonts.bodyTight, color: t.accentInk)),
+                        Text(
+                          I18n.t('ui.cde0ad3061'),
+                          style: TextStyle(
+                            fontSize: NeuFonts.bodyTight,
+                            color: t.accentInk,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -223,13 +278,22 @@ class _DiagnosePageState extends State<DiagnosePage> {
             NeuPressable(
               onTap: report == null ? null : _share,
               radius: NeuRadii.md,
-              padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
+              padding: const EdgeInsets.symmetric(
+                horizontal: NeuSpace.n13,
+                vertical: NeuSpace.n13,
+              ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   NeuIcon(IconId.share, size: 15, color: t.muted),
                   SizedBox(width: NeuSpace.n7),
-                  Text(I18n.t('ui.bfa525d4c6'), style: TextStyle(fontSize: NeuFonts.bodyTight, color: t.muted)),
+                  Text(
+                    I18n.t('ui.bfa525d4c6'),
+                    style: TextStyle(
+                      fontSize: NeuFonts.bodyTight,
+                      color: t.muted,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -252,10 +316,20 @@ class _DiagnosePageState extends State<DiagnosePage> {
         children: [
           SizedBox(
             width: 76,
-            child: Text(key, style: TextStyle(fontSize: NeuFonts.small, color: t.muted)),
+            child: Text(
+              key,
+              style: TextStyle(fontSize: NeuFonts.small, color: t.muted),
+            ),
           ),
           Expanded(
-            child: Text(value, style: TextStyle(fontSize: NeuFonts.sub, color: t.fg, height: 1.5)),
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: NeuFonts.sub,
+                color: t.fg,
+                height: 1.5,
+              ),
+            ),
           ),
         ],
       ),
@@ -283,14 +357,22 @@ class _DiagnosePageState extends State<DiagnosePage> {
               children: [
                 Text(
                   '${step.title}：${step.detail}',
-                  style: TextStyle(fontSize: NeuFonts.sub, color: t.fg, height: 1.5),
+                  style: TextStyle(
+                    fontSize: NeuFonts.sub,
+                    color: t.fg,
+                    height: 1.5,
+                  ),
                 ),
                 if (step.hint != null)
                   Padding(
                     padding: const EdgeInsets.only(top: NeuSpace.n3),
                     child: Text(
                       '→ ${step.hint}',
-                      style: TextStyle(fontSize: NeuFonts.label, color: t.accentInk, height: 1.5),
+                      style: TextStyle(
+                        fontSize: NeuFonts.label,
+                        color: t.accentInk,
+                        height: 1.5,
+                      ),
                     ),
                   ),
               ],

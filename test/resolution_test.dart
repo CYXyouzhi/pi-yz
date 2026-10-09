@@ -69,11 +69,23 @@ void main() {
         setPhoneSurface(tester, width: width);
         await boot(tester);
         // 溢出会被报告成异常；显式确认没有
-        expect(tester.takeException(), isNull, reason: '${width.toInt()}dp 启动阶段出现异常（含溢出）');
+        expect(
+          tester.takeException(),
+          isNull,
+          reason: '${width.toInt()}dp 启动阶段出现异常（含溢出）',
+        );
 
         // 前提：底部 Tab 真的在（否则下面的遍历是空转）
-        expect(find.text('会话'), findsWidgets, reason: '${width.toInt()}dp：找不到「会话」Tab');
-        expect(find.text('设置'), findsWidgets, reason: '${width.toInt()}dp：找不到「设置」Tab');
+        expect(
+          find.text('会话'),
+          findsWidgets,
+          reason: '${width.toInt()}dp：找不到「会话」Tab',
+        );
+        expect(
+          find.text('设置'),
+          findsWidgets,
+          reason: '${width.toInt()}dp：找不到「设置」Tab',
+        );
 
         for (final tab in ['会话', '设置']) {
           await tapTab(tester, tab);
@@ -108,7 +120,8 @@ void main() {
         expect(
           bare.bottom - padded.bottom,
           closeTo(kBottomBar.bottom, 1.0),
-          reason: '${width.toInt()}dp：底部 Tab 没有为 ${kBottomBar.bottom}dp 的手势条让出空间'
+          reason:
+              '${width.toInt()}dp：底部 Tab 没有为 ${kBottomBar.bottom}dp 的手势条让出空间'
               '（实际让位 ${(bare.bottom - padded.bottom).toStringAsFixed(1)}dp）',
         );
       });
@@ -134,7 +147,8 @@ void main() {
         expect(
           padded.top - bare.top,
           closeTo(kTopNotch.top, 1.0),
-          reason: '${width.toInt()}dp：顶部内容没有为 ${kTopNotch.top}dp 的刘海让出空间'
+          reason:
+              '${width.toInt()}dp：顶部内容没有为 ${kTopNotch.top}dp 的刘海让出空间'
               '（实际让位 ${(padded.top - bare.top).toStringAsFixed(1)}dp）',
         );
       });
@@ -149,23 +163,32 @@ void main() {
 
         for (final label in ['会话', '设置']) {
           // 硬断言，不静默跳过
-          expect(find.text(label), findsWidgets, reason: '前提：底部 Tab「$label」应该存在');
+          expect(
+            find.text(label),
+            findsWidgets,
+            reason: '前提：底部 Tab「$label」应该存在',
+          );
 
           // 底部 Tab 用 GestureDetector 承载点击（已实测：不是 InkWell）
           final tappable = find
-              .ancestor(of: find.text(label), matching: find.byType(GestureDetector))
+              .ancestor(
+                of: find.text(label),
+                matching: find.byType(GestureDetector),
+              )
               .first;
           final size = tester.getSize(tappable);
 
           expect(
             size.height,
             greaterThanOrEqualTo(kMinTapTarget - 0.5),
-            reason: '${width.toInt()}dp：「$label」的可点高度只有 ${size.height}dp，低于 $kMinTapTarget',
+            reason:
+                '${width.toInt()}dp：「$label」的可点高度只有 ${size.height}dp，低于 $kMinTapTarget',
           );
           expect(
             size.width,
             greaterThanOrEqualTo(kMinTapTarget - 0.5),
-            reason: '${width.toInt()}dp：「$label」的可点宽度只有 ${size.width}dp，低于 $kMinTapTarget',
+            reason:
+                '${width.toInt()}dp：「$label」的可点宽度只有 ${size.width}dp，低于 $kMinTapTarget',
           );
         }
       });
@@ -187,11 +210,7 @@ void main() {
         if (section.evaluate().isEmpty) continue;
         await tapVisible(tester, section);
         opened += 1;
-        expect(
-          tester.takeException(),
-          isNull,
-          reason: '360dp：展开「$title」后溢出',
-        );
+        expect(tester.takeException(), isNull, reason: '360dp：展开「$title」后溢出');
       }
       // 至少展开到一块，否则这条用例没验证到东西
       expect(opened, greaterThan(0), reason: '360dp：一个分组都没展开，这条用例等于没跑');
@@ -214,8 +233,12 @@ void main() {
       for (final title in ['连接', '外观']) {
         expect(find.text(title), findsWidgets, reason: '前提：设置页应该有「$title」分组');
 
-        final tappable =
-            find.ancestor(of: find.text(title), matching: find.byType(GestureDetector)).first;
+        final tappable = find
+            .ancestor(
+              of: find.text(title),
+              matching: find.byType(GestureDetector),
+            )
+            .first;
         expect(
           tester.getSize(tappable).height,
           greaterThanOrEqualTo(kMinTapTarget - 0.5),

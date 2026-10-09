@@ -99,7 +99,10 @@ void main() {
       // 这是整套材质的物理一致性 —— 搞反了凹槽会读成隆起
       final l = NeuTokens.light;
       expect(l.wellHi.computeLuminance() < l.well.computeLuminance(), isTrue);
-      expect(l.surfaceHi.computeLuminance() > l.surface.computeLuminance(), isTrue);
+      expect(
+        l.surfaceHi.computeLuminance() > l.surface.computeLuminance(),
+        isTrue,
+      );
       expect(l.bgHi.computeLuminance() > l.bgLo.computeLuminance(), isTrue);
     });
   });
@@ -114,14 +117,26 @@ void main() {
           reason: '${entry.key.name} 解析出空路径（数据或解析器有问题）',
         );
         // 光学框是 3–21；留一点余量给描边与个别出框的笔锋
-        expect(bounds.left, greaterThanOrEqualTo(-0.5),
-            reason: '${entry.key.name} 左边界越出网格: ${bounds.left}');
-        expect(bounds.top, greaterThanOrEqualTo(-0.5),
-            reason: '${entry.key.name} 上边界越出网格: ${bounds.top}');
-        expect(bounds.right, lessThanOrEqualTo(24.5),
-            reason: '${entry.key.name} 右边界越出网格: ${bounds.right}');
-        expect(bounds.bottom, lessThanOrEqualTo(24.5),
-            reason: '${entry.key.name} 下边界越出网格: ${bounds.bottom}');
+        expect(
+          bounds.left,
+          greaterThanOrEqualTo(-0.5),
+          reason: '${entry.key.name} 左边界越出网格: ${bounds.left}',
+        );
+        expect(
+          bounds.top,
+          greaterThanOrEqualTo(-0.5),
+          reason: '${entry.key.name} 上边界越出网格: ${bounds.top}',
+        );
+        expect(
+          bounds.right,
+          lessThanOrEqualTo(24.5),
+          reason: '${entry.key.name} 右边界越出网格: ${bounds.right}',
+        );
+        expect(
+          bounds.bottom,
+          lessThanOrEqualTo(24.5),
+          reason: '${entry.key.name} 下边界越出网格: ${bounds.bottom}',
+        );
       }
     });
 
@@ -160,15 +175,15 @@ Rect _boundsOf(NeuIconData data) {
   for (final shape in data.shapes) {
     final path = switch (shape) {
       PathShape() => parseSvgPath(shape.d),
-      RectShape() => Path()
-        ..addRRect(
+      RectShape() =>
+        Path()..addRRect(
           RRect.fromRectAndRadius(
             Rect.fromLTWH(shape.x, shape.y, shape.width, shape.height),
             Radius.circular(shape.rx),
           ),
         ),
-      CircleShape() => Path()
-        ..addOval(
+      CircleShape() =>
+        Path()..addOval(
           Rect.fromCircle(center: Offset(shape.cx, shape.cy), radius: shape.r),
         ),
     };

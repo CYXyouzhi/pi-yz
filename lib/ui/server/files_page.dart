@@ -49,8 +49,22 @@ class _WorkspaceFilesPageState extends State<WorkspaceFilesPage> {
 
   /// 不能内嵌预览、但有意义的办公/媒体格式（给尺寸与路径，别假装能看）
   static const _docExts = {
-    '.pdf', '.docx', '.doc', '.xlsx', '.pptx', '.zip', '.7z', '.rar',
-    '.mp3', '.wav', '.m4a', '.ogg', '.mp4', '.mov', '.webm', '.apk',
+    '.pdf',
+    '.docx',
+    '.doc',
+    '.xlsx',
+    '.pptx',
+    '.zip',
+    '.7z',
+    '.rar',
+    '.mp3',
+    '.wav',
+    '.m4a',
+    '.ogg',
+    '.mp4',
+    '.mov',
+    '.webm',
+    '.apk',
   };
 
   @override
@@ -120,7 +134,9 @@ class _WorkspaceFilesPageState extends State<WorkspaceFilesPage> {
       return;
     }
     final lower = entry.path.toLowerCase();
-    final ext = lower.contains('.') ? lower.substring(lower.lastIndexOf('.')) : '';
+    final ext = lower.contains('.')
+        ? lower.substring(lower.lastIndexOf('.'))
+        : '';
     if (_imageExts.contains(ext)) {
       await _previewImage(entry.path);
       return;
@@ -129,8 +145,13 @@ class _WorkspaceFilesPageState extends State<WorkspaceFilesPage> {
       await _previewUnsupported(entry.path, ext);
       return;
     }
-    await showFilePreview(context, entry.path,
-        store: widget.store, cwd: widget.cwd, git: _git);
+    await showFilePreview(
+      context,
+      entry.path,
+      store: widget.store,
+      cwd: widget.cwd,
+      git: _git,
+    );
   }
 
   /// 图片预览：拉原始字节直接渲染（不能走文本接口，二进制会变乱码）
@@ -139,7 +160,11 @@ class _WorkspaceFilesPageState extends State<WorkspaceFilesPage> {
     if (!mounted) return;
     if (data == null) return;
     if (data.kind != 'image') {
-      NeuToast.show(context, message: I18n.tp('ui.8e735016cc', {'type': data.contentType}), icon: IconId.warn);
+      NeuToast.show(
+        context,
+        message: I18n.tp('ui.8e735016cc', {'type': data.contentType}),
+        icon: IconId.warn,
+      );
       return;
     }
 
@@ -151,12 +176,21 @@ class _WorkspaceFilesPageState extends State<WorkspaceFilesPage> {
         final t = sheetContext.neu;
         final name = filePath.replaceAll('\\', '/').split('/').last;
         return Container(
-          constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.85),
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.85,
+          ),
           decoration: BoxDecoration(
             color: t.bg,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(NeuRadii.lg)),
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(NeuRadii.lg),
+            ),
           ),
-          padding: const EdgeInsets.fromLTRB(NeuSpace.n16, NeuSpace.n10, NeuSpace.n16, NeuSpace.n20),
+          padding: const EdgeInsets.fromLTRB(
+            NeuSpace.n16,
+            NeuSpace.n10,
+            NeuSpace.n16,
+            NeuSpace.n20,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -166,13 +200,21 @@ class _WorkspaceFilesPageState extends State<WorkspaceFilesPage> {
               Row(
                 children: [
                   Expanded(
-                    child: Text(name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: NeuFonts.bodyLg, fontWeight: FontWeight.w700, color: t.fg)),
+                    child: Text(
+                      name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: NeuFonts.bodyLg,
+                        fontWeight: FontWeight.w700,
+                        color: t.fg,
+                      ),
+                    ),
                   ),
-                  Text('${(data.size / 1024).toStringAsFixed(1)} KB',
-                      style: TextStyle(fontSize: NeuFonts.badge, color: t.muted)),
+                  Text(
+                    '${(data.size / 1024).toStringAsFixed(1)} KB',
+                    style: TextStyle(fontSize: NeuFonts.badge, color: t.muted),
+                  ),
                 ],
               ),
               const SizedBox(height: NeuSpace.n12),
@@ -180,7 +222,10 @@ class _WorkspaceFilesPageState extends State<WorkspaceFilesPage> {
                 child: SingleChildScrollView(
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(NeuRadii.md),
-                    child: Image.memory(Uint8List.fromList(data.bytes), fit: BoxFit.contain),
+                    child: Image.memory(
+                      Uint8List.fromList(data.bytes),
+                      fit: BoxFit.contain,
+                    ),
                   ),
                 ),
               ),
@@ -205,23 +250,39 @@ class _WorkspaceFilesPageState extends State<WorkspaceFilesPage> {
         return Container(
           decoration: BoxDecoration(
             color: st.bg,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(NeuRadii.lg)),
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(NeuRadii.lg),
+            ),
           ),
-          padding: const EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n10, NeuSpace.n18, 22),
+          padding: const EdgeInsets.fromLTRB(
+            NeuSpace.n18,
+            NeuSpace.n10,
+            NeuSpace.n18,
+            22,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SheetHandle(),
               const SizedBox(height: NeuSpace.n12),
-              Text(name, style: TextStyle(fontSize: NeuFonts.bodyLg, fontWeight: FontWeight.w700, color: st.fg)),
+              Text(
+                name,
+                style: TextStyle(
+                  fontSize: NeuFonts.bodyLg,
+                  fontWeight: FontWeight.w700,
+                  color: st.fg,
+                ),
+              ),
               SizedBox(height: NeuSpace.n8),
               Text(
-                '${I18n.tp('ui.d99dc368ab', {
-                  'ext': ext.replaceFirst('.', '').toUpperCase(),
-                })}'
+                '${I18n.tp('ui.d99dc368ab', {'ext': ext.replaceFirst('.', '').toUpperCase()})}'
                 '${I18n.tp('ui.ef2e6f8ec0', {'path': filePath})}',
-                style: TextStyle(fontSize: NeuFonts.sub, color: st.muted, height: 1.7),
+                style: TextStyle(
+                  fontSize: NeuFonts.sub,
+                  color: st.muted,
+                  height: 1.7,
+                ),
               ),
               const SizedBox(height: NeuSpace.n14),
               NeuPressable(
@@ -229,16 +290,29 @@ class _WorkspaceFilesPageState extends State<WorkspaceFilesPage> {
                   await Clipboard.setData(ClipboardData(text: filePath));
                   if (!sheetContext.mounted) return;
                   Navigator.of(sheetContext).pop();
-                  NeuToast.show(sheetContext, message: I18n.t('ui.42c4e29d47'), icon: IconId.check);
+                  NeuToast.show(
+                    sheetContext,
+                    message: I18n.t('ui.42c4e29d47'),
+                    icon: IconId.check,
+                  );
                 },
                 radius: NeuRadii.sm,
-                padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: NeuSpace.n13,
+                  vertical: NeuSpace.n13,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     NeuIcon(IconId.cmd, size: 14, color: t.accentInk),
                     SizedBox(width: NeuSpace.n8),
-                    Text(I18n.t('ui.f4130cae7d'), style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.accentInk)),
+                    Text(
+                      I18n.t('ui.f4130cae7d'),
+                      style: TextStyle(
+                        fontSize: NeuFonts.bodySmall,
+                        color: t.accentInk,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -258,7 +332,11 @@ class _WorkspaceFilesPageState extends State<WorkspaceFilesPage> {
     final bytes = await picked.readAsBytes();
     if (!mounted) return;
     if (bytes.isEmpty) {
-      NeuToast.show(context, message: I18n.t('ui.dad890d59d'), icon: IconId.warn);
+      NeuToast.show(
+        context,
+        message: I18n.t('ui.dad890d59d'),
+        icon: IconId.warn,
+      );
       return;
     }
     final ok = await widget.store.uploadFile(
@@ -276,17 +354,32 @@ class _WorkspaceFilesPageState extends State<WorkspaceFilesPage> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: t.bg,
-        title: Text(I18n.t('ui.9a2a7b9e12'), style: TextStyle(color: t.fg, fontSize: NeuFonts.sectionTitle)),
-        content: Text(I18n.tp('ui.6e4f2b46a6', {'name': picked.name}),
-            style: TextStyle(color: t.muted, fontSize: NeuFonts.bodyMid, height: 1.6)),
+        title: Text(
+          I18n.t('ui.9a2a7b9e12'),
+          style: TextStyle(color: t.fg, fontSize: NeuFonts.sectionTitle),
+        ),
+        content: Text(
+          I18n.tp('ui.6e4f2b46a6', {'name': picked.name}),
+          style: TextStyle(
+            color: t.muted,
+            fontSize: NeuFonts.bodyMid,
+            height: 1.6,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(I18n.t('common.cancel'), style: TextStyle(color: t.muted)),
+            child: Text(
+              I18n.t('common.cancel'),
+              style: TextStyle(color: t.muted),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(I18n.t('ui.e09fea40f7'), style: TextStyle(color: t.danger)),
+            child: Text(
+              I18n.t('ui.e09fea40f7'),
+              style: TextStyle(color: t.danger),
+            ),
           ),
         ],
       ),
@@ -319,7 +412,13 @@ class _WorkspaceFilesPageState extends State<WorkspaceFilesPage> {
 
   Widget _buildPage(BuildContext context) {
     final t = context.neu;
-    final tail = _path.replaceAll('\\', '/').split('/').where((s) => s.isNotEmpty).lastOrNull ?? _path;
+    final tail =
+        _path
+            .replaceAll('\\', '/')
+            .split('/')
+            .where((s) => s.isNotEmpty)
+            .lastOrNull ??
+        _path;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -327,7 +426,12 @@ class _WorkspaceFilesPageState extends State<WorkspaceFilesPage> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n8, NeuSpace.n12, NeuSpace.n8),
+              padding: const EdgeInsets.fromLTRB(
+                NeuSpace.n18,
+                NeuSpace.n8,
+                NeuSpace.n12,
+                NeuSpace.n8,
+              ),
               child: Row(
                 children: [
                   NeuPressable(
@@ -339,7 +443,10 @@ class _WorkspaceFilesPageState extends State<WorkspaceFilesPage> {
                     onTap: () => Navigator.of(context).pop(),
                     radius: 12,
                     child: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n12),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: NeuSpace.n12,
+                        vertical: NeuSpace.n12,
+                      ),
                       child: NeuIcon(IconId.chevronLeft, size: 16),
                     ),
                   ),
@@ -370,7 +477,10 @@ class _WorkspaceFilesPageState extends State<WorkspaceFilesPage> {
                       onTap: _goUp,
                       radius: 12,
                       child: const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n12),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: NeuSpace.n12,
+                          vertical: NeuSpace.n12,
+                        ),
                         child: NeuIcon(IconId.chevronDown, size: 16),
                       ),
                     ),
@@ -378,7 +488,10 @@ class _WorkspaceFilesPageState extends State<WorkspaceFilesPage> {
                     onTap: _pickAndUpload,
                     radius: 12,
                     child: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n12),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: NeuSpace.n12,
+                        vertical: NeuSpace.n12,
+                      ),
                       child: NeuIcon(IconId.download, size: 16),
                     ),
                   ),
@@ -386,7 +499,10 @@ class _WorkspaceFilesPageState extends State<WorkspaceFilesPage> {
                     onTap: _load,
                     radius: 12,
                     child: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n12),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: NeuSpace.n12,
+                        vertical: NeuSpace.n12,
+                      ),
                       child: NeuIcon(IconId.sync, size: 16),
                     ),
                   ),
@@ -401,26 +517,48 @@ class _WorkspaceFilesPageState extends State<WorkspaceFilesPage> {
                         children: [
                           NeuIcon(IconId.spinner, size: 22, color: t.accentInk),
                           SizedBox(height: NeuSpace.n10),
-                          Text(I18n.t('common.loading'), style: TextStyle(fontSize: NeuFonts.sub, color: t.onBgDim)),
+                          Text(
+                            I18n.t('common.loading'),
+                            style: TextStyle(
+                              fontSize: NeuFonts.sub,
+                              color: t.onBgDim,
+                            ),
+                          ),
                         ],
                       ),
                     )
                   : ListView(
-                      padding: const EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n4, NeuSpace.n18, 40),
+                      padding: const EdgeInsets.fromLTRB(
+                        NeuSpace.n18,
+                        NeuSpace.n4,
+                        NeuSpace.n18,
+                        40,
+                      ),
                       children: [
                         if (_error != null)
                           Padding(
-                            padding: const EdgeInsets.symmetric(vertical: NeuSpace.n20),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: NeuSpace.n20,
+                            ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
                                   children: [
-                                    NeuIcon(IconId.warn, size: 16, color: t.danger),
+                                    NeuIcon(
+                                      IconId.warn,
+                                      size: 16,
+                                      color: t.danger,
+                                    ),
                                     const SizedBox(width: NeuSpace.n8),
                                     Expanded(
-                                      child: Text(_error!,
-                                          style: TextStyle(fontSize: NeuFonts.sub, color: t.danger)),
+                                      child: Text(
+                                        _error!,
+                                        style: TextStyle(
+                                          fontSize: NeuFonts.sub,
+                                          color: t.danger,
+                                        ),
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -433,9 +571,16 @@ class _WorkspaceFilesPageState extends State<WorkspaceFilesPage> {
                                   },
                                   radius: NeuRadii.sm,
                                   padding: EdgeInsets.symmetric(
-                                      horizontal: NeuSpace.n16, vertical: NeuSpace.n9),
-                                  child: Text(I18n.t('common.retry'),
-                                      style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.accentInk)),
+                                    horizontal: NeuSpace.n16,
+                                    vertical: NeuSpace.n9,
+                                  ),
+                                  child: Text(
+                                    I18n.t('common.retry'),
+                                    style: TextStyle(
+                                      fontSize: NeuFonts.bodySmall,
+                                      color: t.accentInk,
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),
@@ -450,23 +595,48 @@ class _WorkspaceFilesPageState extends State<WorkspaceFilesPage> {
                               children: [
                                 if (_git!.files.isEmpty)
                                   Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: NeuSpace.n10),
-                                    child: Text(I18n.t('ui.af825e2845'),
-                                        style: TextStyle(fontSize: NeuFonts.sub, color: t.muted)),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: NeuSpace.n10,
+                                    ),
+                                    child: Text(
+                                      I18n.t('ui.af825e2845'),
+                                      style: TextStyle(
+                                        fontSize: NeuFonts.sub,
+                                        color: t.muted,
+                                      ),
+                                    ),
                                   )
                                 else ...[
-                                  for (var i = 0; i < _git!.files.length && i < 40; i++) ...[
-                                    if (i > 0) Container(height: 1, color: t.border),
-                                    GitRow(_git!.files[i],
-                                    (p) => showDiffSheet(context, p,
-                                        store: widget.store, cwd: widget.cwd)),
+                                  for (
+                                    var i = 0;
+                                    i < _git!.files.length && i < 40;
+                                    i++
+                                  ) ...[
+                                    if (i > 0)
+                                      Container(height: 1, color: t.border),
+                                    GitRow(
+                                      _git!.files[i],
+                                      (p) => showDiffSheet(
+                                        context,
+                                        p,
+                                        store: widget.store,
+                                        cwd: widget.cwd,
+                                      ),
+                                    ),
                                   ],
                                   if (_git!.files.length > 40)
                                     Padding(
-                                      padding: const EdgeInsets.only(top: NeuSpace.n6),
+                                      padding: const EdgeInsets.only(
+                                        top: NeuSpace.n6,
+                                      ),
                                       child: Text(
-                                        I18n.tp('ui.b7efc0c5ef', {'n': _git!.files.length - 40}),
-                                        style: TextStyle(fontSize: NeuFonts.badge, color: t.muted),
+                                        I18n.tp('ui.b7efc0c5ef', {
+                                          'n': _git!.files.length - 40,
+                                        }),
+                                        style: TextStyle(
+                                          fontSize: NeuFonts.badge,
+                                          color: t.muted,
+                                        ),
                                       ),
                                     ),
                                 ],
@@ -475,7 +645,9 @@ class _WorkspaceFilesPageState extends State<WorkspaceFilesPage> {
                           ),
                           const SizedBox(height: NeuSpace.n16),
                         ],
-                        FilesSectionTitle('Worktrees${_worktrees.isEmpty ? '' : '（${_worktrees.length}）'}'),
+                        FilesSectionTitle(
+                          'Worktrees${_worktrees.isEmpty ? '' : '（${_worktrees.length}）'}',
+                        ),
                         NeuRaised(
                           radius: NeuRadii.md,
                           level: NeuLevel.small,
@@ -484,30 +656,54 @@ class _WorkspaceFilesPageState extends State<WorkspaceFilesPage> {
                             children: [
                               if (_worktrees.isEmpty)
                                 Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: NeuSpace.n10),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: NeuSpace.n10,
+                                  ),
                                   child: Text(
-                                    _git?.isRepo == true ? I18n.t('ui.3ac69ac199') : I18n.t('ui.eb6e66be0f'),
-                                    style: TextStyle(fontSize: NeuFonts.sub, color: t.muted),
+                                    _git?.isRepo == true
+                                        ? I18n.t('ui.3ac69ac199')
+                                        : I18n.t('ui.eb6e66be0f'),
+                                    style: TextStyle(
+                                      fontSize: NeuFonts.sub,
+                                      color: t.muted,
+                                    ),
                                   ),
                                 )
                               else
                                 for (var i = 0; i < _worktrees.length; i++) ...[
-                                  if (i > 0) Container(height: 1, color: t.border),
-                                  WorktreeRow(_worktrees[i], onOpenSession: _openSessionIn, onRemove: _removeWorktree),
+                                  if (i > 0)
+                                    Container(height: 1, color: t.border),
+                                  WorktreeRow(
+                                    _worktrees[i],
+                                    onOpenSession: _openSessionIn,
+                                    onRemove: _removeWorktree,
+                                  ),
                                 ],
                               if (_git?.isRepo == true) ...[
                                 Container(height: 1, color: t.border),
                                 NeuPressable(
                                   onTap: _addWorktreeDialog,
                                   flat: true,
-                                  padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: NeuSpace.n13,
+                                    vertical: NeuSpace.n13,
+                                  ),
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      NeuIcon(IconId.plus, size: 15, color: t.accentInk),
+                                      NeuIcon(
+                                        IconId.plus,
+                                        size: 15,
+                                        color: t.accentInk,
+                                      ),
                                       SizedBox(width: NeuSpace.n8),
-                                      Text(I18n.t('ui.caccdc5cc0'),
-                                          style: TextStyle(fontSize: NeuFonts.bodyMid, color: t.accentInk)),
+                                      Text(
+                                        I18n.t('ui.caccdc5cc0'),
+                                        style: TextStyle(
+                                          fontSize: NeuFonts.bodyMid,
+                                          color: t.accentInk,
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -525,11 +721,24 @@ class _WorkspaceFilesPageState extends State<WorkspaceFilesPage> {
                             children: [
                               if ((_listing?.entries ?? []).isEmpty)
                                 Padding(
-                                  padding: EdgeInsets.symmetric(vertical: NeuSpace.n10),
-                                  child: Text(I18n.t('ui.a21f6ab17d'), style: TextStyle(fontSize: NeuFonts.sub, color: t.muted)),
+                                  padding: EdgeInsets.symmetric(
+                                    vertical: NeuSpace.n10,
+                                  ),
+                                  child: Text(
+                                    I18n.t('ui.a21f6ab17d'),
+                                    style: TextStyle(
+                                      fontSize: NeuFonts.sub,
+                                      color: t.muted,
+                                    ),
+                                  ),
                                 ),
-                              for (var i = 0; i < (_listing?.entries.length ?? 0); i++) ...[
-                                if (i > 0) Container(height: 1, color: t.border),
+                              for (
+                                var i = 0;
+                                i < (_listing?.entries.length ?? 0);
+                                i++
+                              ) ...[
+                                if (i > 0)
+                                  Container(height: 1, color: t.border),
                                 FileRow(_listing!.entries[i], onEnter: _enter),
                               ],
                             ],
@@ -552,11 +761,17 @@ class _WorkspaceFilesPageState extends State<WorkspaceFilesPage> {
     if (id == null) return;
     await widget.store.openSession(id);
     if (!mounted) return;
-    NeuToast.show(context, message: I18n.t('ui.be925b16ea'), icon: IconId.check);
+    NeuToast.show(
+      context,
+      message: I18n.t('ui.be925b16ea'),
+      icon: IconId.check,
+    );
   }
 
   Future<void> _addWorktreeDialog() async {
-    final dirController = TextEditingController(text: '${widget.cwd.replaceAll('\\', '/')}-wt');
+    final dirController = TextEditingController(
+      text: '${widget.cwd.replaceAll('\\', '/')}-wt',
+    );
     final branchController = TextEditingController(text: 'feature/');
     final t = context.neu;
     try {
@@ -564,7 +779,10 @@ class _WorkspaceFilesPageState extends State<WorkspaceFilesPage> {
         context: context,
         builder: (dialogContext) => AlertDialog(
           backgroundColor: t.bg,
-          title: Text(I18n.t('ui.caccdc5cc0'), style: TextStyle(color: t.fg, fontSize: NeuFonts.sectionTitle)),
+          title: Text(
+            I18n.t('ui.caccdc5cc0'),
+            style: TextStyle(color: t.fg, fontSize: NeuFonts.sectionTitle),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -573,9 +791,15 @@ class _WorkspaceFilesPageState extends State<WorkspaceFilesPage> {
                 style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.fg),
                 decoration: InputDecoration(
                   labelText: I18n.t('ui.52ff644bf2'),
-                  labelStyle: TextStyle(fontSize: NeuFonts.small, color: t.muted),
+                  labelStyle: TextStyle(
+                    fontSize: NeuFonts.small,
+                    color: t.muted,
+                  ),
                   helperText: I18n.t('ui.e139dcc6af'),
-                  helperStyle: TextStyle(fontSize: NeuFonts.micro, color: t.muted),
+                  helperStyle: TextStyle(
+                    fontSize: NeuFonts.micro,
+                    color: t.muted,
+                  ),
                 ),
               ),
               const SizedBox(height: NeuSpace.n12),
@@ -584,7 +808,10 @@ class _WorkspaceFilesPageState extends State<WorkspaceFilesPage> {
                 style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.fg),
                 decoration: InputDecoration(
                   labelText: I18n.t('ui.6ae804fad2'),
-                  labelStyle: TextStyle(fontSize: NeuFonts.small, color: t.muted),
+                  labelStyle: TextStyle(
+                    fontSize: NeuFonts.small,
+                    color: t.muted,
+                  ),
                 ),
               ),
             ],
@@ -592,11 +819,17 @@ class _WorkspaceFilesPageState extends State<WorkspaceFilesPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: Text(I18n.t('common.cancel'), style: TextStyle(color: t.muted)),
+              child: Text(
+                I18n.t('common.cancel'),
+                style: TextStyle(color: t.muted),
+              ),
             ),
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: Text(I18n.t('ui.d9ac9228e8'), style: TextStyle(color: t.accentInk)),
+              child: Text(
+                I18n.t('ui.d9ac9228e8'),
+                style: TextStyle(color: t.accentInk),
+              ),
             ),
           ],
         ),
@@ -620,19 +853,32 @@ class _WorkspaceFilesPageState extends State<WorkspaceFilesPage> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: t.bg,
-        title: Text(I18n.t('ui.d6b068b05f'), style: TextStyle(color: t.fg, fontSize: NeuFonts.sectionTitle)),
+        title: Text(
+          I18n.t('ui.d6b068b05f'),
+          style: TextStyle(color: t.fg, fontSize: NeuFonts.sectionTitle),
+        ),
         content: Text(
           I18n.tp('ui.7fdeeb20cd', {'path': wt.path}),
-          style: TextStyle(color: t.muted, fontSize: NeuFonts.bodySmall, height: 1.6),
+          style: TextStyle(
+            color: t.muted,
+            fontSize: NeuFonts.bodySmall,
+            height: 1.6,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(I18n.t('common.cancel'), style: TextStyle(color: t.muted)),
+            child: Text(
+              I18n.t('common.cancel'),
+              style: TextStyle(color: t.muted),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(I18n.t('common.delete'), style: TextStyle(color: t.danger)),
+            child: Text(
+              I18n.t('common.delete'),
+              style: TextStyle(color: t.danger),
+            ),
           ),
         ],
       ),

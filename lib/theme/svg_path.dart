@@ -192,7 +192,8 @@ void _arcTo(
 
   final numerator = rx2 * ry2 - rx2 * y0p2 - ry2 * x0p2;
   final denominator = rx2 * y0p2 + ry2 * x0p2;
-  final factor = (largeArc != sweep ? 1 : -1) *
+  final factor =
+      (largeArc != sweep ? 1 : -1) *
       math.sqrt(math.max(0.0, numerator / denominator));
 
   final cxp = factor * rx * y0p / ry;

@@ -146,12 +146,12 @@ class _ActivityBarState extends State<ActivityBar> {
     final detail = waiting
         ? (action?.detail ?? I18n.t('ui.0b30277c77'))
         : running && action != null
-            ? (action.kind == ActivityKind.tool
-                ? '${action.title}${action.detail.isEmpty ? '' : ' ${action.detail}'}'
-                : action.detail)
-            : (snap.empty
-                ? I18n.t('ui.409a5d5fb9')
-                : (snap.toolCount == 0
+        ? (action.kind == ActivityKind.tool
+              ? '${action.title}${action.detail.isEmpty ? '' : ' ${action.detail}'}'
+              : action.detail)
+        : (snap.empty
+              ? I18n.t('ui.409a5d5fb9')
+              : (snap.toolCount == 0
                     ? I18n.t('ui.e2bbbd3cee')
                     : I18n.tp('ui.20f9b96cf2', {
                         'n': snap.toolCount,
@@ -192,16 +192,22 @@ class _ActivityBarState extends State<ActivityBar> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                    fontSize: NeuFonts.small, fontWeight: FontWeight.w600, color: t.muted),
+                  fontSize: NeuFonts.small,
+                  fontWeight: FontWeight.w600,
+                  color: t.muted,
+                ),
               ),
             ),
             const SizedBox(width: NeuSpace.n6),
           ],
-          Text(head,
-              style: TextStyle(
-                  fontSize: NeuFonts.small,
-                  fontWeight: FontWeight.w600,
-                  color: waiting ? t.warn : (running ? t.success : t.muted))),
+          Text(
+            head,
+            style: TextStyle(
+              fontSize: NeuFonts.small,
+              fontWeight: FontWeight.w600,
+              color: waiting ? t.warn : (running ? t.success : t.muted),
+            ),
+          ),
           const SizedBox(width: NeuSpace.n8),
           Expanded(
             child: Text(
@@ -209,20 +215,24 @@ class _ActivityBarState extends State<ActivityBar> {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                  fontSize: NeuFonts.small,
-                  fontFamily: 'monospace',
-                  color: (running || waiting) ? t.fg : t.muted),
+                fontSize: NeuFonts.small,
+                fontFamily: 'monospace',
+                color: (running || waiting) ? t.fg : t.muted,
+              ),
             ),
           ),
           // 细条模式不显示耗时/速度：那是「运行中」才关心的信息，
           // 空闲时留在这一行只会让状态条更挤
           if (meta.isNotEmpty && !widget.compact) ...[
             const SizedBox(width: NeuSpace.n8),
-            Text(meta.join(' · '),
-                style: TextStyle(
-                    fontSize: NeuFonts.label,
-                    color: t.muted,
-                    fontFeatures: const [FontFeature.tabularFigures()])),
+            Text(
+              meta.join(' · '),
+              style: TextStyle(
+                fontSize: NeuFonts.label,
+                color: t.muted,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
           ],
           const SizedBox(width: NeuSpace.n4),
           NeuIcon(IconId.chevronRight, size: 14, color: t.muted),
@@ -294,7 +304,8 @@ class _ActivitySheetState extends State<_ActivitySheet> {
               decoration: BoxDecoration(
                 color: t.surface,
                 borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(NeuRadii.lg)),
+                  top: Radius.circular(NeuRadii.lg),
+                ),
               ),
               child: Column(
                 children: [
@@ -308,43 +319,71 @@ class _ActivitySheetState extends State<_ActivitySheet> {
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n14, NeuSpace.n12, NeuSpace.n6),
+                    padding: const EdgeInsets.fromLTRB(
+                      NeuSpace.n18,
+                      NeuSpace.n14,
+                      NeuSpace.n12,
+                      NeuSpace.n6,
+                    ),
                     child: Row(
                       children: [
-                        NeuIcon(IconId.spinner,
-                            size: 16,
-                            color: snap.running ? t.success : t.muted),
+                        NeuIcon(
+                          IconId.spinner,
+                          size: 16,
+                          color: snap.running ? t.success : t.muted,
+                        ),
                         SizedBox(width: NeuSpace.n8),
-                        Text(I18n.t('ui.f3460980a4'),
-                            style: TextStyle(
-                                fontSize: NeuFonts.heading,
-                                fontWeight: FontWeight.w700,
-                                color: t.fg)),
+                        Text(
+                          I18n.t('ui.f3460980a4'),
+                          style: TextStyle(
+                            fontSize: NeuFonts.heading,
+                            fontWeight: FontWeight.w700,
+                            color: t.fg,
+                          ),
+                        ),
                         const SizedBox(width: NeuSpace.n8),
                         Expanded(
                           child: Text(
                             widget.store.chat.sessionName ?? '',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(fontSize: NeuFonts.small, color: t.muted),
+                            style: TextStyle(
+                              fontSize: NeuFonts.small,
+                              color: t.muted,
+                            ),
                           ),
                         ),
                         NeuPressable(
                           onTap: () => Navigator.of(context).maybePop(),
                           radius: NeuRadii.sm,
-                          padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n11, vertical: NeuSpace.n11),
-                          child: NeuIcon(IconId.close, size: 18, color: t.muted),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: NeuSpace.n11,
+                            vertical: NeuSpace.n11,
+                          ),
+                          child: NeuIcon(
+                            IconId.close,
+                            size: 18,
+                            color: t.muted,
+                          ),
                         ),
                       ],
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(NeuSpace.n18, 0, NeuSpace.n18, NeuSpace.n10),
+                    padding: const EdgeInsets.fromLTRB(
+                      NeuSpace.n18,
+                      0,
+                      NeuSpace.n18,
+                      NeuSpace.n10,
+                    ),
                     child: Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
                         _summaryLine(snap),
-                        style: TextStyle(fontSize: NeuFonts.small, color: t.muted),
+                        style: TextStyle(
+                          fontSize: NeuFonts.small,
+                          color: t.muted,
+                        ),
                       ),
                     ),
                   ),
@@ -354,13 +393,16 @@ class _ActivitySheetState extends State<_ActivitySheet> {
                         ? _emptyState(t)
                         : ListView.separated(
                             controller: scrollController,
-                            padding: const EdgeInsets.symmetric(vertical: NeuSpace.n8),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: NeuSpace.n8,
+                            ),
                             itemCount: snap.items.length,
                             separatorBuilder: (_, _) => Divider(
-                                height: 1,
-                                indent: 18,
-                                endIndent: 18,
-                                color: t.border.withValues(alpha: 0.5)),
+                              height: 1,
+                              indent: 18,
+                              endIndent: 18,
+                              color: t.border.withValues(alpha: 0.5),
+                            ),
                             itemBuilder: (context, i) {
                               final it = snap.items[snap.items.length - 1 - i];
                               return _row(t, it);
@@ -384,14 +426,26 @@ class _ActivitySheetState extends State<_ActivitySheet> {
     if (snap.waitingCount > 0) {
       parts.add(I18n.tp('ui.a67d3f95b7', {'n': snap.waitingCount}));
     }
-    parts.add(snap.running || snap.waitingCount > 0 ? I18n.t('common.running') : I18n.t('ui.c91492851a'));
+    parts.add(
+      snap.running || snap.waitingCount > 0
+          ? I18n.t('common.running')
+          : I18n.t('ui.c91492851a'),
+    );
     parts.add(I18n.tp('ui.2286308de1', {'n': snap.toolCount}));
-    if (snap.fileCount > 0) parts.add(I18n.tp('ui.f547f2d5e4', {'n': snap.fileCount}));
-    if (snap.outputTokens > 0) parts.add(I18n.tp('ui.1395da23fa', {'n': snap.outputTokens}));
+    if (snap.fileCount > 0) {
+      parts.add(I18n.tp('ui.f547f2d5e4', {'n': snap.fileCount}));
+    }
+    if (snap.outputTokens > 0) {
+      parts.add(I18n.tp('ui.1395da23fa', {'n': snap.outputTokens}));
+    }
     if (snap.running && snap.elapsedMs > 0) {
-      parts.add(I18n.tp('ui.a33efe1f34', {'time': humanDuration(snap.elapsedMs)}));
+      parts.add(
+        I18n.tp('ui.a33efe1f34', {'time': humanDuration(snap.elapsedMs)}),
+      );
     } else if (!snap.running && snap.lastRunMs > 0) {
-      parts.add(I18n.tp('ui.19c1bd1b68', {'time': humanDuration(snap.lastRunMs)}));
+      parts.add(
+        I18n.tp('ui.19c1bd1b68', {'time': humanDuration(snap.lastRunMs)}),
+      );
     }
     final speed = snap.tokensPerSecond;
     if (snap.running && speed > 0) {
@@ -407,10 +461,15 @@ class _ActivitySheetState extends State<_ActivitySheet> {
         children: [
           NeuIcon(IconId.circle, size: 28, color: t.muted),
           SizedBox(height: NeuSpace.n10),
-          Text(I18n.t('ui.1d1a0f3be8'), style: TextStyle(fontSize: NeuFonts.bodyTight, color: t.fg)),
+          Text(
+            I18n.t('ui.1d1a0f3be8'),
+            style: TextStyle(fontSize: NeuFonts.bodyTight, color: t.fg),
+          ),
           SizedBox(height: NeuSpace.n6),
-          Text(I18n.t('ui.998a18b488'),
-              style: TextStyle(fontSize: NeuFonts.small, color: t.muted)),
+          Text(
+            I18n.t('ui.998a18b488'),
+            style: TextStyle(fontSize: NeuFonts.small, color: t.muted),
+          ),
         ],
       ),
     );
@@ -420,12 +479,15 @@ class _ActivitySheetState extends State<_ActivitySheet> {
     final Color c = it.failed
         ? t.danger
         : (it.kind == ActivityKind.wait
-            ? t.warn
-            : (it.running
-                ? t.accentInk
-                : (it.kind == ActivityKind.tool ? t.fg : t.muted)));
+              ? t.warn
+              : (it.running
+                    ? t.accentInk
+                    : (it.kind == ActivityKind.tool ? t.fg : t.muted)));
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n18, vertical: NeuSpace.n9),
+      padding: const EdgeInsets.symmetric(
+        horizontal: NeuSpace.n18,
+        vertical: NeuSpace.n9,
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -480,9 +542,15 @@ class _ActivitySheetState extends State<_ActivitySheet> {
           if (it.failed)
             NeuIcon(IconId.warn, size: 14, color: t.danger)
           else if (it.kind == ActivityKind.wait)
-            Text(I18n.t('ui.3b5b97cab5'), style: TextStyle(fontSize: NeuFonts.badge, color: t.warn))
+            Text(
+              I18n.t('ui.3b5b97cab5'),
+              style: TextStyle(fontSize: NeuFonts.badge, color: t.warn),
+            )
           else if (it.running)
-            Text(I18n.t('ui.fb852fc6cc'), style: TextStyle(fontSize: NeuFonts.badge, color: t.accentInk))
+            Text(
+              I18n.t('ui.fb852fc6cc'),
+              style: TextStyle(fontSize: NeuFonts.badge, color: t.accentInk),
+            )
           else if (it.kind == ActivityKind.tool)
             NeuIcon(IconId.check, size: 14, color: t.muted),
         ],

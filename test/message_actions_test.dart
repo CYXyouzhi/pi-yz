@@ -41,16 +41,16 @@ ChatMessage imageMessage() {
 }
 
 Widget host(Widget child) => MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: buildNeuTheme(NeuTokens.light, brightness: Brightness.light),
-      home: NeuCanvas(
-        brightness: Brightness.light,
-        child: Scaffold(
-          backgroundColor: Colors.transparent,
-          body: SingleChildScrollView(child: child),
-        ),
-      ),
-    );
+  debugShowCheckedModeBanner: false,
+  theme: buildNeuTheme(NeuTokens.light, brightness: Brightness.light),
+  home: NeuCanvas(
+    brightness: Brightness.light,
+    child: Scaffold(
+      backgroundColor: Colors.transparent,
+      body: SingleChildScrollView(child: child),
+    ),
+  ),
+);
 
 void main() {
   // 剪贴板与原生桥都是平台通道：这里 mock 掉并记录调用
@@ -62,16 +62,18 @@ void main() {
     nativeCalls = [];
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(SystemChannels.platform, (call) async {
-      if (call.method == 'Clipboard.setData') {
-        clipboard.add((call.arguments as Map)['text'] as String);
-      }
-      return null;
-    });
+          if (call.method == 'Clipboard.setData') {
+            clipboard.add((call.arguments as Map)['text'] as String);
+          }
+          return null;
+        });
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(const MethodChannel('pi_yz/native'), (call) async {
-      nativeCalls.add(call);
-      return call.method == 'saveImage' ? 'content://saved' : true;
-    });
+        .setMockMethodCallHandler(const MethodChannel('pi_yz/native'), (
+          call,
+        ) async {
+          nativeCalls.add(call);
+          return call.method == 'saveImage' ? 'content://saved' : true;
+        });
   });
 
   tearDown(() {
@@ -82,7 +84,9 @@ void main() {
   });
 
   testWidgets('① 双击消息（留白处）把整条正文复制到剪贴板', (tester) async {
-    await tester.pumpWidget(host(MessageTile(message: textMessage(text: '结论：都读到了'))));
+    await tester.pumpWidget(
+      host(MessageTile(message: textMessage(text: '结论：都读到了'))),
+    );
     await tester.pump(const Duration(milliseconds: 100));
 
     final tile = find.byType(MessageTile);
@@ -97,10 +101,14 @@ void main() {
 
   testWidgets('② ⋮ 菜单：复制 / 引用 / 分享都在，引用会把原文回调出去', (tester) async {
     String? quoted;
-    await tester.pumpWidget(host(MessageTile(
-      message: textMessage(text: '被引用的正文'),
-      onQuote: (text) => quoted = text,
-    )));
+    await tester.pumpWidget(
+      host(
+        MessageTile(
+          message: textMessage(text: '被引用的正文'),
+          onQuote: (text) => quoted = text,
+        ),
+      ),
+    );
     await tester.pump(const Duration(milliseconds: 100));
 
     await tester.tap(find.byType(GestureDetector).last); // 消息右侧那个 ⋮
@@ -119,10 +127,14 @@ void main() {
 
   testWidgets('② 用户消息的菜单里有「编辑重发」', (tester) async {
     String? resend;
-    await tester.pumpWidget(host(MessageTile(
-      message: textMessage(text: '我发的话', isUser: true),
-      onEditResend: (text) => resend = text,
-    )));
+    await tester.pumpWidget(
+      host(
+        MessageTile(
+          message: textMessage(text: '我发的话', isUser: true),
+          onEditResend: (text) => resend = text,
+        ),
+      ),
+    );
     await tester.pump(const Duration(milliseconds: 100));
 
     await tester.tap(find.byType(GestureDetector).last);

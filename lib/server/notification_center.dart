@@ -11,6 +11,7 @@
 //     同一次停顿只提醒一次，出现新输出后重新武装。
 
 import 'dart:async';
+
 import 'i18n.dart';
 
 import 'package:flutter/foundation.dart';
@@ -138,7 +139,8 @@ class NotificationCenter with ChangeNotifier {
   /// 最近一次通知的内容（自检用，也是「点一下能不能直达」的凭据）
   String? lastNotifiedTitle;
 
-  bool get inDndWindow => dndEnabled && inHours(DateTime.now().hour, dndStartHour, dndEndHour);
+  bool get inDndWindow =>
+      dndEnabled && inHours(DateTime.now().hour, dndStartHour, dndEndHour);
 
   /// 免打扰时段判定（纯函数，可单测）：支持跨零点，例如 23 → 8 表示 23、0…7 点。
   @visibleForTesting
@@ -177,7 +179,9 @@ class NotificationCenter with ChangeNotifier {
     int dndEndHour = 8,
   }) {
     if (!enabled) return I18n.t('ui.8f4c857389');
-    if (inDnd) return I18n.tp('ui.18d7b3c71a', {'a': dndStartHour, 'b': dndEndHour});
+    if (inDnd) {
+      return I18n.tp('ui.18d7b3c71a', {'a': dndStartHour, 'b': dndEndHour});
+    }
     if (watchOnly && kind == NotifyKind.done) return I18n.t('ui.7c54beebb8');
     switch (kind) {
       case NotifyKind.done:
@@ -231,11 +235,14 @@ class NotificationCenter with ChangeNotifier {
     if (store == null) return;
     switch (call.method) {
       case 'onQuickReply':
-        final args = (call.arguments as Map?)?.cast<String, dynamic>() ?? const {};
+        final args =
+            (call.arguments as Map?)?.cast<String, dynamic>() ?? const {};
         final text = (args['text'] as String? ?? '').trim();
         final sessionId = args['sessionId'] as String? ?? '';
         if (text.isEmpty) return;
-        debugPrint('[notif] quick reply from notification: $text (session ${sessionId.isEmpty ? 'current' : sessionId})');
+        debugPrint(
+          '[notif] quick reply from notification: $text (session ${sessionId.isEmpty ? 'current' : sessionId})',
+        );
         if (sessionId.isNotEmpty && sessionId != store.currentSessionId) {
           await store.openSession(sessionId);
         }
@@ -245,7 +252,8 @@ class NotificationCenter with ChangeNotifier {
           streamingBehavior: store.chat.isRunning ? 'steer' : null,
         );
       case 'onOpenSession':
-        final args = (call.arguments as Map?)?.cast<String, dynamic>() ?? const {};
+        final args =
+            (call.arguments as Map?)?.cast<String, dynamic>() ?? const {};
         final sessionId = args['sessionId'] as String? ?? '';
         if (sessionId.isNotEmpty) await store.openSession(sessionId);
         onOpenSessionRequested?.call();
@@ -258,7 +266,9 @@ class NotificationCenter with ChangeNotifier {
     if (store == null) return;
     if (!await hasPermission()) return;
     try {
-      final sessionId = await _channel.invokeMethod<String>('consumeLaunchSession');
+      final sessionId = await _channel.invokeMethod<String>(
+        'consumeLaunchSession',
+      );
       if (sessionId != null && sessionId.isNotEmpty) {
         debugPrint('[notif] notification tap → session $sessionId');
         await store.openSession(sessionId);
@@ -286,7 +296,8 @@ class NotificationCenter with ChangeNotifier {
     final textLength = _currentTextLength();
 
     // 有新输出（新消息或最后一条在变长）→ 刷新「最后输出时间」，并重新武装卡住提醒
-    if (running && (count != _lastMessageCount || textLength != _lastTextLength)) {
+    if (running &&
+        (count != _lastMessageCount || textLength != _lastTextLength)) {
       _lastOutputAt = DateTime.now();
       _stallNotified = false;
     }
@@ -319,7 +330,11 @@ class NotificationCenter with ChangeNotifier {
       _notify(
         kind: NotifyKind.error,
         title: I18n.tp('ui.94cbe1dd74', {'label': _sessionLabel(store)}),
-        body: _summarize(last.text.isEmpty ? (store.lastError ?? I18n.t('ui.d99d6fe16a')) : last.text),
+        body: _summarize(
+          last.text.isEmpty
+              ? (store.lastError ?? I18n.t('ui.d99d6fe16a'))
+              : last.text,
+        ),
         sessionId: store.currentSessionId,
       );
       return;
@@ -337,7 +352,10 @@ class NotificationCenter with ChangeNotifier {
     if (name != null && name.trim().isNotEmpty) return name.trim();
     final cwd = store.chat.cwd;
     if (cwd.isNotEmpty) {
-      final parts = cwd.split(RegExp(r'[\\/]')).where((p) => p.isNotEmpty).toList();
+      final parts = cwd
+          .split(RegExp(r'[\\/]'))
+          .where((p) => p.isNotEmpty)
+          .toList();
       if (parts.isNotEmpty) return parts.last;
     }
     return 'pi agent';
@@ -358,8 +376,8 @@ class NotificationCenter with ChangeNotifier {
     final minutes = seconds ~/ 60;
     final rest = seconds % 60;
     return rest == 0
-          ? I18n.tp('ui.47aeb4ecf8', {'n': minutes})
-          : I18n.tp('ui.2607898580', {'n': minutes, 'm': rest});
+        ? I18n.tp('ui.47aeb4ecf8', {'n': minutes})
+        : I18n.tp('ui.2607898580', {'n': minutes, 'm': rest});
   }
 
   void _checkStall() {
@@ -383,8 +401,7 @@ class NotificationCenter with ChangeNotifier {
     _notify(
       kind: NotifyKind.stalled,
       title: I18n.tp('ui.a75650db91', {'label': _sessionLabel(store)}),
-      body: I18n.tp('ui.53e037d7cc',
-          {'idle': idleLabel, 'n': stallSeconds}),
+      body: I18n.tp('ui.53e037d7cc', {'idle': idleLabel, 'n': stallSeconds}),
       sessionId: store.currentSessionId,
     );
   }
@@ -399,7 +416,10 @@ class NotificationCenter with ChangeNotifier {
     final reason = _suppressReason(kind);
     if (reason != null) {
       // 不静默丢：记下来，设置页能看到「刚被压掉了 N 条」
-      suppressed.insert(0, I18n.tp('ui.43d3089cba', {'title': title, 'reason': reason}));
+      suppressed.insert(
+        0,
+        I18n.tp('ui.43d3089cba', {'title': title, 'reason': reason}),
+      );
       while (suppressed.length > 10) {
         suppressed.removeLast();
       }
@@ -425,16 +445,16 @@ class NotificationCenter with ChangeNotifier {
   }
 
   String? _suppressReason(NotifyKind kind) => suppressReason(
-        enabled: enabled,
-        inDnd: inDndWindow,
-        watchOnly: watchOnly,
-        notifyOnDone: notifyOnDone,
-        notifyOnError: notifyOnError,
-        notifyOnNeedInput: notifyOnNeedInput,
-        kind: kind,
-        dndStartHour: dndStartHour,
-        dndEndHour: dndEndHour,
-      );
+    enabled: enabled,
+    inDnd: inDndWindow,
+    watchOnly: watchOnly,
+    notifyOnDone: notifyOnDone,
+    notifyOnError: notifyOnError,
+    notifyOnNeedInput: notifyOnNeedInput,
+    kind: kind,
+    dndStartHour: dndStartHour,
+    dndEndHour: dndEndHour,
+  );
 
   /// 测试通知：绕开免打扰与看护模式 —— 用户点「发一条测试通知」
   /// 就是想确认这条路通不通，被时段压掉反而看不出问题。

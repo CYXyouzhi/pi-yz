@@ -1,5 +1,7 @@
 import 'dart:async';
+
 import 'ui/nav_bar_visibility.dart';
+
 import 'dart:ui' show FrameTiming;
 
 import 'package:flutter/gestures.dart' show DragStartBehavior;
@@ -91,21 +93,23 @@ class _PiYzAppState extends State<PiYzApp> {
             textScaler: TextScaler.linear(AppPrefs.instance.fontScale),
           ),
           child: NeuCanvas(
-          brightness: isDark ? Brightness.dark : Brightness.light,
-          child: Stack(
-            children: [
-              ?child,
-              if (!_splashDone)
-                _SplashOverlay(
-                  onDone: () => setState(() => _splashDone = true),
-                ),
-            ],
+            brightness: isDark ? Brightness.dark : Brightness.light,
+            child: Stack(
+              children: [
+                ?child,
+                if (!_splashDone)
+                  _SplashOverlay(
+                    onDone: () => setState(() => _splashDone = true),
+                  ),
+              ],
             ),
           ),
         );
       },
       home: AppShell(
-        themeMode: AppPrefs.instance.loaded ? AppPrefs.instance.themeMode : _mode,
+        themeMode: AppPrefs.instance.loaded
+            ? AppPrefs.instance.themeMode
+            : _mode,
         onThemeModeChanged: (m) {
           setState(() => _mode = m);
           AppPrefs.instance.setThemeMode(m);
@@ -133,7 +137,6 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
   int _tab = 0;
 
-
   /// 服务端连接与当前会话（新的 HTTP 路线）
   final ServerStore _serverStore = ServerStore();
 
@@ -147,7 +150,9 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
     NotificationCenter.instance.onOpenSessionRequested = () {
       if (mounted) setState(() => _tab = 1);
     };
-    NotificationCenter.instance.load().then((_) => NotificationCenter.instance.attach(_serverStore));
+    NotificationCenter.instance.load().then(
+      (_) => NotificationCenter.instance.attach(_serverStore),
+    );
     _restoreConnection();
   }
 
@@ -181,27 +186,31 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
       if (profile.id == activeId) active = profile;
     }
     active ??= profiles.first;
-    await _serverStore.connect(ServerTarget(
-      host: active.host,
-      port: active.port,
-      token: active.token,
-      defaultCwd: active.defaultCwd,
-      secure: active.secure,
-      fallbackHost: active.fallbackHost,
-      fallbackPort: active.fallbackPort,
-      fallbackSecure: active.fallbackSecure,
-    ));
+    await _serverStore.connect(
+      ServerTarget(
+        host: active.host,
+        port: active.port,
+        token: active.token,
+        defaultCwd: active.defaultCwd,
+        secure: active.secure,
+        fallbackHost: active.fallbackHost,
+        fallbackPort: active.fallbackPort,
+        fallbackSecure: active.fallbackSecure,
+      ),
+    );
   }
 
   void _openConnScreen() {
-    Navigator.of(context).push(MaterialPageRoute<void>(
-      builder: (_) => ServerConnPage(
-        store: _serverStore,
-        onConnected: () {
-          if (mounted) setState(() => _tab = 1);
-        },
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ServerConnPage(
+          store: _serverStore,
+          onConnected: () {
+            if (mounted) setState(() => _tab = 1);
+          },
+        ),
       ),
-    ));
+    );
   }
 
   @override
@@ -313,27 +322,28 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
   }
 
   List<Widget> _pages() => [
-        ServerSessionsPage(
-          store: _serverStore,
-          onOpenSession: (session) {
-            _serverStore.openSession(session.id);
-            setState(() => _tab = 1);
-          },
-          onOpenConn: _openConnScreen,
-          onOpenChat: () => setState(() => _tab = 1),
-        ),
-        ServerChatPage(
-          store: _serverStore,
-          onOpenSessions: () => setState(() => _tab = 0),
-        ),
-        ServerSettingsPage(
-          store: _serverStore,
-          themeMode: widget.themeMode,
-          onThemeModeChanged: widget.onThemeModeChanged,
-          onOpenConn: _openConnScreen,
-        ),
-      ];
+    ServerSessionsPage(
+      store: _serverStore,
+      onOpenSession: (session) {
+        _serverStore.openSession(session.id);
+        setState(() => _tab = 1);
+      },
+      onOpenConn: _openConnScreen,
+      onOpenChat: () => setState(() => _tab = 1),
+    ),
+    ServerChatPage(
+      store: _serverStore,
+      onOpenSessions: () => setState(() => _tab = 0),
+    ),
+    ServerSettingsPage(
+      store: _serverStore,
+      themeMode: widget.themeMode,
+      onThemeModeChanged: widget.onThemeModeChanged,
+      onOpenConn: _openConnScreen,
+    ),
+  ];
 }
+
 /// 底部停靠区：常驻细把手 + 可收展的导航栏。
 ///
 /// 布局自上而下是「页面 → [导航栏] → 把手」。把手永远贴屏底，因为上滑手势的
@@ -521,10 +531,10 @@ class _NeuTabBar extends StatelessWidget {
 
   /// Tab 文案走语言包：切语言时整条栏一起变
   List<(IconId, String)> _tabs(BuildContext context) => [
-        (IconId.home, I18n.t('tab.start', context: context)),
-        (IconId.bubble, I18n.t('tab.chat', context: context)),
-        (IconId.gear, I18n.t('tab.settings', context: context)),
-      ];
+    (IconId.home, I18n.t('tab.start', context: context)),
+    (IconId.bubble, I18n.t('tab.chat', context: context)),
+    (IconId.gear, I18n.t('tab.settings', context: context)),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -534,7 +544,12 @@ class _NeuTabBar extends StatelessWidget {
       radius: NeuRadii.lg,
       level: NeuLevel.large,
       // 底部外边距 11 -> 6：导航栏常驻，竖向每一像素都是从消息区里扣的
-      margin: EdgeInsets.fromLTRB(NeuSpace.n18, 0, NeuSpace.n18, NeuSpace.n6 + bottomInset),
+      margin: EdgeInsets.fromLTRB(
+        NeuSpace.n18,
+        0,
+        NeuSpace.n18,
+        NeuSpace.n6 + bottomInset,
+      ),
       padding: const EdgeInsets.all(NeuSpace.n6),
       child: Row(
         children: [
@@ -680,21 +695,21 @@ class _SplashOverlayState extends State<_SplashOverlay>
 
   @override
   Widget build(BuildContext context) => FadeTransition(
-        opacity: _c,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            // 与 Android 的 @color/splash_background 同色：
-            // 从系统启动画面切过来时，这一屏背景是连续不动的。
-            const ColoredBox(color: Color(0xFFE1FBF4)),
-            // 还是原来那张 assets/splash.png，只是改成淡入。
-            // fit 用 cover 而不是 fill：fill 会在 20:9 这类长屏上把等比的原图
-            // 横向压窄，星球会被拉成竖椭圆。
-            FadeTransition(
-              opacity: CurvedAnimation(parent: _fadeIn, curve: Curves.easeOut),
-              child: Image.asset('assets/splash.png', fit: BoxFit.cover),
-            ),
-          ],
+    opacity: _c,
+    child: Stack(
+      fit: StackFit.expand,
+      children: [
+        // 与 Android 的 @color/splash_background 同色：
+        // 从系统启动画面切过来时，这一屏背景是连续不动的。
+        const ColoredBox(color: Color(0xFFE1FBF4)),
+        // 还是原来那张 assets/splash.png，只是改成淡入。
+        // fit 用 cover 而不是 fill：fill 会在 20:9 这类长屏上把等比的原图
+        // 横向压窄，星球会被拉成竖椭圆。
+        FadeTransition(
+          opacity: CurvedAnimation(parent: _fadeIn, curve: Curves.easeOut),
+          child: Image.asset('assets/splash.png', fit: BoxFit.cover),
         ),
-      );
+      ],
+    ),
+  );
 }

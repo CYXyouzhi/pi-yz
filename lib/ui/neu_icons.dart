@@ -117,16 +117,18 @@ const Map<IconId, NeuIconData> kNeuIcons = {
   ]),
   IconId.trash: NeuIconData([
     PathShape('M3.4 6.2h17.2'),
-    PathShape('M18.9 6.2v11.9a2.3 2.3 0 0 1-2.3 2.3H7.4a2.3 2.3 0 0 1-2.3-2.3V6.2'),
-    PathShape('M8.6 6.2V4.7a1.5 1.5 0 0 1 1.5-1.5h3.8a1.5 1.5 0 0 1 1.5 1.5v1.5'),
+    PathShape(
+      'M18.9 6.2v11.9a2.3 2.3 0 0 1-2.3 2.3H7.4a2.3 2.3 0 0 1-2.3-2.3V6.2',
+    ),
+    PathShape(
+      'M8.6 6.2V4.7a1.5 1.5 0 0 1 1.5-1.5h3.8a1.5 1.5 0 0 1 1.5 1.5v1.5',
+    ),
   ]),
   IconId.power: NeuIconData([
     PathShape('M12 3v8'),
     PathShape('M6.8 6.8a8 8 0 1 0 10.4 0'),
   ]),
-  IconId.plus: NeuIconData([
-    PathShape('M12 3.8v16.4M3.8 12h16.4'),
-  ]),
+  IconId.plus: NeuIconData([PathShape('M12 3.8v16.4M3.8 12h16.4')]),
   IconId.pen: NeuIconData([
     PathShape('M4.6 19.25l1-4L16.1 4.75a2.35 2.35 0 0 1 3.32 3.32L8.8 18.65Z'),
     PathShape('M15.35 5.75l2.85 2.85'),
@@ -135,7 +137,9 @@ const Map<IconId, NeuIconData> kNeuIcons = {
   IconId.chevronDown: NeuIconData([PathShape('M6 9l6 6 6-6')]),
   IconId.chevronLeft: NeuIconData([PathShape('M15 6l-6 6 6 6')]),
   IconId.check: NeuIconData([PathShape('M3.6 12.1 9.4 17.9 20.4 6.1')]),
-  IconId.close: NeuIconData([PathShape('M6.2 6.2 17.8 17.8M17.8 6.2 6.2 17.8')]),
+  IconId.close: NeuIconData([
+    PathShape('M6.2 6.2 17.8 17.8M17.8 6.2 6.2 17.8'),
+  ]),
   IconId.warn: NeuIconData([
     CircleShape(12, 12, 9),
     PathShape('M12 7.6v5.4M12 16.4h.01'),
@@ -161,7 +165,9 @@ const Map<IconId, NeuIconData> kNeuIcons = {
     PathShape('M8 10.5V7.5a4 4 0 0 1 8 0v3'),
   ]),
   IconId.cmd: NeuIconData([
-    PathShape('M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3'),
+    PathShape(
+      'M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3',
+    ),
   ]),
   IconId.send: NeuIconData([
     PathShape('M19.28 4.58 3.32 12.37l6.37 2.37 2.66 6.08Z'),
@@ -177,7 +183,9 @@ const Map<IconId, NeuIconData> kNeuIcons = {
     ),
   ]),
   IconId.home: NeuIconData([
-    PathShape('M3.4 10.1 12 4.1l8.6 6V18.7a1.6 1.6 0 0 1-1.6 1.6H5a1.6 1.6 0 0 1-1.6-1.6Z'),
+    PathShape(
+      'M3.4 10.1 12 4.1l8.6 6V18.7a1.6 1.6 0 0 1-1.6 1.6H5a1.6 1.6 0 0 1-1.6-1.6Z',
+    ),
   ]),
   IconId.sync: NeuIconData([
     PathShape('M4 9h12.6l-3.2-3.2'),
@@ -221,12 +229,7 @@ const Map<IconId, NeuIconData> kNeuIcons = {
 /// 解决办法是**反向补偿**：坐标系里的线宽写成 `1.55 * 24 / size`，
 /// 缩放回去正好是 1.55px。设计稿那张尺寸/线宽对照表就是这张换算的结果。
 class NeuIcon extends StatelessWidget {
-  const NeuIcon(
-    this.icon, {
-    super.key,
-    this.size = 18,
-    this.color,
-  });
+  const NeuIcon(this.icon, {super.key, this.size = 18, this.color});
 
   final IconId icon;
   final double size;
@@ -242,7 +245,8 @@ class NeuIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final resolved = color ??
+    final resolved =
+        color ??
         IconTheme.of(context).color ??
         DefaultTextStyle.of(context).style.color ??
         const Color(0xFF000000);
@@ -292,19 +296,19 @@ class _IconPainter extends CustomPainter {
   }
 
   Path _toPath(IconShape shape) => switch (shape) {
-        PathShape() => parseSvgPath(shape.d),
-        RectShape() => Path()
-          ..addRRect(
-            RRect.fromRectAndRadius(
-              Rect.fromLTWH(shape.x, shape.y, shape.width, shape.height),
-              Radius.circular(shape.rx),
-            ),
-          ),
-        CircleShape() => Path()
-          ..addOval(
-            Rect.fromCircle(center: Offset(shape.cx, shape.cy), radius: shape.r),
-          ),
-      };
+    PathShape() => parseSvgPath(shape.d),
+    RectShape() =>
+      Path()..addRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(shape.x, shape.y, shape.width, shape.height),
+          Radius.circular(shape.rx),
+        ),
+      ),
+    CircleShape() =>
+      Path()..addOval(
+        Rect.fromCircle(center: Offset(shape.cx, shape.cy), radius: shape.r),
+      ),
+  };
 
   @override
   bool shouldRepaint(_IconPainter oldDelegate) =>

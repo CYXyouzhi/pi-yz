@@ -182,13 +182,16 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
 
     for (final entry in entries) {
       // 搜索时强制展开：否则命中结果藏在收起的分组里，等于搜不到
-      final expanded = searching || _store.expandedWorkspaces.contains(entry.key);
-      rows.add(_GroupRow(
-        entry.key,
-        entry.value.first.workspaceName,
-        entry.value,
-        expanded,
-      ));
+      final expanded =
+          searching || _store.expandedWorkspaces.contains(entry.key);
+      rows.add(
+        _GroupRow(
+          entry.key,
+          entry.value.first.workspaceName,
+          entry.value,
+          expanded,
+        ),
+      );
     }
 
     // 已归档的会话不占默认列表，但得有个地方能把它们捞回来（合同③）
@@ -203,7 +206,9 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
     final name = (session.name ?? '').toLowerCase();
     final preview = session.preview.toLowerCase();
     final cwd = session.cwd.toLowerCase();
-    return name.contains(query) || preview.contains(query) || cwd.contains(query);
+    return name.contains(query) ||
+        preview.contains(query) ||
+        cwd.contains(query);
   }
 
   // ==================== 操作 ====================
@@ -237,8 +242,11 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
     setState(() => _creating = false);
 
     if (id == null) {
-      NeuToast.show(context,
-          message: _store.lastError ?? I18n.t('ui.96a6a6ca0f'), icon: IconId.warn);
+      NeuToast.show(
+        context,
+        message: _store.lastError ?? I18n.t('ui.96a6a6ca0f'),
+        icon: IconId.warn,
+      );
       return;
     }
     // 模板开场白：建完会话立刻发出去，省掉「再打一遍」
@@ -246,11 +254,18 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
       final sent = await _store.sendPrompt(firstMessage);
       if (!mounted) return;
       if (!sent) {
-        NeuToast.show(context,
-            message: _store.lastError ?? I18n.t('ui.370bc4a6b1'), icon: IconId.warn);
+        NeuToast.show(
+          context,
+          message: _store.lastError ?? I18n.t('ui.370bc4a6b1'),
+          icon: IconId.warn,
+        );
       }
     }
-    NeuToast.show(context, message: I18n.t('ui.b244d633d4'), icon: IconId.check);
+    NeuToast.show(
+      context,
+      message: I18n.t('ui.b244d633d4'),
+      icon: IconId.check,
+    );
     widget.onOpenChat?.call();
   }
 
@@ -266,14 +281,19 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
         final t = dialogContext.neu;
         return AlertDialog(
           backgroundColor: t.bg,
-          title: Text(I18n.t('conn.manualWorkspace'),
-              style: TextStyle(fontSize: NeuFonts.sectionTitle, color: t.fg)),
+          title: Text(
+            I18n.t('conn.manualWorkspace'),
+            style: TextStyle(fontSize: NeuFonts.sectionTitle, color: t.fg),
+          ),
           content: TextField(
             controller: controller,
             autofocus: true,
             decoration: InputDecoration(
               hintText: I18n.t('conn.manualWorkspaceHint'),
-              hintStyle: TextStyle(fontSize: NeuFonts.bodySmall, color: t.muted),
+              hintStyle: TextStyle(
+                fontSize: NeuFonts.bodySmall,
+                color: t.muted,
+              ),
             ),
             style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.fg),
             onSubmitted: (v) => Navigator.of(dialogContext).pop(v.trim()),
@@ -281,7 +301,7 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text(I18n.t('common.cancel')), 
+              child: Text(I18n.t('common.cancel')),
             ),
             TextButton(
               onPressed: () =>
@@ -313,7 +333,11 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
     final list = workspaces.toList();
 
     if (list.isEmpty) {
-      NeuToast.show(context, message: I18n.t('ui.0ef428fefc'), icon: IconId.warn);
+      NeuToast.show(
+        context,
+        message: I18n.t('ui.0ef428fefc'),
+        icon: IconId.warn,
+      );
       widget.onOpenConn?.call();
       return null;
     }
@@ -332,9 +356,16 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
           ),
           decoration: BoxDecoration(
             color: t.bg,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(NeuRadii.lg)),
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(NeuRadii.lg),
+            ),
           ),
-          padding: const EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n10, NeuSpace.n18, NeuSpace.n24),
+          padding: const EdgeInsets.fromLTRB(
+            NeuSpace.n18,
+            NeuSpace.n10,
+            NeuSpace.n18,
+            NeuSpace.n24,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -366,13 +397,25 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
                   NeuPressable(
                     onTap: () => Navigator.of(sheetContext).pop(),
                     radius: 12,
-                    padding: EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n7),
-                    child: Text(I18n.t('common.cancel'), style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.muted)),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: NeuSpace.n12,
+                      vertical: NeuSpace.n7,
+                    ),
+                    child: Text(
+                      I18n.t('common.cancel'),
+                      style: TextStyle(
+                        fontSize: NeuFonts.bodySmall,
+                        color: t.muted,
+                      ),
+                    ),
                   ),
                 ],
               ),
               SizedBox(height: NeuSpace.n2),
-              Text(I18n.t('ui.435ccbf9b2'), style: TextStyle(fontSize: NeuFonts.small, color: t.muted)),
+              Text(
+                I18n.t('ui.435ccbf9b2'),
+                style: TextStyle(fontSize: NeuFonts.small, color: t.muted),
+              ),
               const SizedBox(height: NeuSpace.n14),
               Flexible(
                 child: ListView.builder(
@@ -387,23 +430,37 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
                     if (index == 0) {
                       return NeuPressable(
                         onTap: () async {
-                          final typed = await _askWorkspacePath(sheetContext, configured);
+                          final typed = await _askWorkspacePath(
+                            sheetContext,
+                            configured,
+                          );
                           if (typed == null || !sheetContext.mounted) return;
                           Navigator.of(sheetContext).pop(typed);
                         },
                         flat: true,
                         padding: const EdgeInsets.symmetric(
-                            horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
+                          horizontal: NeuSpace.n13,
+                          vertical: NeuSpace.n13,
+                        ),
                         margin: const EdgeInsets.only(bottom: NeuSpace.n6),
                         child: Row(
                           children: [
                             NeuIcon(IconId.pen, size: 15, color: t.accentInk),
                             const SizedBox(width: NeuSpace.n10),
                             Expanded(
-                              child: Text(I18n.t('conn.manualWorkspace'),
-                                  style: TextStyle(fontSize: NeuFonts.bodyMid, color: t.accentInk)),
+                              child: Text(
+                                I18n.t('conn.manualWorkspace'),
+                                style: TextStyle(
+                                  fontSize: NeuFonts.bodyMid,
+                                  color: t.accentInk,
+                                ),
+                              ),
                             ),
-                            NeuIcon(IconId.chevronRight, size: 13, color: t.muted),
+                            NeuIcon(
+                              IconId.chevronRight,
+                              size: 13,
+                              color: t.muted,
+                            ),
                           ],
                         ),
                       );
@@ -413,7 +470,10 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
                     return NeuPressable(
                       onTap: () => Navigator.of(sheetContext).pop(path),
                       flat: true,
-                      padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: NeuSpace.n13,
+                        vertical: NeuSpace.n13,
+                      ),
                       margin: const EdgeInsets.only(bottom: NeuSpace.n6),
                       child: Row(
                         children: [
@@ -425,19 +485,31 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
                               children: [
                                 Text(
                                   path.replaceAll('\\', '/').split('/').last,
-                                  style: TextStyle(fontSize: NeuFonts.bodyMid, color: t.fg),
+                                  style: TextStyle(
+                                    fontSize: NeuFonts.bodyMid,
+                                    color: t.fg,
+                                  ),
                                 ),
                                 Text(
                                   path,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(fontSize: NeuFonts.badge, color: t.muted),
+                                  style: TextStyle(
+                                    fontSize: NeuFonts.badge,
+                                    color: t.muted,
+                                  ),
                                 ),
                               ],
                             ),
                           ),
                           if (isDefault)
-                            Text(I18n.t('ui.18c63459a2'), style: TextStyle(fontSize: NeuFonts.micro, color: t.accentInk)),
+                            Text(
+                              I18n.t('ui.18c63459a2'),
+                              style: TextStyle(
+                                fontSize: NeuFonts.micro,
+                                color: t.accentInk,
+                              ),
+                            ),
                         ],
                       ),
                     );
@@ -458,19 +530,35 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: t.bg,
-        title: Text(I18n.t('ui.78fb22f373'), style: TextStyle(color: t.fg, fontSize: NeuFonts.sectionTitle)),
+        title: Text(
+          I18n.t('ui.78fb22f373'),
+          style: TextStyle(color: t.fg, fontSize: NeuFonts.sectionTitle),
+        ),
         content: Text(
-          I18n.tp('ui.4751d5948e', {'title': session.displayTitle, 'n': session.messageCount}),
-          style: TextStyle(color: t.muted, fontSize: NeuFonts.bodyMid, height: 1.6),
+          I18n.tp('ui.4751d5948e', {
+            'title': session.displayTitle,
+            'n': session.messageCount,
+          }),
+          style: TextStyle(
+            color: t.muted,
+            fontSize: NeuFonts.bodyMid,
+            height: 1.6,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(I18n.t('common.cancel'), style: TextStyle(color: t.muted)),
+            child: Text(
+              I18n.t('common.cancel'),
+              style: TextStyle(color: t.muted),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(I18n.t('common.delete'), style: TextStyle(color: t.danger)),
+            child: Text(
+              I18n.t('common.delete'),
+              style: TextStyle(color: t.danger),
+            ),
           ),
         ],
       ),
@@ -479,7 +567,11 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
 
     final ok = await _store.deleteSession(session.id);
     if (ok && mounted) {
-      NeuToast.show(context, message: I18n.t('ui.5cc232620c'), icon: IconId.trash);
+      NeuToast.show(
+        context,
+        message: I18n.t('ui.5cc232620c'),
+        icon: IconId.trash,
+      );
     }
   }
 
@@ -509,7 +601,12 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
             // 切 Tab 回来时保留滚动位置
             key: const PageStorageKey<String>('server-sessions'),
             // 底部留出 tab 栏的高度，否则最后一组会被 tab 栏切掉
-            padding: const EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n10, NeuSpace.n18, 104),
+            padding: const EdgeInsets.fromLTRB(
+              NeuSpace.n18,
+              NeuSpace.n10,
+              NeuSpace.n18,
+              104,
+            ),
             // 内容不满一屏时也要能下拉
             physics: const AlwaysScrollableScrollPhysics(),
             itemCount: rows.length,
@@ -530,10 +627,16 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
         return Container(
           decoration: BoxDecoration(
             color: sheetContext.neu.bg,
-            borderRadius:
-                const BorderRadius.vertical(top: Radius.circular(NeuRadii.lg)),
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(NeuRadii.lg),
+            ),
           ),
-          padding: const EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n10, NeuSpace.n18, NeuSpace.n24),
+          padding: const EdgeInsets.fromLTRB(
+            NeuSpace.n18,
+            NeuSpace.n10,
+            NeuSpace.n18,
+            NeuSpace.n24,
+          ),
           child: ListenableBuilder(
             listenable: _store,
             builder: (context, _) {
@@ -554,21 +657,37 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
                     ),
                   ),
                   SizedBox(height: NeuSpace.n16),
-                  Text(I18n.tp('ui.c748caed3a', {'n': list.length}),
-                      style: TextStyle(
-                          fontSize: NeuFonts.heading,
-                          fontWeight: FontWeight.w700,
-                          color: st.fg)),
+                  Text(
+                    I18n.tp('ui.c748caed3a', {'n': list.length}),
+                    style: TextStyle(
+                      fontSize: NeuFonts.heading,
+                      fontWeight: FontWeight.w700,
+                      color: st.fg,
+                    ),
+                  ),
                   SizedBox(height: NeuSpace.n6),
-                  Text(I18n.t('ui.67a8909b85'),
-                      style: TextStyle(fontSize: NeuFonts.small, color: st.muted, height: 1.5)),
+                  Text(
+                    I18n.t('ui.67a8909b85'),
+                    style: TextStyle(
+                      fontSize: NeuFonts.small,
+                      color: st.muted,
+                      height: 1.5,
+                    ),
+                  ),
                   const SizedBox(height: NeuSpace.n12),
                   if (list.isEmpty)
                     Padding(
-                      padding: const EdgeInsets.symmetric(vertical: NeuSpace.n20),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: NeuSpace.n20,
+                      ),
                       child: Center(
-                        child: Text(I18n.t('ui.065d1a7742'),
-                            style: TextStyle(fontSize: NeuFonts.bodySmall, color: st.muted)),
+                        child: Text(
+                          I18n.t('ui.065d1a7742'),
+                          style: TextStyle(
+                            fontSize: NeuFonts.bodySmall,
+                            color: st.muted,
+                          ),
+                        ),
                       ),
                     )
                   else
@@ -582,7 +701,9 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
                         children: [
                           for (final session in list)
                             Padding(
-                              padding: const EdgeInsets.symmetric(vertical: NeuSpace.n6),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: NeuSpace.n6,
+                              ),
                               child: Row(
                                 children: [
                                   Expanded(
@@ -590,27 +711,44 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        Text(session.displayTitle,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: TextStyle(
-                                                fontSize: NeuFonts.bodySmall, color: st.fg)),
+                                        Text(
+                                          session.displayTitle,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontSize: NeuFonts.bodySmall,
+                                            color: st.fg,
+                                          ),
+                                        ),
                                         SizedBox(height: NeuSpace.n2),
                                         Text(
-                                            I18n.tp('ui.8d6dd7475a', {'ws': session.workspaceName, 'n': session.messageCount}),
-                                            style: TextStyle(
-                                                fontSize: NeuFonts.badge, color: st.muted)),
+                                          I18n.tp('ui.8d6dd7475a', {
+                                            'ws': session.workspaceName,
+                                            'n': session.messageCount,
+                                          }),
+                                          style: TextStyle(
+                                            fontSize: NeuFonts.badge,
+                                            color: st.muted,
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   ),
                                   NeuPressable(
-                                    onTap: () => _store.unarchiveSession(session.id),
+                                    onTap: () =>
+                                        _store.unarchiveSession(session.id),
                                     radius: NeuRadii.sm,
                                     padding: EdgeInsets.symmetric(
-                                        horizontal: NeuSpace.n10, vertical: NeuSpace.n6),
-                                    child: Text(I18n.t('ui.8d8324a89f'),
-                                        style: TextStyle(
-                                            fontSize: NeuFonts.small, color: st.accentInk)),
+                                      horizontal: NeuSpace.n10,
+                                      vertical: NeuSpace.n6,
+                                    ),
+                                    child: Text(
+                                      I18n.t('ui.8d8324a89f'),
+                                      style: TextStyle(
+                                        fontSize: NeuFonts.small,
+                                        color: st.accentInk,
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ),
@@ -628,87 +766,87 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
   }
 
   Widget _buildRow(NeuTokens t, _Row row) => switch (row) {
-        _ConnRow() => ConnCard(store: _store, onOpenConn: widget.onOpenConn),
-        _PoolRow() => Padding(
-            padding: const EdgeInsets.only(top: NeuSpace.n14),
-            child: RunningSessionsCard(
-              sessions: _store.pool,
-              // 点一下直接切过去：并行跑着的时候，「跳到我关心的那条」是最高频动作
-              onOpen: (p) async {
-                await _store.openSession(p.id);
-                widget.onOpenChat?.call();
-              },
-              onRefresh: _store.loadPool,
-              onClose: (p) => _store.closeLiveSession(p.id),
-            ),
+    _ConnRow() => ConnCard(store: _store, onOpenConn: widget.onOpenConn),
+    _PoolRow() => Padding(
+      padding: const EdgeInsets.only(top: NeuSpace.n14),
+      child: RunningSessionsCard(
+        sessions: _store.pool,
+        // 点一下直接切过去：并行跑着的时候，「跳到我关心的那条」是最高频动作
+        onOpen: (p) async {
+          await _store.openSession(p.id);
+          widget.onOpenChat?.call();
+        },
+        onRefresh: _store.loadPool,
+        onClose: (p) => _store.closeLiveSession(p.id),
+      ),
+    ),
+    _ArchiveRow(:final count) => Padding(
+      padding: const EdgeInsets.only(top: NeuSpace.n20),
+      child: ArchiveEntryRow(count: count, onOpen: _showArchiveSheet),
+    ),
+    _NewSessionRow() => Padding(
+      padding: const EdgeInsets.only(top: NeuSpace.n14),
+      child: NewSessionRow(
+        creating: _creating,
+        onCreate: _createSession,
+        onLongPress: _creating ? null : _showTemplateSheet,
+      ),
+    ),
+    _SectionRow(:final title) => Padding(
+      padding: const EdgeInsets.only(top: NeuSpace.n20, bottom: NeuSpace.n10),
+      child: Text(
+        title,
+        style: TextStyle(
+          fontSize: NeuFonts.sectionTitle,
+          fontWeight: FontWeight.w700,
+          color: t.onBg,
+        ),
+      ),
+    ),
+    _SearchRow() => Padding(
+      padding: const EdgeInsets.only(top: NeuSpace.n14),
+      child: SessionSearchBar(
+        query: _query,
+        controller: _searchController,
+        onQueryChanged: (value) => setState(() => _query = value),
+      ),
+    ),
+    _NoMatchRow() => Padding(
+      padding: const EdgeInsets.symmetric(vertical: 32),
+      child: Column(
+        children: [
+          NeuIcon(IconId.warn, size: 22, color: t.muted),
+          SizedBox(height: NeuSpace.n10),
+          Text(
+            I18n.tp('ui.a425983efe', {'query': _query}),
+            style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.onBgDim),
           ),
-        _ArchiveRow(:final count) => Padding(
-            padding: const EdgeInsets.only(top: NeuSpace.n20),
-            child: ArchiveEntryRow(count: count, onOpen: _showArchiveSheet),
-          ),
-        _NewSessionRow() => Padding(
-            padding: const EdgeInsets.only(top: NeuSpace.n14),
-            child: NewSessionRow(
-              creating: _creating,
-              onCreate: _createSession,
-              onLongPress: _creating ? null : _showTemplateSheet,
-            ),
-          ),
-        _SectionRow(:final title) => Padding(
-            padding: const EdgeInsets.only(top: NeuSpace.n20, bottom: NeuSpace.n10),
-            child: Text(
-              title,
-              style: TextStyle(
-                fontSize: NeuFonts.sectionTitle,
-                fontWeight: FontWeight.w700,
-                color: t.onBg,
-              ),
-            ),
-          ),
-        _SearchRow() => Padding(
-            padding: const EdgeInsets.only(top: NeuSpace.n14),
-            child: SessionSearchBar(
-              query: _query,
-              controller: _searchController,
-              onQueryChanged: (value) => setState(() => _query = value),
-            ),
-          ),
-        _NoMatchRow() => Padding(
-            padding: const EdgeInsets.symmetric(vertical: 32),
-            child: Column(
-              children: [
-                NeuIcon(IconId.warn, size: 22, color: t.muted),
-                SizedBox(height: NeuSpace.n10),
-                Text(
-                  I18n.tp('ui.a425983efe', {'query': _query}),
-                  style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.onBgDim),
-                ),
-              ],
-            ),
-          ),
-        _GroupRow(:final cwd, :final name, :final sessions, :final expanded) =>
-          SessionGroupCard(
-            cwd: cwd,
-            name: name,
-            sessions: sessions,
-            expanded: expanded,
-            runningIds: _store.pool
-                .where((p) => p.running)
-                .map((p) => p.id)
-                .toSet(),
-            onToggle: (c) => setState(() {
-              if (_store.expandedWorkspaces.contains(c)) {
-                _store.expandedWorkspaces.remove(c);
-              } else {
-                _store.expandedWorkspaces.add(c);
-              }
-            }),
-            onOpenSession: (s) => widget.onOpenSession?.call(s),
-            onOpenChat: () => widget.onOpenChat?.call(),
-            onMore: _showSessionActions,
-          ),
-        _EmptyRow() => EmptyStateView(store: _store),
-      };
+        ],
+      ),
+    ),
+    _GroupRow(:final cwd, :final name, :final sessions, :final expanded) =>
+      SessionGroupCard(
+        cwd: cwd,
+        name: name,
+        sessions: sessions,
+        expanded: expanded,
+        runningIds: _store.pool
+            .where((p) => p.running)
+            .map((p) => p.id)
+            .toSet(),
+        onToggle: (c) => setState(() {
+          if (_store.expandedWorkspaces.contains(c)) {
+            _store.expandedWorkspaces.remove(c);
+          } else {
+            _store.expandedWorkspaces.add(c);
+          }
+        }),
+        onOpenSession: (s) => widget.onOpenSession?.call(s),
+        onOpenChat: () => widget.onOpenChat?.call(),
+        onMore: _showSessionActions,
+      ),
+    _EmptyRow() => EmptyStateView(store: _store),
+  };
 
   /// 搜索框。244 条会话全在内存，本地过滤就够，不必加服务端接口。
   /// 会话操作菜单：重命名 / 删除。
@@ -727,9 +865,16 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
         return Container(
           decoration: BoxDecoration(
             color: sheetTokens.bg,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(NeuRadii.lg)),
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(NeuRadii.lg),
+            ),
           ),
-          padding: const EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n10, NeuSpace.n18, NeuSpace.n24),
+          padding: const EdgeInsets.fromLTRB(
+            NeuSpace.n18,
+            NeuSpace.n10,
+            NeuSpace.n18,
+            NeuSpace.n24,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -757,52 +902,93 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
               ),
               SizedBox(height: NeuSpace.n2),
               Text(
-                I18n.tp('ui.40f8db2889', {'n': session.messageCount, 'cwd': session.cwd}),
+                I18n.tp('ui.40f8db2889', {
+                  'n': session.messageCount,
+                  'cwd': session.cwd,
+                }),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: NeuFonts.label, color: sheetTokens.muted),
+                style: TextStyle(
+                  fontSize: NeuFonts.label,
+                  color: sheetTokens.muted,
+                ),
               ),
               const SizedBox(height: NeuSpace.n14),
               NeuPressable(
                 onTap: () => Navigator.of(sheetContext).pop('rename'),
                 flat: true,
-                padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: NeuSpace.n12,
+                  vertical: NeuSpace.n12,
+                ),
                 margin: const EdgeInsets.only(bottom: NeuSpace.n6),
                 child: Row(
                   children: [
                     NeuIcon(IconId.pen, size: 16, color: sheetTokens.accentInk),
                     SizedBox(width: NeuSpace.n10),
-                    Text(I18n.t('ui.c8ce4b36cb'), style: TextStyle(fontSize: NeuFonts.bodyTight, color: sheetTokens.fg)),
+                    Text(
+                      I18n.t('ui.c8ce4b36cb'),
+                      style: TextStyle(
+                        fontSize: NeuFonts.bodyTight,
+                        color: sheetTokens.fg,
+                      ),
+                    ),
                   ],
                 ),
               ),
               NeuPressable(
                 onTap: () => Navigator.of(sheetContext).pop('clone'),
                 flat: true,
-                padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: NeuSpace.n12,
+                  vertical: NeuSpace.n12,
+                ),
                 margin: const EdgeInsets.only(bottom: NeuSpace.n6),
                 child: Row(
                   children: [
-                    NeuIcon(IconId.download, size: 16, color: sheetTokens.accentInk),
+                    NeuIcon(
+                      IconId.download,
+                      size: 16,
+                      color: sheetTokens.accentInk,
+                    ),
                     SizedBox(width: NeuSpace.n10),
-                    Text(I18n.t('ui.5f6e171c5b'), style: TextStyle(fontSize: NeuFonts.bodyTight, color: sheetTokens.fg)),
+                    Text(
+                      I18n.t('ui.5f6e171c5b'),
+                      style: TextStyle(
+                        fontSize: NeuFonts.bodyTight,
+                        color: sheetTokens.fg,
+                      ),
+                    ),
                   ],
                 ),
               ),
               NeuPressable(
-                onTap: () => Navigator.of(sheetContext)
-                    .pop(isArchived ? 'unarchive' : 'archive'),
+                onTap: () =>
+                    Navigator.of(sheetContext)
+                        .pop(isArchived ? 'unarchive' : 'archive'),
                 flat: true,
-                padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: NeuSpace.n12,
+                  vertical: NeuSpace.n12,
+                ),
                 margin: const EdgeInsets.only(bottom: NeuSpace.n6),
                 child: Row(
                   children: [
-                    NeuIcon(IconId.folder, size: 16, color: sheetTokens.accentInk),
+                    NeuIcon(
+                      IconId.folder,
+                      size: 16,
+                      color: sheetTokens.accentInk,
+                    ),
                     SizedBox(width: NeuSpace.n10),
                     Expanded(
                       child: Text(
-                        isArchived ? I18n.t('ui.bc83e0c0c2') : I18n.t('ui.dac78a7368'),
-                        style: TextStyle(fontSize: NeuFonts.bodyTight, color: sheetTokens.fg),
+                        isArchived
+                            ? I18n.t('ui.bc83e0c0c2')
+                            : I18n.t('ui.dac78a7368'),
+                        style: TextStyle(
+                          fontSize: NeuFonts.bodyTight,
+                          color: sheetTokens.fg,
+                        ),
                       ),
                     ),
                   ],
@@ -811,12 +997,21 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
               NeuPressable(
                 onTap: () => Navigator.of(sheetContext).pop('delete'),
                 flat: true,
-                padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: NeuSpace.n12,
+                  vertical: NeuSpace.n12,
+                ),
                 child: Row(
                   children: [
                     NeuIcon(IconId.trash, size: 16, color: sheetTokens.danger),
                     SizedBox(width: NeuSpace.n10),
-                    Text(I18n.t('common.delete'), style: TextStyle(fontSize: NeuFonts.bodyTight, color: sheetTokens.danger)),
+                    Text(
+                      I18n.t('common.delete'),
+                      style: TextStyle(
+                        fontSize: NeuFonts.bodyTight,
+                        color: sheetTokens.danger,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -833,20 +1028,30 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
       final newId = await _store.cloneSession(sessionId: session.id);
       if (!mounted) return;
       if (newId != null) {
-        NeuToast.show(context, message: I18n.t('ui.d228d6f331'), icon: IconId.check);
+        NeuToast.show(
+          context,
+          message: I18n.t('ui.d228d6f331'),
+          icon: IconId.check,
+        );
         widget.onOpenChat?.call();
       }
     } else if (action == 'archive') {
       await _store.archiveSession(session.id);
       if (!mounted) return;
       // 说清楚「归档 ≠ 删除」：用户最怕的是「我的会话是不是没了」
-      NeuToast.show(context,
-          message: I18n.t('ui.0708eadaa1'),
-          icon: IconId.check);
+      NeuToast.show(
+        context,
+        message: I18n.t('ui.0708eadaa1'),
+        icon: IconId.check,
+      );
     } else if (action == 'unarchive') {
       await _store.unarchiveSession(session.id);
       if (!mounted) return;
-      NeuToast.show(context, message: I18n.t('ui.e8b121d05d'), icon: IconId.check);
+      NeuToast.show(
+        context,
+        message: I18n.t('ui.e8b121d05d'),
+        icon: IconId.check,
+      );
     } else if (action == 'delete') {
       await _deleteSession(session);
     }
@@ -860,7 +1065,10 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
         context: context,
         builder: (dialogContext) => AlertDialog(
           backgroundColor: t.bg,
-          title: Text(I18n.t('ui.3e654d807c'), style: TextStyle(color: t.fg, fontSize: NeuFonts.sectionTitle)),
+          title: Text(
+            I18n.t('ui.3e654d807c'),
+            style: TextStyle(color: t.fg, fontSize: NeuFonts.sectionTitle),
+          ),
           content: NeuInset(
             radius: NeuRadii.sm,
             padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n12),
@@ -872,8 +1080,13 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
                 isDense: true,
                 border: InputBorder.none,
                 hintText: I18n.t('ui.fd081a3eac'),
-                hintStyle: TextStyle(fontSize: NeuFonts.bodySmall, color: t.muted),
-                contentPadding: const EdgeInsets.symmetric(vertical: NeuSpace.n12),
+                hintStyle: TextStyle(
+                  fontSize: NeuFonts.bodySmall,
+                  color: t.muted,
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: NeuSpace.n12,
+                ),
               ),
               onSubmitted: (value) => Navigator.of(dialogContext).pop(value),
             ),
@@ -881,11 +1094,17 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text(I18n.t('common.cancel'), style: TextStyle(color: t.muted)),
+              child: Text(
+                I18n.t('common.cancel'),
+                style: TextStyle(color: t.muted),
+              ),
             ),
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(controller.text),
-              child: Text(I18n.t('common.save'), style: TextStyle(color: t.accentInk)),
+              child: Text(
+                I18n.t('common.save'),
+                style: TextStyle(color: t.accentInk),
+              ),
             ),
           ],
         ),
@@ -893,7 +1112,11 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
       if (name == null || !mounted) return;
       final ok = await _store.renameSession(session.id, name);
       if (ok && mounted) {
-        NeuToast.show(context, message: I18n.t('ui.560e8629e3'), icon: IconId.check);
+        NeuToast.show(
+          context,
+          message: I18n.t('ui.560e8629e3'),
+          icon: IconId.check,
+        );
       }
     } finally {
       controller.dispose();
@@ -913,7 +1136,11 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
       backgroundColor: Colors.transparent,
       builder: (sheetContext) => Container(
         margin: EdgeInsets.fromLTRB(
-            NeuSpace.n14, 0, NeuSpace.n14, NeuSpace.n14 + MediaQuery.paddingOf(sheetContext).bottom),
+          NeuSpace.n14,
+          0,
+          NeuSpace.n14,
+          NeuSpace.n14 + MediaQuery.paddingOf(sheetContext).bottom,
+        ),
         padding: const EdgeInsets.symmetric(vertical: NeuSpace.n10),
         constraints: BoxConstraints(
           maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.6,
@@ -928,10 +1155,20 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n4, NeuSpace.n18, NeuSpace.n8),
-              child: Text(I18n.t('ui.08d9b34843'),
-                  style: TextStyle(
-                      fontSize: NeuFonts.bodyLg, fontWeight: FontWeight.w700, color: t.fg)),
+              padding: const EdgeInsets.fromLTRB(
+                NeuSpace.n18,
+                NeuSpace.n4,
+                NeuSpace.n18,
+                NeuSpace.n8,
+              ),
+              child: Text(
+                I18n.t('ui.08d9b34843'),
+                style: TextStyle(
+                  fontSize: NeuFonts.bodyLg,
+                  fontWeight: FontWeight.w700,
+                  color: t.fg,
+                ),
+              ),
             ),
             Flexible(
               child: ListView(
@@ -942,10 +1179,18 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
                     _templateRow(sheetContext, t, item, item),
                   if (templates.isEmpty)
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n10, NeuSpace.n18, NeuSpace.n6),
+                      padding: const EdgeInsets.fromLTRB(
+                        NeuSpace.n18,
+                        NeuSpace.n10,
+                        NeuSpace.n18,
+                        NeuSpace.n6,
+                      ),
                       child: Text(
                         I18n.t('ui.b47293f027'),
-                        style: TextStyle(fontSize: NeuFonts.label, color: t.muted),
+                        style: TextStyle(
+                          fontSize: NeuFonts.label,
+                          color: t.muted,
+                        ),
                       ),
                     ),
                 ],
@@ -960,17 +1205,30 @@ class _ServerSessionsPageState extends State<ServerSessionsPage> {
   }
 
   Widget _templateRow(
-      BuildContext sheetContext, NeuTokens t, String label, String value) {
+    BuildContext sheetContext,
+    NeuTokens t,
+    String label,
+    String value,
+  ) {
     return NeuPressable(
       onTap: () => Navigator.of(sheetContext).pop(value),
       flat: true,
       radius: NeuRadii.sm,
-      padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n18, vertical: NeuSpace.n13),
-      margin: const EdgeInsets.symmetric(horizontal: NeuSpace.n6, vertical: NeuSpace.n1),
+      padding: const EdgeInsets.symmetric(
+        horizontal: NeuSpace.n18,
+        vertical: NeuSpace.n13,
+      ),
+      margin: const EdgeInsets.symmetric(
+        horizontal: NeuSpace.n6,
+        vertical: NeuSpace.n1,
+      ),
       child: Row(
         children: [
-          NeuIcon(value.isEmpty ? IconId.bubble : IconId.pen,
-              size: 15, color: t.muted),
+          NeuIcon(
+            value.isEmpty ? IconId.bubble : IconId.pen,
+            size: 15,
+            color: t.muted,
+          ),
           const SizedBox(width: NeuSpace.n10),
           Expanded(
             child: Text(

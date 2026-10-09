@@ -87,7 +87,9 @@ class ChatReducer {
       messages.add(ChatMessage.fromPiMessage(message, key: _nextKey()));
     }
     contextMessages = messages.length;
-    historyTotal = snapshot.historyTotal == 0 ? messages.length : snapshot.historyTotal;
+    historyTotal = snapshot.historyTotal == 0
+        ? messages.length
+        : snapshot.historyTotal;
     historyHasMore = snapshot.historyHasMore;
     historyStart = historyTotal - messages.length;
     _last = messages.isEmpty ? null : messages.last;
@@ -99,7 +101,9 @@ class ChatReducer {
   /// 直接用快照重建的话，用户翻上去看的历史会被冲掉（只剩最近几十条），
   /// 表现就是「重新载入后历史不见了」。
   void mergeSnapshot(SessionSnapshot snapshot) {
-    final incoming = snapshot.messages.where((m) => m.role != 'system').toList();
+    final incoming = snapshot.messages
+        .where((m) => m.role != 'system')
+        .toList();
 
     // 已结束的工具记录要清掉：重连后 toolCallId 不一定复用，留着会一直累积（内存），
     // 界面上也残留上一轮的工具卡片。运行中的保留，否则正在跑的工具会凭空消失。
@@ -111,7 +115,9 @@ class ChatReducer {
     autoCompactionEnabled = snapshot.autoCompactionEnabled;
     isRunning = snapshot.isStreaming;
     if (isRunning) runStartedAt ??= DateTime.now().millisecondsSinceEpoch;
-    historyTotal = snapshot.historyTotal == 0 ? incoming.length : snapshot.historyTotal;
+    historyTotal = snapshot.historyTotal == 0
+        ? incoming.length
+        : snapshot.historyTotal;
     historyHasMore = snapshot.historyHasMore;
 
     // 本地比快照多出来的部分就是用户翻页加载过的，留着
@@ -152,8 +158,7 @@ class ChatReducer {
           final provider = event.data['provider'] as String? ?? '';
           final modelId = event.data['modelId'] as String? ?? '';
           if (provider.isNotEmpty || modelId.isNotEmpty) {
-            notice = I18n.tp('ui.cd8057fce0',
-                {'p': provider, 'm': modelId});
+            notice = I18n.tp('ui.cd8057fce0', {'p': provider, 'm': modelId});
           }
           return true;
         }
@@ -217,8 +222,7 @@ class ChatReducer {
 
       case 'compaction_end':
         notice = event.data['errorMessage'] != null
-            ? I18n.tp('ui.7cec835f67',
-                {'e': event.data['errorMessage']})
+            ? I18n.tp('ui.7cec835f67', {'e': event.data['errorMessage']})
             : null;
         return true;
 
@@ -289,11 +293,13 @@ class ChatReducer {
         return true;
       case 'toolcall_start':
         // 服务端在 start 时补了 id 与 toolName；参数要等 message_end 才有
-        target.toolCalls.add(PiToolCall(
-          id: update['id'] as String? ?? '',
-          name: update['toolName'] as String? ?? '',
-          arguments: const {},
-        ));
+        target.toolCalls.add(
+          PiToolCall(
+            id: update['id'] as String? ?? '',
+            name: update['toolName'] as String? ?? '',
+            arguments: const {},
+          ),
+        );
         return true;
       case 'toolcall_delta':
         // 参数 JSON 的片段，流式期间不解析；message_end 会给完整参数
@@ -301,8 +307,9 @@ class ChatReducer {
       case 'toolcall_end':
         final call = update['toolCall'];
         if (call is Map && target.toolCalls.isNotEmpty) {
-          target.toolCalls[target.toolCalls.length - 1] =
-              PiToolCall.fromMap(call.cast<String, dynamic>());
+          target.toolCalls[target.toolCalls.length - 1] = PiToolCall.fromMap(
+            call.cast<String, dynamic>(),
+          );
           return true;
         }
         return false;
@@ -335,10 +342,12 @@ class ChatReducer {
   bool _onToolStart(Map<String, dynamic> data) {
     final id = data['toolCallId'] as String?;
     if (id == null) return false;
-    final run = tools[id] ?? ToolRun(
-      id: id,
-      name: data['toolName'] as String? ?? I18n.t('ui.20dce2c6fa'),
-    );
+    final run =
+        tools[id] ??
+        ToolRun(
+          id: id,
+          name: data['toolName'] as String? ?? I18n.t('ui.20dce2c6fa'),
+        );
     run.status = ToolStatus.running;
     tools[id] = run;
     return true;

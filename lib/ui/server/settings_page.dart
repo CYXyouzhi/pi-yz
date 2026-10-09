@@ -4,6 +4,7 @@
 // 所以重做一个精简版；旧的 SettingsPage 保留在代码里但不再引用。
 
 import 'package:flutter/material.dart';
+
 import '../collapsible_text.dart';
 
 import '../../server/app_prefs.dart';
@@ -24,7 +25,6 @@ import 'settings/app_section.dart';
 import 'settings/conn_section.dart';
 import 'settings/workspace_section.dart';
 import 'settings/widgets.dart';
-
 
 class ServerSettingsPage extends StatefulWidget {
   const ServerSettingsPage({
@@ -66,7 +66,12 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
       listenable: store,
       builder: (context, _) => ListView(
         // 底部留出 tab 栏高度，否则「关于」最后一行被遮住
-        padding: EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n14, NeuSpace.n18, 104),
+        padding: EdgeInsets.fromLTRB(
+          NeuSpace.n18,
+          NeuSpace.n14,
+          NeuSpace.n18,
+          104,
+        ),
         children: [
           Text(
             I18n.t('tab.settings'),
@@ -99,7 +104,10 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
           // 「分组标题 + 展开后又一行同样标题」的重复感。
           NeuRaised(
             radius: NeuRadii.lg,
-            padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n14, vertical: NeuSpace.n4),
+            padding: const EdgeInsets.symmetric(
+              horizontal: NeuSpace.n14,
+              vertical: NeuSpace.n4,
+            ),
             child: NeuPressable(
               onTap: () {
                 Navigator.of(context).push(
@@ -109,7 +117,10 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
                 );
               },
               flat: true,
-              padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n12),
+              padding: const EdgeInsets.symmetric(
+                horizontal: NeuSpace.n12,
+                vertical: NeuSpace.n12,
+              ),
               child: Row(
                 children: [
                   NeuIcon(IconId.spinner, size: 17, color: t.accentInk),
@@ -120,7 +131,10 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
                       children: [
                         Text(
                           I18n.t('ui.5258ce61e8'),
-                          style: TextStyle(fontSize: NeuFonts.bodyTight, color: t.fg),
+                          style: TextStyle(
+                            fontSize: NeuFonts.bodyTight,
+                            color: t.fg,
+                          ),
                         ),
                         SizedBox(height: NeuSpace.n2),
                         Text(
@@ -130,7 +144,10 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
                           // （这是先靠 golden 基线看出来的 —— 断言式用例抓不到「没溢出但换了行」）。
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: NeuFonts.label, color: t.muted),
+                          style: TextStyle(
+                            fontSize: NeuFonts.label,
+                            color: t.muted,
+                          ),
                         ),
                       ],
                     ),
@@ -141,7 +158,11 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
             ),
           ),
           SizedBox(height: NeuSpace.n20),
-          _section(t, I18n.t('settings.appearance', context: context), icon: IconId.image),
+          _section(
+            t,
+            I18n.t('settings.appearance', context: context),
+            icon: IconId.image,
+          ),
           if (_expanded.contains(
             I18n.t('settings.appearance', context: context),
           )) ...[
@@ -187,19 +208,28 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
             SizedBox(height: NeuSpace.n20),
 
             // ==================== 后台保活（补 task-10 的已知不足） ====================
-            _section(t, I18n.t('ui.066ae8d7d6'),
-                icon: IconId.power,
-                summary: AppPrefs.instance.keepAlive
-                    ? I18n.t('ui.97f76f1a29')
-                    : I18n.t('ui.d58a55bcee')),
+            _section(
+              t,
+              I18n.t('ui.066ae8d7d6'),
+              icon: IconId.power,
+              summary: AppPrefs.instance.keepAlive
+                  ? I18n.t('ui.97f76f1a29')
+                  : I18n.t('ui.d58a55bcee'),
+            ),
             if (_expanded.contains(I18n.t('ui.066ae8d7d6'))) ...[
               NeuRaised(
                 radius: NeuRadii.lg,
-                padding: const EdgeInsets.fromLTRB(NeuSpace.n14, NeuSpace.n12, NeuSpace.n14, NeuSpace.n12),
+                padding: const EdgeInsets.fromLTRB(
+                  NeuSpace.n14,
+                  NeuSpace.n12,
+                  NeuSpace.n14,
+                  NeuSpace.n12,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    NotifToggle(I18n.t('ui.97f76f1a29'),
+                    NotifToggle(
+                      I18n.t('ui.97f76f1a29'),
                       AppPrefs.instance.keepAlive,
                       (value) async {
                         await AppPrefs.instance.setKeepAlive(value);
@@ -217,9 +247,11 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
                         } else {
                           await NativeBridge.stopKeepAlive();
                           if (!context.mounted) return;
-                          NeuToast.show(context,
-                              message: I18n.t('ui.cbfd37e24c'),
-                              icon: IconId.check);
+                          NeuToast.show(
+                            context,
+                            message: I18n.t('ui.cbfd37e24c'),
+                            icon: IconId.check,
+                          );
                         }
                       },
                     ),
@@ -227,12 +259,16 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
                     // 保活说明有 4–5 行，典型「想懂了有用、不想看时占地方」：
                     // 默认收成一行，点开看全文（手机竖屏的竖向空间最贵）。
                     CollapsibleText(
-                      text: '${I18n.t('ui.27109fea19')}'
+                      text:
+                          '${I18n.t('ui.27109fea19')}'
                           '${I18n.tp('ui.c97d59e36c', {'n': SessionCache.maxSessions})}'
                           '${I18n.t('ui.74d486f798')}'
                           '${I18n.t('ui.3df36a0007')}',
                       style: TextStyle(
-                          fontSize: NeuFonts.label, height: 1.5, color: t.muted),
+                        fontSize: NeuFonts.label,
+                        height: 1.5,
+                        color: t.muted,
+                      ),
                     ),
                   ],
                 ),
@@ -249,199 +285,230 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
                   children: [
                     _section(t, I18n.t('ui.5660bcd256'), icon: IconId.bubble),
                     if (_expanded.contains(I18n.t('ui.5660bcd256'))) ...[
-                    NeuRaised(
-                      radius: NeuRadii.lg,
-                      padding: EdgeInsets.fromLTRB(NeuSpace.n14, NeuSpace.n12, NeuSpace.n14, NeuSpace.n12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          NotifToggle(I18n.t('ui.0a2ef2dec1'), notif.notifyOnDone, (
-                            v,
-                          ) async {
-                            notif.notifyOnDone = v;
-                            await notif.setEnabled(notif.enabled);
-                          }),
-                          NotifToggle(I18n.t('ui.dd24107d75'), notif.notifyOnError, (
-                            v,
-                          ) async {
-                            notif.notifyOnError = v;
-                            await notif.setEnabled(notif.enabled);
-                          }),
-                          NotifToggle(I18n.t('ui.a7b4addcc2'), notif.notifyOnNeedInput, (
-                            v,
-                          ) async {
-                            notif.notifyOnNeedInput = v;
-                            await notif.setEnabled(notif.enabled);
-                          }),
-                          NotifToggle(I18n.t('ui.4f1313e28c'),
-                            notif.watchOnly,
-                            notif.setWatchOnly,
-                          ),
-                          NotifToggle(I18n.t('ui.a8b60db178'),
-                            notif.quickReply,
-                            notif.setQuickReply,
-                          ),
-                          SizedBox(height: NeuSpace.n6),
-                          PrefLabel(I18n.t('ui.b33eaa597b')),
-                          PrefChips([
-                              (I18n.t('ui.f4ae4ba20c'), 60),
-                              (I18n.t('ui.265b0f8cf7'), 120),
-                              (I18n.t('ui.ec13baff37'), 300),
-                              (I18n.t('ui.0e19f86e8d'), 600),
-                            ],
-                            current: notif.stallSeconds.toDouble(),
-                            onPick: (v) => notif.setStallSeconds(v.round()),
-                          ),
-                          SizedBox(height: NeuSpace.n10),
-                          PrefLabel(I18n.t('ui.be63fac285')),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: PrefChips([
-                                    (I18n.t('ui.6224248126'), 0),
-                                    ('23→8', 1),
-                                    ('22→7', 2),
-                                    ('0→7', 3),
-                                  ],
-                                  current: !notif.dndEnabled
-                                      ? 0
-                                      : notif.dndStartHour == 22
-                                      ? 2
-                                      : notif.dndStartHour == 0
-                                      ? 3
-                                      : 1,
-                                  onPick: (v) {
-                                    switch (v.round()) {
-                                      case 0:
-                                        notif.setDnd(on: false);
-                                      case 1:
-                                        notif.setDnd(
-                                          on: true,
-                                          startHour: 23,
-                                          endHour: 8,
-                                        );
-                                      case 2:
-                                        notif.setDnd(
-                                          on: true,
-                                          startHour: 22,
-                                          endHour: 7,
-                                        );
-                                      default:
-                                        notif.setDnd(
-                                          on: true,
-                                          startHour: 0,
-                                          endHour: 7,
-                                        );
-                                    }
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: NeuSpace.n10),
-                          // 权限与「被压掉的提醒」都要看得见：不然用户只会觉得「没提醒」
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  notif.enabled
-                                      ? I18n.tp('ui.ded70fe6ab', {
-                        'dnd': notif.inDndWindow ? I18n.t('ui.13b31d4b3e') : '',
-                      })
-                                      : I18n.t('ui.b0a2bb16fb'),
-                                  style: TextStyle(
-                                    fontSize: NeuFonts.small,
-                                    color: t.muted,
-                                  ),
-                                ),
-                              ),
-                              NeuPressable(
-                                onTap: () => notif.setEnabled(!notif.enabled),
-                                radius: NeuRadii.sm,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: NeuSpace.n12,
-                                  vertical: NeuSpace.n8,
-                                ),
-                                child: Text(
-                                  notif.enabled ? I18n.t('ui.3ee093d39a') : I18n.t('ui.e9e41b7e7f'),
-                                  style: TextStyle(
-                                    fontSize: NeuFonts.sub,
-                                    color: t.accentInk,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          if (notif.suppressed.isNotEmpty) ...[
-                            SizedBox(height: NeuSpace.n8),
-                            Text(
-                              I18n.tp('ui.ac2a29973b', {'n': notif.suppressed.length}),
-                              style: TextStyle(fontSize: NeuFonts.label, color: t.muted),
+                      NeuRaised(
+                        radius: NeuRadii.lg,
+                        padding: EdgeInsets.fromLTRB(
+                          NeuSpace.n14,
+                          NeuSpace.n12,
+                          NeuSpace.n14,
+                          NeuSpace.n12,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            NotifToggle(
+                              I18n.t('ui.0a2ef2dec1'),
+                              notif.notifyOnDone,
+                              (v) async {
+                                notif.notifyOnDone = v;
+                                await notif.setEnabled(notif.enabled);
+                              },
                             ),
-                            for (final item in notif.suppressed.take(3))
-                              Padding(
-                                padding: const EdgeInsets.only(top: NeuSpace.n2),
-                                child: Text(
-                                  '· $item',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: NeuFonts.badge,
-                                    color: t.muted,
+                            NotifToggle(
+                              I18n.t('ui.dd24107d75'),
+                              notif.notifyOnError,
+                              (v) async {
+                                notif.notifyOnError = v;
+                                await notif.setEnabled(notif.enabled);
+                              },
+                            ),
+                            NotifToggle(
+                              I18n.t('ui.a7b4addcc2'),
+                              notif.notifyOnNeedInput,
+                              (v) async {
+                                notif.notifyOnNeedInput = v;
+                                await notif.setEnabled(notif.enabled);
+                              },
+                            ),
+                            NotifToggle(
+                              I18n.t('ui.4f1313e28c'),
+                              notif.watchOnly,
+                              notif.setWatchOnly,
+                            ),
+                            NotifToggle(
+                              I18n.t('ui.a8b60db178'),
+                              notif.quickReply,
+                              notif.setQuickReply,
+                            ),
+                            SizedBox(height: NeuSpace.n6),
+                            PrefLabel(I18n.t('ui.b33eaa597b')),
+                            PrefChips(
+                              [
+                                (I18n.t('ui.f4ae4ba20c'), 60),
+                                (I18n.t('ui.265b0f8cf7'), 120),
+                                (I18n.t('ui.ec13baff37'), 300),
+                                (I18n.t('ui.0e19f86e8d'), 600),
+                              ],
+                              current: notif.stallSeconds.toDouble(),
+                              onPick: (v) => notif.setStallSeconds(v.round()),
+                            ),
+                            SizedBox(height: NeuSpace.n10),
+                            PrefLabel(I18n.t('ui.be63fac285')),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: PrefChips(
+                                    [
+                                      (I18n.t('ui.6224248126'), 0),
+                                      ('23→8', 1),
+                                      ('22→7', 2),
+                                      ('0→7', 3),
+                                    ],
+                                    current: !notif.dndEnabled
+                                        ? 0
+                                        : notif.dndStartHour == 22
+                                        ? 2
+                                        : notif.dndStartHour == 0
+                                        ? 3
+                                        : 1,
+                                    onPick: (v) {
+                                      switch (v.round()) {
+                                        case 0:
+                                          notif.setDnd(on: false);
+                                        case 1:
+                                          notif.setDnd(
+                                            on: true,
+                                            startHour: 23,
+                                            endHour: 8,
+                                          );
+                                        case 2:
+                                          notif.setDnd(
+                                            on: true,
+                                            startHour: 22,
+                                            endHour: 7,
+                                          );
+                                        default:
+                                          notif.setDnd(
+                                            on: true,
+                                            startHour: 0,
+                                            endHour: 7,
+                                          );
+                                      }
+                                    },
                                   ),
                                 ),
-                              ),
-                          ],
-                          SizedBox(height: NeuSpace.n6),
-                          Text(
-                            I18n.tp('ui.226628b2da', {'check': notif.selfCheck}),
-                            style: TextStyle(fontSize: NeuFonts.micro, color: t.muted),
-                          ),
-                          const SizedBox(height: NeuSpace.n8),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: NeuPressable(
-                                  onTap: () => _testNotification(context, t),
-                                  radius: NeuRadii.sm,
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: NeuSpace.n10,
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      I18n.t('ui.8454029f34'),
-                                      style: TextStyle(
-                                        fontSize: NeuFonts.sub,
-                                        color: t.accentInk,
-                                      ),
+                              ],
+                            ),
+                            const SizedBox(height: NeuSpace.n10),
+                            // 权限与「被压掉的提醒」都要看得见：不然用户只会觉得「没提醒」
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    notif.enabled
+                                        ? I18n.tp('ui.ded70fe6ab', {
+                                            'dnd': notif.inDndWindow
+                                                ? I18n.t('ui.13b31d4b3e')
+                                                : '',
+                                          })
+                                        : I18n.t('ui.b0a2bb16fb'),
+                                    style: TextStyle(
+                                      fontSize: NeuFonts.small,
+                                      color: t.muted,
                                     ),
                                   ),
                                 ),
-                              ),
-                              const SizedBox(width: NeuSpace.n8),
-                              Expanded(
-                                child: NeuPressable(
-                                  onTap: () => _pickStuckSeconds(context, t),
+                                NeuPressable(
+                                  onTap: () => notif.setEnabled(!notif.enabled),
                                   radius: NeuRadii.sm,
                                   padding: const EdgeInsets.symmetric(
-                                    vertical: NeuSpace.n10,
+                                    horizontal: NeuSpace.n12,
+                                    vertical: NeuSpace.n8,
                                   ),
-                                  child: Center(
-                                    child: Text(
-                                      I18n.t('ui.6c237fca7f'),
-                                      style: TextStyle(
-                                        fontSize: NeuFonts.sub,
-                                        color: t.muted,
-                                      ),
+                                  child: Text(
+                                    notif.enabled
+                                        ? I18n.t('ui.3ee093d39a')
+                                        : I18n.t('ui.e9e41b7e7f'),
+                                    style: TextStyle(
+                                      fontSize: NeuFonts.sub,
+                                      color: t.accentInk,
                                     ),
                                   ),
                                 ),
+                              ],
+                            ),
+                            if (notif.suppressed.isNotEmpty) ...[
+                              SizedBox(height: NeuSpace.n8),
+                              Text(
+                                I18n.tp('ui.ac2a29973b', {
+                                  'n': notif.suppressed.length,
+                                }),
+                                style: TextStyle(
+                                  fontSize: NeuFonts.label,
+                                  color: t.muted,
+                                ),
                               ),
+                              for (final item in notif.suppressed.take(3))
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                    top: NeuSpace.n2,
+                                  ),
+                                  child: Text(
+                                    '· $item',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: NeuFonts.badge,
+                                      color: t.muted,
+                                    ),
+                                  ),
+                                ),
                             ],
-                          ),
-                        ],
+                            SizedBox(height: NeuSpace.n6),
+                            Text(
+                              I18n.tp('ui.226628b2da', {
+                                'check': notif.selfCheck,
+                              }),
+                              style: TextStyle(
+                                fontSize: NeuFonts.micro,
+                                color: t.muted,
+                              ),
+                            ),
+                            const SizedBox(height: NeuSpace.n8),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: NeuPressable(
+                                    onTap: () => _testNotification(context, t),
+                                    radius: NeuRadii.sm,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: NeuSpace.n10,
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        I18n.t('ui.8454029f34'),
+                                        style: TextStyle(
+                                          fontSize: NeuFonts.sub,
+                                          color: t.accentInk,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: NeuSpace.n8),
+                                Expanded(
+                                  child: NeuPressable(
+                                    onTap: () => _pickStuckSeconds(context, t),
+                                    radius: NeuRadii.sm,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: NeuSpace.n10,
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        I18n.t('ui.6c237fca7f'),
+                                        style: TextStyle(
+                                          fontSize: NeuFonts.sub,
+                                          color: t.muted,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
                     ],
                   ],
                 );
@@ -457,51 +524,56 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _section(t, I18n.t('settings.language', context: context),
-                        icon: IconId.cmd,
-                        summary: lang == 'zh'
-                            ? '中文'
-                            : (lang == 'en' ? 'English' : I18n.t('theme.system'))),
-                    if (_expanded.contains(I18n.t('settings.language', context: context))) ...[
-                    NeuRaised(
-                      radius: NeuRadii.lg,
-                      padding: const EdgeInsets.all(NeuSpace.n6),
-                      child: Row(
-                        children: [
-                          for (final option in const [
-                            ('zh', 'lang.zh'),
-                            ('en', 'lang.en'),
-                            ('system', 'lang.system'),
-                          ])
-                            Expanded(
-                              child: NeuPressable(
-                                onTap: () =>
-                                    AppPrefs.instance.setLang(option.$1),
-                                flat: lang != option.$1,
-                                alwaysInset: lang == option.$1,
-                                radius: NeuRadii.sm,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: NeuSpace.n11,
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    I18n.t(option.$2, context: context),
-                                    style: TextStyle(
-                                      fontSize: NeuFonts.bodySmall,
-                                      color: lang == option.$1
-                                          ? t.accentInk
-                                          : t.muted,
-                                      fontWeight: lang == option.$1
-                                          ? FontWeight.w600
-                                          : FontWeight.w400,
+                    _section(
+                      t,
+                      I18n.t('settings.language', context: context),
+                      icon: IconId.cmd,
+                      summary: lang == 'zh'
+                          ? '中文'
+                          : (lang == 'en' ? 'English' : I18n.t('theme.system')),
+                    ),
+                    if (_expanded.contains(
+                      I18n.t('settings.language', context: context),
+                    )) ...[
+                      NeuRaised(
+                        radius: NeuRadii.lg,
+                        padding: const EdgeInsets.all(NeuSpace.n6),
+                        child: Row(
+                          children: [
+                            for (final option in const [
+                              ('zh', 'lang.zh'),
+                              ('en', 'lang.en'),
+                              ('system', 'lang.system'),
+                            ])
+                              Expanded(
+                                child: NeuPressable(
+                                  onTap: () =>
+                                      AppPrefs.instance.setLang(option.$1),
+                                  flat: lang != option.$1,
+                                  alwaysInset: lang == option.$1,
+                                  radius: NeuRadii.sm,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: NeuSpace.n11,
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      I18n.t(option.$2, context: context),
+                                      style: TextStyle(
+                                        fontSize: NeuFonts.bodySmall,
+                                        color: lang == option.$1
+                                            ? t.accentInk
+                                            : t.muted,
+                                        fontWeight: lang == option.$1
+                                            ? FontWeight.w600
+                                            : FontWeight.w400,
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
-                            ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
                     ],
                   ],
                 );
@@ -541,7 +613,10 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
         context: context,
         builder: (dialogContext) => AlertDialog(
           backgroundColor: t.bg,
-          title: Text(I18n.t('ui.af3e668e71'), style: TextStyle(color: t.fg, fontSize: NeuFonts.heading)),
+          title: Text(
+            I18n.t('ui.af3e668e71'),
+            style: TextStyle(color: t.fg, fontSize: NeuFonts.heading),
+          ),
           content: TextField(
             controller: controller,
             keyboardType: TextInputType.number,
@@ -551,14 +626,20 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text(I18n.t('common.cancel'), style: TextStyle(color: t.muted)),
+              child: Text(
+                I18n.t('common.cancel'),
+                style: TextStyle(color: t.muted),
+              ),
             ),
             TextButton(
               onPressed: () {
                 final parsed = int.tryParse(controller.text.trim());
                 Navigator.of(dialogContext).pop(parsed);
               },
-              child: Text(I18n.t('common.save'), style: TextStyle(color: t.accentInk)),
+              child: Text(
+                I18n.t('common.save'),
+                style: TextStyle(color: t.accentInk),
+              ),
             ),
           ],
         ),
@@ -577,7 +658,11 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
     if (!granted) {
       await notif.requestPermission();
       if (!context.mounted) return;
-      NeuToast.show(context, message: I18n.t('ui.87ad4d4da6'), icon: IconId.info);
+      NeuToast.show(
+        context,
+        message: I18n.t('ui.87ad4d4da6'),
+        icon: IconId.info,
+      );
       return;
     }
     final ok = await notif.sendTest();
@@ -613,7 +698,12 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
               top: Radius.circular(NeuRadii.lg),
             ),
           ),
-          padding: EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n14, NeuSpace.n18, NeuSpace.n24),
+          padding: EdgeInsets.fromLTRB(
+            NeuSpace.n18,
+            NeuSpace.n14,
+            NeuSpace.n18,
+            NeuSpace.n24,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -642,7 +732,10 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
                         margin: const EdgeInsets.only(bottom: NeuSpace.n6),
                         child: Text(
                           cwd,
-                          style: TextStyle(fontSize: NeuFonts.sub, color: st.fg),
+                          style: TextStyle(
+                            fontSize: NeuFonts.sub,
+                            color: st.fg,
+                          ),
                         ),
                       ),
                     NeuPressable(
@@ -654,7 +747,10 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
                       ),
                       child: Text(
                         I18n.t('ui.f447ebec03'),
-                        style: TextStyle(fontSize: NeuFonts.sub, color: st.muted),
+                        style: TextStyle(
+                          fontSize: NeuFonts.sub,
+                          color: st.muted,
+                        ),
                       ),
                     ),
                   ],
@@ -670,7 +766,9 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
     if (!context.mounted) return;
     NeuToast.show(
       context,
-      message: picked.isEmpty ? I18n.t('ui.add6e7b352') : I18n.tp('ui.9b86661544', {'picked': picked}),
+      message: picked.isEmpty
+          ? I18n.t('ui.add6e7b352')
+          : I18n.tp('ui.9b86661544', {'picked': picked}),
       icon: IconId.check,
     );
   }
@@ -700,7 +798,12 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
               top: Radius.circular(NeuRadii.lg),
             ),
           ),
-          padding: const EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n14, NeuSpace.n18, NeuSpace.n24),
+          padding: const EdgeInsets.fromLTRB(
+            NeuSpace.n18,
+            NeuSpace.n14,
+            NeuSpace.n18,
+            NeuSpace.n24,
+          ),
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -724,10 +827,16 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
                 const SizedBox(height: NeuSpace.n10),
                 for (final entry in byProvider.entries) ...[
                   Padding(
-                    padding: const EdgeInsets.only(top: NeuSpace.n8, bottom: NeuSpace.n4),
+                    padding: const EdgeInsets.only(
+                      top: NeuSpace.n8,
+                      bottom: NeuSpace.n4,
+                    ),
                     child: Text(
                       entry.key,
-                      style: TextStyle(fontSize: NeuFonts.label, color: st.muted),
+                      style: TextStyle(
+                        fontSize: NeuFonts.label,
+                        color: st.muted,
+                      ),
                     ),
                   ),
                   for (final model in entry.value)
@@ -749,11 +858,16 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
                               children: [
                                 Text(
                                   model.name,
-                                  style: TextStyle(fontSize: NeuFonts.bodySmall, color: st.fg),
+                                  style: TextStyle(
+                                    fontSize: NeuFonts.bodySmall,
+                                    color: st.fg,
+                                  ),
                                 ),
                                 Text(
-                                  I18n.tp('ui.b7077d029c',
-                    {'provider': model.provider, 'window': model.contextWindow ?? '?'}),
+                                  I18n.tp('ui.b7077d029c', {
+                                    'provider': model.provider,
+                                    'window': model.contextWindow ?? '?',
+                                  }),
                                   style: TextStyle(
                                     fontSize: NeuFonts.micro,
                                     color: st.muted,
@@ -841,12 +955,12 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
   bool _isOpen(String key) => _expanded.contains(key);
 
   void _toggle(String key) => setState(() {
-        if (_expanded.contains(key)) {
-          _expanded.remove(key);
-        } else {
-          _expanded.add(key);
-        }
-      });
+    if (_expanded.contains(key)) {
+      _expanded.remove(key);
+    } else {
+      _expanded.add(key);
+    }
+  });
 
   /// 保留这层薄包装：8 个分组的调用点都写 `_section(t, I18n.t(...), ...)`，
   /// 让它继续读 `_expanded` 并调 setState，就不用改那 8 处。

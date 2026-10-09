@@ -48,11 +48,11 @@ class _LogPageState extends State<LogPage> {
   }
 
   Color _levelColor(NeuTokens t, LogLevel level) => switch (level) {
-        LogLevel.error => t.danger,
-        LogLevel.warn => t.warn,
-        LogLevel.info => t.accentInk,
-        LogLevel.debug => t.muted,
-      };
+    LogLevel.error => t.danger,
+    LogLevel.warn => t.warn,
+    LogLevel.info => t.accentInk,
+    LogLevel.debug => t.muted,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -63,14 +63,22 @@ class _LogPageState extends State<LogPage> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n8, NeuSpace.n12, NeuSpace.n8),
+              padding: const EdgeInsets.fromLTRB(
+                NeuSpace.n18,
+                NeuSpace.n8,
+                NeuSpace.n12,
+                NeuSpace.n8,
+              ),
               child: Row(
                 children: [
                   NeuPressable(
                     onTap: () => Navigator.of(context).maybePop(),
                     radius: 12,
                     child: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n12),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: NeuSpace.n12,
+                        vertical: NeuSpace.n12,
+                      ),
                       child: NeuIcon(IconId.chevronLeft, size: 16),
                     ),
                   ),
@@ -79,33 +87,49 @@ class _LogPageState extends State<LogPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(I18n.t('ui.456d29ef8b'),
-                            style: TextStyle(
-                              fontSize: NeuFonts.pageTitle,
-                              fontWeight: FontWeight.w700,
-                              color: t.onBg,
-                            )),
-                        Text(I18n.tp('ui.29889d892e', {'n': _entries.length}),
-                            style: TextStyle(fontSize: NeuFonts.label, color: t.muted)),
+                        Text(
+                          I18n.t('ui.456d29ef8b'),
+                          style: TextStyle(
+                            fontSize: NeuFonts.pageTitle,
+                            fontWeight: FontWeight.w700,
+                            color: t.onBg,
+                          ),
+                        ),
+                        Text(
+                          I18n.tp('ui.29889d892e', {'n': _entries.length}),
+                          style: TextStyle(
+                            fontSize: NeuFonts.label,
+                            color: t.muted,
+                          ),
+                        ),
                       ],
                     ),
                   ),
                   NeuPressable(
                     onTap: () async {
                       final text = _entries
-                          .map((e) =>
-                              '${e.time.toIso8601String()} [${e.level.name}] ${e.tag}: ${e.message}')
+                          .map(
+                            (e) =>
+                                '${e.time.toIso8601String()} [${e.level.name}] ${e.tag}: ${e.message}',
+                          )
                           .join('\n');
                       await Clipboard.setData(ClipboardData(text: text));
                       if (context.mounted) {
-                        NeuToast.show(context,
-                            message: I18n.tp('ui.a2e6d79651', {'n': _entries.length}),
-                            icon: IconId.check);
+                        NeuToast.show(
+                          context,
+                          message: I18n.tp('ui.a2e6d79651', {
+                            'n': _entries.length,
+                          }),
+                          icon: IconId.check,
+                        );
                       }
                     },
                     radius: 12,
                     child: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n12),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: NeuSpace.n12,
+                        vertical: NeuSpace.n12,
+                      ),
                       child: NeuIcon(IconId.pen, size: 16),
                     ),
                   ),
@@ -116,7 +140,10 @@ class _LogPageState extends State<LogPage> {
                     },
                     radius: 12,
                     child: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n12),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: NeuSpace.n12,
+                        vertical: NeuSpace.n12,
+                      ),
                       child: NeuIcon(IconId.trash, size: 16),
                     ),
                   ),
@@ -126,28 +153,42 @@ class _LogPageState extends State<LogPage> {
             Expanded(
               child: _entries.isEmpty
                   ? Center(
-                      child: Text(I18n.t('ui.761a77f1f9'),
-                          style: TextStyle(fontSize: NeuFonts.sub, color: t.muted)),
+                      child: Text(
+                        I18n.t('ui.761a77f1f9'),
+                        style: TextStyle(
+                          fontSize: NeuFonts.sub,
+                          color: t.muted,
+                        ),
+                      ),
                     )
                   : ListView.builder(
                       controller: _scroll,
-                      padding: const EdgeInsets.fromLTRB(NeuSpace.n14, NeuSpace.n4, NeuSpace.n14, 30),
+                      padding: const EdgeInsets.fromLTRB(
+                        NeuSpace.n14,
+                        NeuSpace.n4,
+                        NeuSpace.n14,
+                        30,
+                      ),
                       itemCount: _entries.length,
                       itemBuilder: (context, index) {
                         final entry = _entries[index];
-                        final time = entry.time
-                            .toIso8601String()
-                            .substring(11, 19);
+                        final time = entry.time.toIso8601String().substring(
+                          11,
+                          19,
+                        );
                         return Padding(
                           padding: const EdgeInsets.only(bottom: NeuSpace.n6),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(time,
-                                  style: TextStyle(
-                                      fontSize: NeuFonts.badge,
-                                      fontFamily: 'monospace',
-                                      color: t.muted)),
+                              Text(
+                                time,
+                                style: TextStyle(
+                                  fontSize: NeuFonts.badge,
+                                  fontFamily: 'monospace',
+                                  color: t.muted,
+                                ),
+                              ),
                               const SizedBox(width: NeuSpace.n8),
                               Expanded(
                                 child: Text.rich(

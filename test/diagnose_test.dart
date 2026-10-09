@@ -78,14 +78,14 @@ void main() {
 
   group('DiagReport：报告文本与结论', () {
     DiagReport build(List<DiagStep> steps) => DiagReport(
-          host: '10.1.1.195',
-          port: 30142,
-          token: 'abcdefghijklmn',
-          defaultCwd: 'C:/work',
-          steps: steps,
-          startedAt: DateTime(2026, 10, 4, 8, 30),
-          elapsed: const Duration(milliseconds: 120),
-        );
+      host: '10.1.1.195',
+      port: 30142,
+      token: 'abcdefghijklmn',
+      defaultCwd: 'C:/work',
+      steps: steps,
+      startedAt: DateTime(2026, 10, 4, 8, 30),
+      elapsed: const Duration(milliseconds: 120),
+    );
 
     test('全部通过时结论就是「全部通过」', () {
       final report = build([

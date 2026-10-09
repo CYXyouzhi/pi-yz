@@ -80,7 +80,10 @@ class WorkspaceSection extends StatelessWidget {
                           children: [
                             Text(
                               I18n.t('ui.5ba881d3c3'),
-                              style: TextStyle(fontSize: NeuFonts.bodyTight, color: t.fg),
+                              style: TextStyle(
+                                fontSize: NeuFonts.bodyTight,
+                                color: t.fg,
+                              ),
                             ),
                             SizedBox(height: NeuSpace.n2),
                             Text(
@@ -106,7 +109,10 @@ class WorkspaceSection extends StatelessWidget {
                     ),
                   ),
                   flat: true,
-                  padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: NeuSpace.n12,
+                    vertical: NeuSpace.n12,
+                  ),
                   child: Row(
                     children: [
                       NeuIcon(IconId.server, size: 17, color: t.accentInk),
@@ -117,7 +123,10 @@ class WorkspaceSection extends StatelessWidget {
                           children: [
                             Text(
                               I18n.t('ui.b9d0f24c4c'),
-                              style: TextStyle(fontSize: NeuFonts.bodyTight, color: t.fg),
+                              style: TextStyle(
+                                fontSize: NeuFonts.bodyTight,
+                                color: t.fg,
+                              ),
                             ),
                             SizedBox(height: NeuSpace.n2),
                             Text(

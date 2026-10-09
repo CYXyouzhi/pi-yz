@@ -1,0 +1,38 @@
+# 编辑器统一配置。
+#
+# 与 .gitattributes 的分工：
+#   · .gitattributes  管「git 存什么、检出成什么」（仓库内一律 LF）
+#   · .editorconfig   管「编辑器写什么」（保存时用哪种换行、几个空格）
+# 两者必须一致，否则就会出现「编辑器写 CRLF → git 转 LF → diff 假改动」那类噪音。
+#
+# 换行符与 .gitattributes 保持同一套：默认 LF，Windows 批处理保留 CRLF。
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+# Markdown 行尾两个空格 = 换行，删了会改变渲染结果
+[*.md]
+trim_trailing_whitespace = false
+
+# Windows 批处理必须是 CRLF（与 .gitattributes 一致）
+[*.{cmd,bat}]
+end_of_line = crlf
+
+# Kotlin / Gradle 惯例是 4 空格
+[*.{kt,kts,gradle}]
+indent_size = 4
+
+# JSON / YAML 缩进
+[*.{json,yml,yaml}]
+indent_size = 2
+
+# 测试基线图是二进制，别让编辑器做任何转换
+[*.png]
+insert_final_newline = false
+end_of_line = unset

@@ -54,7 +54,11 @@ void main() {
     await tapTab(tester, '设置');
 
     // 前提：「工作区」分组确实存在（否则这条用例什么都没验证）
-    expect(find.text(kWorkspace), findsWidgets, reason: '前提：设置页应该有「$kWorkspace」分组');
+    expect(
+      find.text(kWorkspace),
+      findsWidgets,
+      reason: '前提：设置页应该有「$kWorkspace」分组',
+    );
     await tapVisible(tester, find.text(kWorkspace));
     expect(tester.takeException(), isNull);
 
@@ -77,10 +81,6 @@ void main() {
 
     // 反面对照：「文件浏览」跟工作区确实是相干的，应该留在该分组里 ——
     // 防止「收敛入口」时舞过头把它一起挪走。
-    expect(
-      find.text('文件浏览'),
-      findsWidgets,
-      reason: '「文件浏览」跟工作区相干，应该留在该分组里',
-    );
+    expect(find.text('文件浏览'), findsWidgets, reason: '「文件浏览」跟工作区相干，应该留在该分组里');
   });
 }

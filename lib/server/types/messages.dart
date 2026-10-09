@@ -3,7 +3,6 @@
 // 由 server_types.dart 拆分而来（原文件保留为 barrel，
 // 所以调用方 import 路径不用改）。
 
-
 int? parseTimestamp(Object? raw) {
   if (raw == null) return null;
   if (raw is num) return raw.toInt();
@@ -13,14 +12,10 @@ int? parseTimestamp(Object? raw) {
   return DateTime.tryParse(text)?.millisecondsSinceEpoch;
 }
 
-
-
-
 class PiText extends PiContent {
   const PiText(this.text);
   final String text;
 }
-
 
 class PiThinking extends PiContent {
   const PiThinking(this.thinking, {this.redacted = false});
@@ -28,22 +23,32 @@ class PiThinking extends PiContent {
   final bool redacted;
 }
 
-
 class PiToolCall extends PiContent {
-  const PiToolCall({required this.id, required this.name, required this.arguments});
+  const PiToolCall({
+    required this.id,
+    required this.name,
+    required this.arguments,
+  });
   final String id;
   final String name;
   final Map<String, dynamic> arguments;
 
   factory PiToolCall.fromMap(Map<String, dynamic> json) => PiToolCall(
-        id: json['id'] as String? ?? '',
-        name: json['name'] as String? ?? '',
-        arguments: (json['arguments'] as Map?)?.cast<String, dynamic>() ?? const {},
-      );
+    id: json['id'] as String? ?? '',
+    name: json['name'] as String? ?? '',
+    arguments: (json['arguments'] as Map?)?.cast<String, dynamic>() ?? const {},
+  );
 
   /// 工具参数的简短摘要，用于工具卡片副标题
   String get summary {
-    for (final key in const ['command', 'path', 'pattern', 'query', 'url', 'prompt']) {
+    for (final key in const [
+      'command',
+      'path',
+      'pattern',
+      'query',
+      'url',
+      'prompt',
+    ]) {
       final value = arguments[key];
       if (value is String && value.isNotEmpty) return value;
     }
@@ -53,7 +58,6 @@ class PiToolCall extends PiContent {
   }
 }
 
-
 class PiImage extends PiContent {
   const PiImage({required this.data, required this.mimeType});
   final String data;
@@ -61,7 +65,6 @@ class PiImage extends PiContent {
 }
 
 /// 一条消息。role: user | assistant | toolResult | system | custom | ...
-
 
 /// token 用量
 class PiUsage {
@@ -114,7 +117,8 @@ sealed class PiContent {
         return PiToolCall(
           id: json['id'] as String? ?? '',
           name: json['name'] as String? ?? '',
-          arguments: (json['arguments'] as Map?)?.cast<String, dynamic>() ?? const {},
+          arguments:
+              (json['arguments'] as Map?)?.cast<String, dynamic>() ?? const {},
         );
       case 'image':
         return PiImage(
@@ -126,7 +130,6 @@ sealed class PiContent {
     }
   }
 }
-
 
 /// 一条消息。role: user | assistant | toolResult | system | custom | ...
 class PiMessage {
@@ -158,7 +161,8 @@ class PiMessage {
   String get text => content.whereType<PiText>().map((c) => c.text).join();
 
   /// 思考部分
-  String get thinking => content.whereType<PiThinking>().map((c) => c.thinking).join();
+  String get thinking =>
+      content.whereType<PiThinking>().map((c) => c.thinking).join();
 
   List<PiToolCall> get toolCalls => content.whereType<PiToolCall>().toList();
 
@@ -190,7 +194,8 @@ class PiMessage {
     // 摘要类消息（分支摘要 branchSummary / 自动压缩 compactionSummary）：
     // pi 把正文放在 summary 字段而不是 content —— 不读它界面上就是个空气泡。
     final role = json['role'] as String? ?? 'unknown';
-    if (blocks.isEmpty && (role == 'branchSummary' || role == 'compactionSummary')) {
+    if (blocks.isEmpty &&
+        (role == 'branchSummary' || role == 'compactionSummary')) {
       final summary = json['summary'];
       if (summary is String && summary.isNotEmpty) blocks.add(PiText(summary));
     }
@@ -203,7 +208,9 @@ class PiMessage {
       toolCallId: json['toolCallId'] as String?,
       isError: json['isError'] as bool? ?? false,
       timestamp: parseTimestamp(json['timestamp']),
-      usage: rawUsage is Map ? PiUsage.fromJson(rawUsage.cast<String, dynamic>()) : null,
+      usage: rawUsage is Map
+          ? PiUsage.fromJson(rawUsage.cast<String, dynamic>())
+          : null,
       raw: json,
     );
   }

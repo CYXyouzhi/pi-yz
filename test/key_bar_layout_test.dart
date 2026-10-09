@@ -20,33 +20,38 @@ import 'package:pi_yz/theme/neu_theme.dart';
 import 'package:pi_yz/ui/key_bar.dart';
 
 Widget _wrap(Widget child) => MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: buildNeuTheme(NeuTokens.light, brightness: Brightness.light),
-      home: NeuCanvas(
-        brightness: Brightness.light,
-        child: Scaffold(backgroundColor: Colors.transparent, body: child),
-      ),
-    );
+  debugShowCheckedModeBanner: false,
+  theme: buildNeuTheme(NeuTokens.light, brightness: Brightness.light),
+  home: NeuCanvas(
+    brightness: Brightness.light,
+    child: Scaffold(backgroundColor: Colors.transparent, body: child),
+  ),
+);
 
 /// 聊天页传的那套参数：有 `/` 命令键、有 `⏎` 发送键、不显示修饰键。
 NeuKeyBar _chatKeyBar({required bool expanded}) => NeuKeyBar(
-      visible: true,
-      expanded: expanded,
-      onExpandedChanged: (_) {},
-      onVisibleChanged: (_) {},
-      modifiers: const ModifierState(),
-      onModifiersChanged: (_) {},
-      onKey: (_) {},
-      onCommands: () {},
-      onEnter: () {},
-      showModifiers: false,
-    );
+  visible: true,
+  expanded: expanded,
+  onExpandedChanged: (_) {},
+  onVisibleChanged: (_) {},
+  modifiers: const ModifierState(),
+  onModifiersChanged: (_) {},
+  onKey: (_) {},
+  onCommands: () {},
+  onEnter: () {},
+  showModifiers: false,
+);
 
 void main() {
   testWidgets('折叠态：一排键都能布局出来', (tester) async {
-    await tester.pumpWidget(_wrap(
-      Column(mainAxisSize: MainAxisSize.min, children: [_chatKeyBar(expanded: false)]),
-    ));
+    await tester.pumpWidget(
+      _wrap(
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [_chatKeyBar(expanded: false)],
+        ),
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
@@ -55,9 +60,14 @@ void main() {
   });
 
   testWidgets('展开态：标题和键位都要出来（用户报的那一条）', (tester) async {
-    await tester.pumpWidget(_wrap(
-      Column(mainAxisSize: MainAxisSize.min, children: [_chatKeyBar(expanded: true)]),
-    ));
+    await tester.pumpWidget(
+      _wrap(
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [_chatKeyBar(expanded: true)],
+        ),
+      ),
+    );
     await tester.pumpAndSettle();
 
     // 布局异常必须先被抓住 —— 只说「找不到 Esc」会把根因藏起来
@@ -72,17 +82,19 @@ void main() {
     var expanded = false;
     late StateSetter setOuter;
 
-    await tester.pumpWidget(_wrap(
-      StatefulBuilder(
-        builder: (context, setState) {
-          setOuter = setState;
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [_chatKeyBar(expanded: expanded)],
-          );
-        },
+    await tester.pumpWidget(
+      _wrap(
+        StatefulBuilder(
+          builder: (context, setState) {
+            setOuter = setState;
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [_chatKeyBar(expanded: expanded)],
+            );
+          },
+        ),
       ),
-    ));
+    );
     await tester.pumpAndSettle();
 
     for (final want in [true, false, true]) {

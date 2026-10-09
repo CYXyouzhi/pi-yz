@@ -72,17 +72,29 @@ class _SessionExportPageState extends State<SessionExportPage> {
       final file = File('${exportDir.path}/$_filename');
       await file.writeAsString(_markdown, flush: true);
       if (!mounted) return;
-      NeuToast.show(context, message: I18n.tp('ui.8af708690a', {'path': file.path}), icon: IconId.check);
+      NeuToast.show(
+        context,
+        message: I18n.tp('ui.8af708690a', {'path': file.path}),
+        icon: IconId.check,
+      );
     } catch (error) {
       if (!mounted) return;
-      NeuToast.show(context, message: I18n.tp('ui.d7c8e237a5', {'error': error}), icon: IconId.warn);
+      NeuToast.show(
+        context,
+        message: I18n.tp('ui.d7c8e237a5', {'error': error}),
+        icon: IconId.warn,
+      );
     }
   }
 
   Future<void> _copyAll() async {
     await Clipboard.setData(ClipboardData(text: _markdown));
     if (!mounted) return;
-    NeuToast.show(context, message: I18n.t('ui.1b857f46f0'), icon: IconId.check);
+    NeuToast.show(
+      context,
+      message: I18n.t('ui.1b857f46f0'),
+      icon: IconId.check,
+    );
   }
 
   Future<void> _exportToServer() async {
@@ -90,13 +102,21 @@ class _SessionExportPageState extends State<SessionExportPage> {
     if (!mounted) return;
     if (result == null) return;
     setState(() => _serverPaths = result);
-    NeuToast.show(context, message: I18n.t('ui.2a5478aa2c'), icon: IconId.check);
+    NeuToast.show(
+      context,
+      message: I18n.t('ui.2a5478aa2c'),
+      icon: IconId.check,
+    );
   }
 
   Future<void> _copy(String text, String label) async {
     await Clipboard.setData(ClipboardData(text: text));
     if (!mounted) return;
-    NeuToast.show(context, message: I18n.tp('ui.eb2ee57cb4', {'label': label}), icon: IconId.check);
+    NeuToast.show(
+      context,
+      message: I18n.tp('ui.eb2ee57cb4', {'label': label}),
+      icon: IconId.check,
+    );
   }
 
   @override
@@ -111,23 +131,41 @@ class _SessionExportPageState extends State<SessionExportPage> {
             Expanded(
               child: _loading
                   ? Center(
-                      child: Text(I18n.t('ui.5f31a99e96'), style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.muted)),
+                      child: Text(
+                        I18n.t('ui.5f31a99e96'),
+                        style: TextStyle(
+                          fontSize: NeuFonts.bodySmall,
+                          color: t.muted,
+                        ),
+                      ),
                     )
                   : _error != null
-                      ? Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(NeuSpace.n24),
-                            child: Text(
-                              _error!,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.muted, height: 1.7),
-                            ),
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(NeuSpace.n24),
+                        child: Text(
+                          _error!,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: NeuFonts.bodySmall,
+                            color: t.muted,
+                            height: 1.7,
                           ),
-                        )
-                      : SingleChildScrollView(
-                          padding: const EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n4, NeuSpace.n18, 28),
-                          child: NeuMarkdown(data: _markdown, fontSize: NeuFonts.bodyMid),
                         ),
+                      ),
+                    )
+                  : SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(
+                        NeuSpace.n18,
+                        NeuSpace.n4,
+                        NeuSpace.n18,
+                        28,
+                      ),
+                      child: NeuMarkdown(
+                        data: _markdown,
+                        fontSize: NeuFonts.bodyMid,
+                      ),
+                    ),
             ),
           ],
         ),
@@ -137,7 +175,12 @@ class _SessionExportPageState extends State<SessionExportPage> {
 
   Widget _header(NeuTokens t) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(NeuSpace.n14, NeuSpace.n10, NeuSpace.n14, NeuSpace.n8),
+      padding: const EdgeInsets.fromLTRB(
+        NeuSpace.n14,
+        NeuSpace.n10,
+        NeuSpace.n14,
+        NeuSpace.n8,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -147,7 +190,10 @@ class _SessionExportPageState extends State<SessionExportPage> {
                 onTap: () => Navigator.of(context).pop(),
                 radius: 12,
                 child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n12),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: NeuSpace.n12,
+                    vertical: NeuSpace.n12,
+                  ),
                   child: NeuIcon(IconId.chevronLeft, size: 16),
                 ),
               ),
@@ -169,7 +215,10 @@ class _SessionExportPageState extends State<SessionExportPage> {
                         _filename,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: NeuFonts.label, color: t.muted),
+                        style: TextStyle(
+                          fontSize: NeuFonts.label,
+                          color: t.muted,
+                        ),
                       ),
                   ],
                 ),
@@ -181,9 +230,24 @@ class _SessionExportPageState extends State<SessionExportPage> {
             spacing: 8,
             runSpacing: 8,
             children: [
-              _chip(t, IconId.cmd, I18n.t('ui.290b624aca'), _loading ? null : _copyAll),
-              _chip(t, IconId.download, I18n.t('ui.03fcdf562e'), _loading ? null : _saveToPhone),
-              _chip(t, IconId.server, I18n.t('ui.50242e8bb9'), _loading ? null : _exportToServer),
+              _chip(
+                t,
+                IconId.cmd,
+                I18n.t('ui.290b624aca'),
+                _loading ? null : _copyAll,
+              ),
+              _chip(
+                t,
+                IconId.download,
+                I18n.t('ui.03fcdf562e'),
+                _loading ? null : _saveToPhone,
+              ),
+              _chip(
+                t,
+                IconId.server,
+                I18n.t('ui.50242e8bb9'),
+                _loading ? null : _exportToServer,
+              ),
             ],
           ),
           if (_serverPaths != null) ...[
@@ -193,20 +257,36 @@ class _SessionExportPageState extends State<SessionExportPage> {
                 Padding(
                   padding: const EdgeInsets.only(top: NeuSpace.n4),
                   child: NeuPressable(
-                    onTap: () => _copy(entry.value,
-                        I18n.tp('ui.9aa63cf775', {'key': entry.key.toUpperCase()})),
+                    onTap: () => _copy(
+                      entry.value,
+                      I18n.tp('ui.9aa63cf775', {
+                        'key': entry.key.toUpperCase(),
+                      }),
+                    ),
                     radius: NeuRadii.sm,
-                    padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n14, vertical: NeuSpace.n14),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: NeuSpace.n14,
+                      vertical: NeuSpace.n14,
+                    ),
                     child: Row(
                       children: [
-                        Text('${entry.key.toUpperCase()} ',
-                            style: TextStyle(fontSize: NeuFonts.micro, color: t.accentInk)),
+                        Text(
+                          '${entry.key.toUpperCase()} ',
+                          style: TextStyle(
+                            fontSize: NeuFonts.micro,
+                            color: t.accentInk,
+                          ),
+                        ),
                         Expanded(
                           child: Text(
                             entry.value,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(fontSize: NeuFonts.micro, color: t.muted, height: 1.4),
+                            style: TextStyle(
+                              fontSize: NeuFonts.micro,
+                              color: t.muted,
+                              height: 1.4,
+                            ),
                           ),
                         ),
                         NeuIcon(IconId.cmd, size: 13, color: t.muted),
@@ -224,14 +304,22 @@ class _SessionExportPageState extends State<SessionExportPage> {
     return NeuPressable(
       onTap: onTap,
       radius: NeuRadii.sm,
-      padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n14, vertical: NeuSpace.n14),
+      padding: const EdgeInsets.symmetric(
+        horizontal: NeuSpace.n14,
+        vertical: NeuSpace.n14,
+      ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           NeuIcon(icon, size: 13, color: onTap == null ? t.muted : t.accentInk),
           const SizedBox(width: NeuSpace.n6),
-          Text(label,
-              style: TextStyle(fontSize: NeuFonts.sub, color: onTap == null ? t.muted : t.fg)),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: NeuFonts.sub,
+              color: onTap == null ? t.muted : t.fg,
+            ),
+          ),
         ],
       ),
     );

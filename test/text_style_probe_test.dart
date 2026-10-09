@@ -32,7 +32,10 @@ void main() {
                   ),
                 ),
                 // 3) 等宽字（预览页里也用等宽字）
-                Text('mono', style: TextStyle(fontFamily: 'monospace', fontSize: 12)),
+                Text(
+                  'mono',
+                  style: TextStyle(fontFamily: 'monospace', fontSize: 12),
+                ),
               ],
             ),
           ),
@@ -45,8 +48,10 @@ void main() {
       final el = tester.element(find.text(labelText));
       final dflt = DefaultTextStyle.of(el).style;
       final rich = el.widget as Text;
-      print('[$labelText] DefaultTextStyle.decoration=${dflt.decoration} '
-          'color=${dflt.decorationColor} | 自身 style.decoration=${rich.style?.decoration}');
+      print(
+        '[$labelText] DefaultTextStyle.decoration=${dflt.decoration} '
+        'color=${dflt.decorationColor} | 自身 style.decoration=${rich.style?.decoration}',
+      );
     }
 
     probe('plain');
@@ -55,7 +60,9 @@ void main() {
 
     // 主题里 bodyMedium 的 decoration
     final theme = Theme.of(tester.element(find.text('plain')));
-    print('theme.textTheme.bodyMedium.decoration=${theme.textTheme.bodyMedium?.decoration}');
+    print(
+      'theme.textTheme.bodyMedium.decoration=${theme.textTheme.bodyMedium?.decoration}',
+    );
     print('neu extension present=${theme.extension<NeuTheme>() != null}');
   });
 }

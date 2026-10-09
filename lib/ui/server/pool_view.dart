@@ -49,7 +49,12 @@ class RunningSessionsCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(NeuRadii.md),
         border: Border.all(color: t.border),
       ),
-      padding: const EdgeInsets.fromLTRB(NeuSpace.n14, NeuSpace.n12, NeuSpace.n14, NeuSpace.n8),
+      padding: const EdgeInsets.fromLTRB(
+        NeuSpace.n14,
+        NeuSpace.n12,
+        NeuSpace.n14,
+        NeuSpace.n8,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -65,9 +70,14 @@ class RunningSessionsCard extends StatelessWidget {
               ),
               SizedBox(width: NeuSpace.n8),
               Text(
-                running > 0 ? I18n.tp('ui.e3e9b48350', {'n': running}) : I18n.t('ui.35eb0b8e30'),
+                running > 0
+                    ? I18n.tp('ui.e3e9b48350', {'n': running})
+                    : I18n.t('ui.35eb0b8e30'),
                 style: TextStyle(
-                    fontSize: NeuFonts.bodySmall, fontWeight: FontWeight.w700, color: t.fg),
+                  fontSize: NeuFonts.bodySmall,
+                  fontWeight: FontWeight.w700,
+                  color: t.fg,
+                ),
               ),
               SizedBox(width: NeuSpace.n8),
               Expanded(
@@ -79,7 +89,10 @@ class RunningSessionsCard extends StatelessWidget {
               NeuPressable(
                 onTap: onRefresh,
                 radius: NeuRadii.sm,
-                padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: NeuSpace.n13,
+                  vertical: NeuSpace.n13,
+                ),
                 child: NeuIcon(IconId.sync, size: 15, color: t.muted),
               ),
             ],
@@ -104,7 +117,10 @@ class RunningSessionsCard extends StatelessWidget {
     return NeuPressable(
       onTap: () => onOpen(s),
       radius: NeuRadii.sm,
-      padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n14, vertical: NeuSpace.n14),
+      padding: const EdgeInsets.symmetric(
+        horizontal: NeuSpace.n14,
+        vertical: NeuSpace.n14,
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -126,7 +142,10 @@ class RunningSessionsCard extends StatelessWidget {
                     Text(
                       s.workspaceName,
                       style: TextStyle(
-                          fontSize: NeuFonts.label, color: t.muted, fontFamily: 'monospace'),
+                        fontSize: NeuFonts.label,
+                        color: t.muted,
+                        fontFamily: 'monospace',
+                      ),
                     ),
                     if (s.lastAction.isNotEmpty) ...[
                       const SizedBox(width: NeuSpace.n6),
@@ -136,9 +155,10 @@ class RunningSessionsCard extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                              fontSize: NeuFonts.label,
-                              color: t.accentInk,
-                              fontFamily: 'monospace'),
+                            fontSize: NeuFonts.label,
+                            color: t.accentInk,
+                            fontFamily: 'monospace',
+                          ),
                         ),
                       ),
                     ] else
@@ -154,8 +174,10 @@ class RunningSessionsCard extends StatelessWidget {
                 ),
                 if (parts.isNotEmpty) ...[
                   const SizedBox(height: NeuSpace.n2),
-                  Text(parts.join(' · '),
-                      style: TextStyle(fontSize: NeuFonts.badge, color: t.muted)),
+                  Text(
+                    parts.join(' · '),
+                    style: TextStyle(fontSize: NeuFonts.badge, color: t.muted),
+                  ),
                 ],
               ],
             ),
@@ -231,35 +253,44 @@ class _StoragePageState extends State<StoragePage> {
 
   Future<void> _delete(DiskSession s, DiskGroup g) async {
     if (_runningIds.contains(s.id)) {
-      NeuToast.show(context,
-          message: I18n.t('ui.2d951376b5'), icon: IconId.warn);
+      NeuToast.show(
+        context,
+        message: I18n.t('ui.2d951376b5'),
+        icon: IconId.warn,
+      );
       return;
     }
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: ctx.neu.surface,
-        title: Text(I18n.t('ui.643e2ff2b9'), style: TextStyle(color: ctx.neu.fg, fontSize: NeuFonts.sectionTitle)),
+        title: Text(
+          I18n.t('ui.643e2ff2b9'),
+          style: TextStyle(color: ctx.neu.fg, fontSize: NeuFonts.sectionTitle),
+        ),
         content: Text(
-          '${I18n.tp('ui.cd0d2003f0', {
-            'title': s.title,
-            'size': humanBytes(s.bytes),
-            'n': s.messages,
-          })}'
-          '${I18n.tp('ui.86b3ddbe40', {
-            'ws': g.workspaceName,
-            'size': humanBytes(s.bytes),
-          })}',
-          style: TextStyle(color: ctx.neu.muted, fontSize: NeuFonts.bodyMid, height: 1.5),
+          '${I18n.tp('ui.cd0d2003f0', {'title': s.title, 'size': humanBytes(s.bytes), 'n': s.messages})}'
+          '${I18n.tp('ui.86b3ddbe40', {'ws': g.workspaceName, 'size': humanBytes(s.bytes)})}',
+          style: TextStyle(
+            color: ctx.neu.muted,
+            fontSize: NeuFonts.bodyMid,
+            height: 1.5,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(I18n.t('common.cancel'), style: TextStyle(color: ctx.neu.muted)),
+            child: Text(
+              I18n.t('common.cancel'),
+              style: TextStyle(color: ctx.neu.muted),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(I18n.t('common.delete'), style: TextStyle(color: ctx.neu.danger)),
+            child: Text(
+              I18n.t('common.delete'),
+              style: TextStyle(color: ctx.neu.danger),
+            ),
           ),
         ],
       ),
@@ -269,17 +300,23 @@ class _StoragePageState extends State<StoragePage> {
     final done = await _store.deleteSession(s.id);
     if (!mounted) return;
     if (done) {
-      NeuToast.show(context, message: I18n.tp('ui.5fa4f9c0f7', {'size': humanBytes(s.bytes)}),
-          icon: IconId.check);
+      NeuToast.show(
+        context,
+        message: I18n.tp('ui.5fa4f9c0f7', {'size': humanBytes(s.bytes)}),
+        icon: IconId.check,
+      );
       // 归档标记顺手清掉（这条 id 不会再出现）
       // 故意不等：刷新磁盘缓存失败不影响本次操作；显式标 unawaited 表明是刻意而非漏写
       unawaited(_store.loadDisk());
     } else {
       // 服务端拒绝的情况（正在跑）会走这里，原因已在 store.lastError 里
-      NeuToast.show(context,
-          message: I18n.tp('ui.dd5666e6e0',
-              {'e': _store.lastError ?? I18n.t('ui.31bbcc36d8')}),
-          icon: IconId.warn);
+      NeuToast.show(
+        context,
+        message: I18n.tp('ui.dd5666e6e0', {
+          'e': _store.lastError ?? I18n.t('ui.31bbcc36d8'),
+        }),
+        icon: IconId.warn,
+      );
     }
   }
 
@@ -291,8 +328,14 @@ class _StoragePageState extends State<StoragePage> {
       appBar: AppBar(
         backgroundColor: t.bg,
         elevation: 0,
-        title: Text(I18n.t('ui.b9d0f24c4c'),
-            style: TextStyle(color: t.fg, fontSize: NeuFonts.sectionTitle, fontWeight: FontWeight.w700)),
+        title: Text(
+          I18n.t('ui.b9d0f24c4c'),
+          style: TextStyle(
+            color: t.fg,
+            fontSize: NeuFonts.sectionTitle,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
         actions: [
           IconButton(
             onPressed: _store.loadDisk,
@@ -306,7 +349,8 @@ class _StoragePageState extends State<StoragePage> {
           final disk = _store.disk;
           if (_store.loadingDisk && disk == null) {
             return Center(
-                child: NeuIcon(IconId.spinner, size: 22, color: t.muted));
+              child: NeuIcon(IconId.spinner, size: 22, color: t.muted),
+            );
           }
           if (disk == null) {
             return Center(
@@ -315,22 +359,33 @@ class _StoragePageState extends State<StoragePage> {
                 child: Text(
                   _store.diskError ?? I18n.t('ui.2af86cefa9'),
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: t.muted, fontSize: NeuFonts.bodyMid, height: 1.6),
+                  style: TextStyle(
+                    color: t.muted,
+                    fontSize: NeuFonts.bodyMid,
+                    height: 1.6,
+                  ),
                 ),
               ),
             );
           }
           if (disk.groups.isEmpty) {
             return Center(
-              child: Text(I18n.t('ui.ea2e75976e'),
-                  style: TextStyle(color: t.muted, fontSize: NeuFonts.bodyMid)),
+              child: Text(
+                I18n.t('ui.ea2e75976e'),
+                style: TextStyle(color: t.muted, fontSize: NeuFonts.bodyMid),
+              ),
             );
           }
 
           if (_expanded.isEmpty) _expanded.add(disk.groups.first.cwd);
 
           return ListView(
-            padding: const EdgeInsets.fromLTRB(NeuSpace.n16, NeuSpace.n12, NeuSpace.n16, 30),
+            padding: const EdgeInsets.fromLTRB(
+              NeuSpace.n16,
+              NeuSpace.n12,
+              NeuSpace.n16,
+              30,
+            ),
             children: [
               // 总量 + 口径
               Container(
@@ -343,25 +398,48 @@ class _StoragePageState extends State<StoragePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(humanBytes(disk.totalBytes),
-                        style: TextStyle(
-                            fontSize: 24, fontWeight: FontWeight.w700, color: t.fg)),
+                    Text(
+                      humanBytes(disk.totalBytes),
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                        color: t.fg,
+                      ),
+                    ),
                     SizedBox(height: NeuSpace.n4),
                     Text(
-                        I18n.tp('ui.95409b9ef3', {'n': disk.totalSessions, 'g': disk.groups.length}),
-                        style: TextStyle(fontSize: NeuFonts.small, color: t.muted)),
+                      I18n.tp('ui.95409b9ef3', {
+                        'n': disk.totalSessions,
+                        'g': disk.groups.length,
+                      }),
+                      style: TextStyle(
+                        fontSize: NeuFonts.small,
+                        color: t.muted,
+                      ),
+                    ),
                     if (disk.basis.isNotEmpty) ...[
                       SizedBox(height: NeuSpace.n8),
-                      Text(I18n.tp('ui.2a624cf5e8', {'basis': disk.basis}),
-                          style: TextStyle(fontSize: NeuFonts.badge, color: t.muted, height: 1.5)),
+                      Text(
+                        I18n.tp('ui.2a624cf5e8', {'basis': disk.basis}),
+                        style: TextStyle(
+                          fontSize: NeuFonts.badge,
+                          color: t.muted,
+                          height: 1.5,
+                        ),
+                      ),
                     ],
                   ],
                 ),
               ),
               SizedBox(height: NeuSpace.n16),
-              Text(I18n.t('ui.3c56ed3536'),
-                  style: TextStyle(
-                      fontSize: NeuFonts.bodyLg, fontWeight: FontWeight.w700, color: t.onBg)),
+              Text(
+                I18n.t('ui.3c56ed3536'),
+                style: TextStyle(
+                  fontSize: NeuFonts.bodyLg,
+                  fontWeight: FontWeight.w700,
+                  color: t.onBg,
+                ),
+              ),
               const SizedBox(height: NeuSpace.n10),
               for (final g in disk.groups) _group(t, g),
             ],
@@ -392,7 +470,12 @@ class _StoragePageState extends State<StoragePage> {
                 }
               }),
               radius: NeuRadii.md,
-              padding: const EdgeInsets.fromLTRB(NeuSpace.n14, NeuSpace.n12, NeuSpace.n14, NeuSpace.n12),
+              padding: const EdgeInsets.fromLTRB(
+                NeuSpace.n14,
+                NeuSpace.n12,
+                NeuSpace.n14,
+                NeuSpace.n12,
+              ),
               child: Row(
                 children: [
                   NeuIcon(IconId.folder, size: 16, color: t.accentInk),
@@ -401,23 +484,42 @@ class _StoragePageState extends State<StoragePage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(g.workspaceName,
-                            style: TextStyle(
-                                fontSize: NeuFonts.bodyTight,
-                                fontWeight: FontWeight.w600,
-                                color: t.fg)),
+                        Text(
+                          g.workspaceName,
+                          style: TextStyle(
+                            fontSize: NeuFonts.bodyTight,
+                            fontWeight: FontWeight.w600,
+                            color: t.fg,
+                          ),
+                        ),
                         SizedBox(height: NeuSpace.n2),
-                        Text(I18n.tp('ui.dda1a3b608', {'n': g.count, 'size': humanBytes(g.bytes)}),
-                            style: TextStyle(fontSize: NeuFonts.label, color: t.muted)),
+                        Text(
+                          I18n.tp('ui.dda1a3b608', {
+                            'n': g.count,
+                            'size': humanBytes(g.bytes),
+                          }),
+                          style: TextStyle(
+                            fontSize: NeuFonts.label,
+                            color: t.muted,
+                          ),
+                        ),
                       ],
                     ),
                   ),
-                  Text(humanBytes(g.bytes),
-                      style: TextStyle(
-                          fontSize: NeuFonts.small, fontWeight: FontWeight.w600, color: t.fg)),
+                  Text(
+                    humanBytes(g.bytes),
+                    style: TextStyle(
+                      fontSize: NeuFonts.small,
+                      fontWeight: FontWeight.w600,
+                      color: t.fg,
+                    ),
+                  ),
                   const SizedBox(width: NeuSpace.n6),
-                  NeuIcon(open ? IconId.chevronDown : IconId.chevronRight,
-                      size: 14, color: t.muted),
+                  NeuIcon(
+                    open ? IconId.chevronDown : IconId.chevronRight,
+                    size: 14,
+                    color: t.muted,
+                  ),
                 ],
               ),
             ),
@@ -439,7 +541,12 @@ class _StoragePageState extends State<StoragePage> {
         : '${when.year}-${when.month.toString().padLeft(2, '0')}-${when.day.toString().padLeft(2, '0')}';
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(NeuSpace.n14, NeuSpace.n10, NeuSpace.n10, NeuSpace.n10),
+      padding: const EdgeInsets.fromLTRB(
+        NeuSpace.n14,
+        NeuSpace.n10,
+        NeuSpace.n10,
+        NeuSpace.n10,
+      ),
       child: Row(
         children: [
           Expanded(
@@ -453,15 +560,19 @@ class _StoragePageState extends State<StoragePage> {
                         width: 6,
                         height: 6,
                         decoration: BoxDecoration(
-                            shape: BoxShape.circle, color: t.success),
+                          shape: BoxShape.circle,
+                          color: t.success,
+                        ),
                       ),
                       const SizedBox(width: NeuSpace.n6),
                     ],
                     Expanded(
-                      child: Text(s.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: NeuFonts.sub, color: t.fg)),
+                      child: Text(
+                        s.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: NeuFonts.sub, color: t.fg),
+                      ),
                     ),
                   ],
                 ),
@@ -474,8 +585,9 @@ class _StoragePageState extends State<StoragePage> {
                     if (whenText.isNotEmpty) whenText,
                   ].join(' · '),
                   style: TextStyle(
-                      fontSize: NeuFonts.badge,
-                      color: running ? t.success : t.muted),
+                    fontSize: NeuFonts.badge,
+                    color: running ? t.success : t.muted,
+                  ),
                 ),
               ],
             ),
@@ -483,9 +595,14 @@ class _StoragePageState extends State<StoragePage> {
           NeuPressable(
             onTap: () => _delete(s, g),
             radius: NeuRadii.sm,
-            padding: EdgeInsets.symmetric(horizontal: NeuSpace.n10, vertical: NeuSpace.n6),
-            child: Text(I18n.t('common.delete'),
-                style: TextStyle(fontSize: NeuFonts.small, color: t.danger)),
+            padding: EdgeInsets.symmetric(
+              horizontal: NeuSpace.n10,
+              vertical: NeuSpace.n6,
+            ),
+            child: Text(
+              I18n.t('common.delete'),
+              style: TextStyle(fontSize: NeuFonts.small, color: t.danger),
+            ),
           ),
         ],
       ),

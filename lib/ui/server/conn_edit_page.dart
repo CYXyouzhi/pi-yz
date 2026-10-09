@@ -88,28 +88,44 @@ class _ConnEditPageState extends State<ConnEditPage> {
   ServerProfile? _collect() {
     final host = _host.text.trim();
     if (host.isEmpty) {
-      NeuToast.show(context, message: I18n.t('connEdit.hostRequired'), icon: IconId.warn);
+      NeuToast.show(
+        context,
+        message: I18n.t('connEdit.hostRequired'),
+        icon: IconId.warn,
+      );
       return null;
     }
     final port = int.tryParse(_port.text.trim()) ?? 0;
     if (port <= 0 || port > 65535) {
-      NeuToast.show(context, message: I18n.t('connEdit.portInvalid'), icon: IconId.warn);
+      NeuToast.show(
+        context,
+        message: I18n.t('connEdit.portInvalid'),
+        icon: IconId.warn,
+      );
       return null;
     }
     final token = _token.text.trim();
     if (token.isEmpty) {
-      NeuToast.show(context, message: I18n.t('connEdit.tokenRequired'), icon: IconId.warn);
+      NeuToast.show(
+        context,
+        message: I18n.t('connEdit.tokenRequired'),
+        icon: IconId.warn,
+      );
       return null;
     }
     return ServerProfile(
-      id: widget.initial?.id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+      id:
+          widget.initial?.id ??
+          DateTime.now().microsecondsSinceEpoch.toString(),
       name: _name.text.trim().isEmpty ? host : _name.text.trim(),
       host: host,
       port: port,
       token: token,
       defaultCwd: _cwd.text.trim().isEmpty ? null : _cwd.text.trim(),
       secure: _secure,
-      fallbackHost: _fallback.text.trim().isEmpty ? null : _fallback.text.trim(),
+      fallbackHost: _fallback.text.trim().isEmpty
+          ? null
+          : _fallback.text.trim(),
       fallbackPort: null,
       fallbackSecure: false,
     );
@@ -164,7 +180,12 @@ class _ConnEditPageState extends State<ConnEditPage> {
       backgroundColor: t.bg,
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n8, NeuSpace.n18, 28),
+          padding: const EdgeInsets.fromLTRB(
+            NeuSpace.n18,
+            NeuSpace.n8,
+            NeuSpace.n18,
+            28,
+          ),
           children: [
             _header(t),
             const SizedBox(height: NeuSpace.n14),
@@ -175,15 +196,33 @@ class _ConnEditPageState extends State<ConnEditPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _groupTitle(t, I18n.t('conn.groupBasic')),
-                  _field(t, label: I18n.t('ui.4fcad1c9ba'), controller: _name,
-                      hint: I18n.t('ui.ae50303667')),
-                  _field(t, label: I18n.t('ui.aeb5271ede'), controller: _host,
-                      hint: I18n.t('ui.358bf4b90b'), keyboard: TextInputType.url),
-                  _field(t, label: I18n.t('ui.c76cfefe72'), controller: _port,
-                      hint: '30142', keyboard: TextInputType.number),
+                  _field(
+                    t,
+                    label: I18n.t('ui.4fcad1c9ba'),
+                    controller: _name,
+                    hint: I18n.t('ui.ae50303667'),
+                  ),
+                  _field(
+                    t,
+                    label: I18n.t('ui.aeb5271ede'),
+                    controller: _host,
+                    hint: I18n.t('ui.358bf4b90b'),
+                    keyboard: TextInputType.url,
+                  ),
+                  _field(
+                    t,
+                    label: I18n.t('ui.c76cfefe72'),
+                    controller: _port,
+                    hint: '30142',
+                    keyboard: TextInputType.number,
+                  ),
                   _tokenField(t),
-                  _field(t, label: I18n.t('ui.e963f6371c'), controller: _cwd,
-                      hint: I18n.t('ui.487a7ad4fa')),
+                  _field(
+                    t,
+                    label: I18n.t('ui.e963f6371c'),
+                    controller: _cwd,
+                    hint: I18n.t('ui.487a7ad4fa'),
+                  ),
                   _switchRow(
                     t,
                     label: I18n.t('conn.useHttps'),
@@ -218,8 +257,13 @@ class _ConnEditPageState extends State<ConnEditPage> {
                     padding: EdgeInsets.symmetric(vertical: NeuSpace.n12),
                     child: Center(
                       child: Text(
-                        _testing ? I18n.t('connEdit.testing') : I18n.t('connEdit.test'),
-                        style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.accentInk),
+                        _testing
+                            ? I18n.t('connEdit.testing')
+                            : I18n.t('connEdit.test'),
+                        style: TextStyle(
+                          fontSize: NeuFonts.bodySmall,
+                          color: t.accentInk,
+                        ),
                       ),
                     ),
                   ),
@@ -257,13 +301,18 @@ class _ConnEditPageState extends State<ConnEditPage> {
           onTap: () => Navigator.of(context).maybePop(),
           radius: 12,
           child: const Padding(
-            padding: EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n12),
+            padding: EdgeInsets.symmetric(
+              horizontal: NeuSpace.n12,
+              vertical: NeuSpace.n12,
+            ),
             child: NeuIcon(IconId.chevronLeft, size: 16),
           ),
         ),
         const SizedBox(width: NeuSpace.n10),
         Text(
-          widget.initial == null ? I18n.t('connEdit.newTitle') : I18n.t('connEdit.editTitle'),
+          widget.initial == null
+              ? I18n.t('connEdit.newTitle')
+              : I18n.t('connEdit.editTitle'),
           style: TextStyle(
             fontSize: NeuFonts.sectionTitle,
             fontWeight: FontWeight.w700,
@@ -330,7 +379,11 @@ class _ConnEditPageState extends State<ConnEditPage> {
                     padding: const EdgeInsets.only(bottom: NeuSpace.n5),
                     child: Text(
                       '· $line',
-                      style: TextStyle(fontSize: NeuFonts.badge, height: 1.6, color: t.muted),
+                      style: TextStyle(
+                        fontSize: NeuFonts.badge,
+                        height: 1.6,
+                        color: t.muted,
+                      ),
                     ),
                   ),
               ],
@@ -352,13 +405,20 @@ class _ConnEditPageState extends State<ConnEditPage> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          NeuIcon(_testOk ? IconId.check : IconId.warn, size: 14,
-              color: _testOk ? t.success : t.danger),
+          NeuIcon(
+            _testOk ? IconId.check : IconId.warn,
+            size: 14,
+            color: _testOk ? t.success : t.danger,
+          ),
           const SizedBox(width: NeuSpace.n8),
           Expanded(
             child: Text(
               _testMessage ?? '',
-              style: TextStyle(fontSize: NeuFonts.label, height: 1.5, color: t.fg),
+              style: TextStyle(
+                fontSize: NeuFonts.label,
+                height: 1.5,
+                color: t.fg,
+              ),
             ),
           ),
         ],
@@ -388,7 +448,11 @@ class _ConnEditPageState extends State<ConnEditPage> {
           SizedBox(height: NeuSpace.n6),
           Text(
             I18n.t('conn.securityBody'),
-            style: TextStyle(fontSize: NeuFonts.badge, height: 1.6, color: t.muted),
+            style: TextStyle(
+              fontSize: NeuFonts.badge,
+              height: 1.6,
+              color: t.muted,
+            ),
           ),
         ],
       ),
@@ -451,9 +515,19 @@ class _ConnEditPageState extends State<ConnEditPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: TextStyle(fontSize: NeuFonts.bodyTight, color: t.fg)),
+                Text(
+                  label,
+                  style: TextStyle(fontSize: NeuFonts.bodyTight, color: t.fg),
+                ),
                 SizedBox(height: NeuSpace.n2),
-                Text(hint, style: TextStyle(fontSize: NeuFonts.badge, height: 1.5, color: t.muted)),
+                Text(
+                  hint,
+                  style: TextStyle(
+                    fontSize: NeuFonts.badge,
+                    height: 1.5,
+                    color: t.muted,
+                  ),
+                ),
               ],
             ),
           ),
@@ -463,7 +537,10 @@ class _ConnEditPageState extends State<ConnEditPage> {
             radius: NeuRadii.sm,
             flat: !value,
             alwaysInset: value,
-            padding: EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n7),
+            padding: EdgeInsets.symmetric(
+              horizontal: NeuSpace.n12,
+              vertical: NeuSpace.n7,
+            ),
             child: Text(
               value ? I18n.t('ui.8493205602') : I18n.t('ui.d58a55bcee'),
               style: TextStyle(
@@ -491,7 +568,10 @@ class _ConnEditPageState extends State<ConnEditPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: TextStyle(fontSize: NeuFonts.small, color: t.muted)),
+          Text(
+            label,
+            style: TextStyle(fontSize: NeuFonts.small, color: t.muted),
+          ),
           const SizedBox(height: NeuSpace.n6),
           NeuInset(
             radius: NeuRadii.sm,
@@ -505,8 +585,13 @@ class _ConnEditPageState extends State<ConnEditPage> {
                 isDense: true,
                 border: InputBorder.none,
                 hintText: hint,
-                hintStyle: TextStyle(fontSize: NeuFonts.bodySmall, color: t.muted),
-                contentPadding: const EdgeInsets.symmetric(vertical: NeuSpace.n12),
+                hintStyle: TextStyle(
+                  fontSize: NeuFonts.bodySmall,
+                  color: t.muted,
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: NeuSpace.n12,
+                ),
               ),
             ),
           ),

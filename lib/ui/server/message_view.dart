@@ -7,6 +7,7 @@
 //   · 气泡圆角各留一角缺口：user 右下 8px、agent 左下 8px（对话指向感）
 
 import 'dart:convert';
+
 import '../collapsible_text.dart';
 
 import 'package:flutter/material.dart';
@@ -87,7 +88,10 @@ class MessageTile extends StatelessWidget {
         children: [
           tile,
           Padding(
-            padding: const EdgeInsets.only(top: NeuSpace.n2, right: NeuSpace.n4),
+            padding: const EdgeInsets.only(
+              top: NeuSpace.n2,
+              right: NeuSpace.n4,
+            ),
             child: Text(
               humanElapsed(elapsed!),
               style: TextStyle(
@@ -163,7 +167,11 @@ class _BubbleTile extends StatelessWidget {
     if (text.isEmpty) return;
     await Clipboard.setData(ClipboardData(text: text));
     if (!context.mounted) return;
-    NeuToast.show(context, message: I18n.t('common.copied'), icon: IconId.check);
+    NeuToast.show(
+      context,
+      message: I18n.t('common.copied'),
+      icon: IconId.check,
+    );
   }
 
   /// 长按菜单：复制 / 引用 / 编辑重发 / 分享
@@ -179,7 +187,12 @@ class _BubbleTile extends StatelessWidget {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) => Container(
-        margin: EdgeInsets.fromLTRB(NeuSpace.n14, 0, NeuSpace.n14, NeuSpace.n14 + MediaQuery.paddingOf(sheetContext).bottom),
+        margin: EdgeInsets.fromLTRB(
+          NeuSpace.n14,
+          0,
+          NeuSpace.n14,
+          NeuSpace.n14 + MediaQuery.paddingOf(sheetContext).bottom,
+        ),
         padding: const EdgeInsets.symmetric(vertical: NeuSpace.n8),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(NeuRadii.lg),
@@ -190,13 +203,43 @@ class _BubbleTile extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (hasImages)
-              _sheetRow(sheetContext, t, IconId.image, I18n.t('ui.a2e9a7991a'), 'save-image'),
+              _sheetRow(
+                sheetContext,
+                t,
+                IconId.image,
+                I18n.t('ui.a2e9a7991a'),
+                'save-image',
+              ),
             if (text.isNotEmpty) ...[
-              _sheetRow(sheetContext, t, IconId.copy, I18n.t('ui.79d3abe929'), 'copy'),
-              _sheetRow(sheetContext, t, IconId.bubble, I18n.t('ui.0f875dd0dc'), 'quote'),
+              _sheetRow(
+                sheetContext,
+                t,
+                IconId.copy,
+                I18n.t('ui.79d3abe929'),
+                'copy',
+              ),
+              _sheetRow(
+                sheetContext,
+                t,
+                IconId.bubble,
+                I18n.t('ui.0f875dd0dc'),
+                'quote',
+              ),
               if (isUser)
-                _sheetRow(sheetContext, t, IconId.pen, I18n.t('ui.7c79620b1a'), 'edit'),
-              _sheetRow(sheetContext, t, IconId.share, I18n.t('ui.96c2ee76cd'), 'share'),
+                _sheetRow(
+                  sheetContext,
+                  t,
+                  IconId.pen,
+                  I18n.t('ui.7c79620b1a'),
+                  'edit',
+                ),
+              _sheetRow(
+                sheetContext,
+                t,
+                IconId.share,
+                I18n.t('ui.96c2ee76cd'),
+                'share',
+              ),
             ],
           ],
         ),
@@ -209,10 +252,18 @@ class _BubbleTile extends StatelessWidget {
         await _copy(context);
       case 'quote':
         onQuote?.call(text);
-        NeuToast.show(context, message: I18n.t('ui.c881be90ec'), icon: IconId.bubble);
+        NeuToast.show(
+          context,
+          message: I18n.t('ui.c881be90ec'),
+          icon: IconId.bubble,
+        );
       case 'edit':
         onEditResend?.call(text);
-        NeuToast.show(context, message: I18n.t('ui.0ed6fd21dd'), icon: IconId.pen);
+        NeuToast.show(
+          context,
+          message: I18n.t('ui.0ed6fd21dd'),
+          icon: IconId.pen,
+        );
       case 'share':
         final ok = await NativeBridge.shareText(text: text);
         if (!context.mounted) return;
@@ -237,13 +288,22 @@ class _BubbleTile extends StatelessWidget {
       onTap: () => Navigator.of(context).pop(value),
       flat: true,
       radius: NeuRadii.sm,
-      padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n16, vertical: NeuSpace.n13),
-      margin: const EdgeInsets.symmetric(horizontal: NeuSpace.n6, vertical: NeuSpace.n1),
+      padding: const EdgeInsets.symmetric(
+        horizontal: NeuSpace.n16,
+        vertical: NeuSpace.n13,
+      ),
+      margin: const EdgeInsets.symmetric(
+        horizontal: NeuSpace.n6,
+        vertical: NeuSpace.n1,
+      ),
       child: Row(
         children: [
           NeuIcon(icon, size: 16, color: t.muted),
           const SizedBox(width: NeuSpace.n12),
-          Text(label, style: TextStyle(fontSize: NeuFonts.body, color: t.fg)),
+          Text(
+            label,
+            style: TextStyle(fontSize: NeuFonts.body, color: t.fg),
+          ),
         ],
       ),
     );
@@ -257,7 +317,11 @@ class _BubbleTile extends StatelessWidget {
       bytes = base64Decode(image.data);
     } catch (_) {
       if (context.mounted) {
-        NeuToast.show(context, message: I18n.t('ui.db2728b716'), icon: IconId.warn);
+        NeuToast.show(
+          context,
+          message: I18n.t('ui.db2728b716'),
+          icon: IconId.warn,
+        );
       }
       return;
     }
@@ -303,119 +367,136 @@ class _BubbleTile extends StatelessWidget {
       // 这一点是实测出来的，不是猜的。
       onLongPress: () => _showActions(context),
       child: Padding(
-      padding: EdgeInsets.only(
-        left: isUser ? 46 : 0,
-        right: isUser ? 0 : 46,
-        top: NeuSpace.n5,
-        bottom: NeuSpace.n5,
-      ),
-      child: Row(
-        mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (!isUser) ...[
-            const _Avatar(isUser: false),
-            const SizedBox(width: NeuSpace.n8),
-          ],
-          Flexible(
-            child: Column(
-              crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-              children: [
-                // 图片排在最前：发截图时用户先看的是图
-                if (images.isNotEmpty) _MessageImages(images: images),
-                if (summaryLabel != null)
-                  Padding(
-                    padding: const EdgeInsets.only(left: NeuSpace.n4, bottom: NeuSpace.n4),
-                    child: Row(
-                      children: [
-                        NeuIcon(IconId.info, size: 13, color: t.accentInk),
-                        const SizedBox(width: NeuSpace.n6),
-                        Text(
-                          summaryLabel,
-                          style: TextStyle(
-                            fontSize: NeuFonts.label,
-                            fontWeight: FontWeight.w700,
-                            color: t.accentInk,
+        padding: EdgeInsets.only(
+          left: isUser ? 46 : 0,
+          right: isUser ? 0 : 46,
+          top: NeuSpace.n5,
+          bottom: NeuSpace.n5,
+        ),
+        child: Row(
+          mainAxisAlignment: isUser
+              ? MainAxisAlignment.end
+              : MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (!isUser) ...[
+              const _Avatar(isUser: false),
+              const SizedBox(width: NeuSpace.n8),
+            ],
+            Flexible(
+              child: Column(
+                crossAxisAlignment: isUser
+                    ? CrossAxisAlignment.end
+                    : CrossAxisAlignment.start,
+                children: [
+                  // 图片排在最前：发截图时用户先看的是图
+                  if (images.isNotEmpty) _MessageImages(images: images),
+                  if (summaryLabel != null)
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        left: NeuSpace.n4,
+                        bottom: NeuSpace.n4,
+                      ),
+                      child: Row(
+                        children: [
+                          NeuIcon(IconId.info, size: 13, color: t.accentInk),
+                          const SizedBox(width: NeuSpace.n6),
+                          Text(
+                            summaryLabel,
+                            style: TextStyle(
+                              fontSize: NeuFonts.label,
+                              fontWeight: FontWeight.w700,
+                              color: t.accentInk,
+                            ),
+                          ),
+                          SizedBox(width: NeuSpace.n8),
+                          Text(
+                            I18n.t('ui.cc2177391a'),
+                            style: TextStyle(
+                              fontSize: NeuFonts.micro,
+                              color: t.muted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  if (hasThinking && !isUser) ...[
+                    _ThinkingBlock(text: message.thinking),
+                    const SizedBox(height: NeuSpace.n6),
+                  ],
+                  if (message.toolCalls.isNotEmpty && !isUser)
+                    // 只显示「还没有结果」的调用：有结果时工具结果那条消息
+                    // （_ToolTile）自己带「完成/失败」标签，再显示一遍 chip 就是
+                    // 同一个工具占两行 —— 这是用户反馈「工具不折叠」的直接原因。
+                    ...message.toolCalls
+                        .where((call) {
+                          final run = runOf?.call(call.id);
+                          return run == null ||
+                              run.status == ToolStatus.running;
+                        })
+                        .map(
+                          (call) => Padding(
+                            padding: const EdgeInsets.only(bottom: NeuSpace.n6),
+                            child: _ToolCallChip(
+                              call: call,
+                              run: runOf?.call(call.id),
+                            ),
                           ),
                         ),
-                        SizedBox(width: NeuSpace.n8),
-                        Text(
-                          I18n.t('ui.cc2177391a'),
-                          style: TextStyle(fontSize: NeuFonts.micro, color: t.muted),
+                  if (message.text.isNotEmpty || message.streaming)
+                    // 长错误默认折叠：pi 的报错常带整段堆栈（几十行），
+                    // 全展开会把消息区挤没；截断又等于没给（用户要拿去搜），
+                    // 所以默认一行、点开看全文。正常回复不走这条路。
+                    message.isError &&
+                            message.text.length > kErrorCollapseThreshold
+                        ? CollapsibleText(
+                            text: message.text,
+                            expandableIfLongerThan: kErrorCollapseThreshold,
+                            style: TextStyle(
+                              fontSize: NeuFonts.bodyMid,
+                              color: t.danger,
+                              height: 1.5,
+                            ),
+                          )
+                        : _Bubble(message: message),
+                  if (message.isError)
+                    Padding(
+                      padding: EdgeInsets.only(top: NeuSpace.n4),
+                      child: Text(
+                        I18n.t('ui.ad8e01fe71'),
+                        style: TextStyle(
+                          fontSize: NeuFonts.label,
+                          color: t.danger,
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                if (hasThinking && !isUser) ...[
-                  _ThinkingBlock(text: message.thinking),
-                  const SizedBox(height: NeuSpace.n6),
+                  // 本轮耗时（task-21 合同①）：跟「出错」同一行的位置，
+                  // 只给 assistant —— 用户消息的间隔是人在打字，没有参考价值
+                  if (!isUser &&
+                      elapsed != null &&
+                      elapsed!.inMilliseconds >= 200)
+                    Padding(
+                      padding: const EdgeInsets.only(top: NeuSpace.n3),
+                      child: Text(
+                        humanElapsed(elapsed!),
+                        style: TextStyle(
+                          fontSize: NeuFonts.micro,
+                          color: t.muted,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                    ),
                 ],
-                if (message.toolCalls.isNotEmpty && !isUser)
-                  // 只显示「还没有结果」的调用：有结果时工具结果那条消息
-                  // （_ToolTile）自己带「完成/失败」标签，再显示一遍 chip 就是
-                  // 同一个工具占两行 —— 这是用户反馈「工具不折叠」的直接原因。
-                  ...message.toolCalls
-                      .where((call) {
-                        final run = runOf?.call(call.id);
-                        return run == null || run.status == ToolStatus.running;
-                      })
-                      .map(
-                        (call) => Padding(
-                          padding: const EdgeInsets.only(bottom: NeuSpace.n6),
-                          child: _ToolCallChip(
-                            call: call,
-                            run: runOf?.call(call.id),
-                          ),
-                        ),
-                      ),
-                if (message.text.isNotEmpty || message.streaming)
-                  // 长错误默认折叠：pi 的报错常带整段堆栈（几十行），
-                  // 全展开会把消息区挤没；截断又等于没给（用户要拿去搜），
-                  // 所以默认一行、点开看全文。正常回复不走这条路。
-                  message.isError && message.text.length > kErrorCollapseThreshold
-                      ? CollapsibleText(
-                          text: message.text,
-                          expandableIfLongerThan: kErrorCollapseThreshold,
-                          style: TextStyle(
-                            fontSize: NeuFonts.bodyMid,
-                            color: t.danger,
-                            height: 1.5,
-                          ),
-                        )
-                      : _Bubble(message: message),
-                if (message.isError)
-                  Padding(
-                    padding: EdgeInsets.only(top: NeuSpace.n4),
-                    child: Text(
-                      I18n.t('ui.ad8e01fe71'),
-                      style: TextStyle(fontSize: NeuFonts.label, color: t.danger),
-                    ),
-                  ),
-                // 本轮耗时（task-21 合同①）：跟「出错」同一行的位置，
-                // 只给 assistant —— 用户消息的间隔是人在打字，没有参考价值
-                if (!isUser && elapsed != null && elapsed!.inMilliseconds >= 200)
-                  Padding(
-                    padding: const EdgeInsets.only(top: NeuSpace.n3),
-                    child: Text(
-                      humanElapsed(elapsed!),
-                      style: TextStyle(
-                        fontSize: NeuFonts.micro,
-                        color: t.muted,
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                      ),
-                    ),
-                  ),
-              ],
+              ),
             ),
-          ),
-          if (isUser) ...[
-            const SizedBox(width: NeuSpace.n8),
-            const _Avatar(isUser: true),
+            if (isUser) ...[
+              const SizedBox(width: NeuSpace.n8),
+              const _Avatar(isUser: true),
+            ],
+            // 两条消息之间的空隙放 ⋮：不压住正文，也不用长按（长按留给选文字）
+            _MoreButton(onTap: () => _showActions(context)),
           ],
-          // 两条消息之间的空隙放 ⋮：不压住正文，也不用长按（长按留给选文字）
-          _MoreButton(onTap: () => _showActions(context)),
-        ],
-      ),
+        ),
       ),
     );
   }
@@ -438,7 +519,11 @@ class _MoreButton extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n2),
-        child: NeuIcon(IconId.more, size: 15, color: t.muted.withValues(alpha: 0.75)),
+        child: NeuIcon(
+          IconId.more,
+          size: 15,
+          color: t.muted.withValues(alpha: 0.75),
+        ),
       ),
     );
   }
@@ -479,12 +564,23 @@ class _Bubble extends StatelessWidget {
             : NeuDecorations.raisedGradient(t),
         boxShadow: isUser
             ? [
-                BoxShadow(color: t.nmLo, offset: const Offset(4, 4), blurRadius: 11),
-                BoxShadow(color: t.nmHi, offset: const Offset(-4, -4), blurRadius: 11),
+                BoxShadow(
+                  color: t.nmLo,
+                  offset: const Offset(4, 4),
+                  blurRadius: 11,
+                ),
+                BoxShadow(
+                  color: t.nmHi,
+                  offset: const Offset(-4, -4),
+                  blurRadius: 11,
+                ),
               ]
             : NeuShadows.raise(t),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: NeuSpace.n12),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 15,
+        vertical: NeuSpace.n12,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -501,8 +597,7 @@ class _Bubble extends StatelessWidget {
                     ),
                   )
                 : NeuMarkdown(data: message.text),
-          if (message.streaming && message.text.isEmpty)
-            const _TypingDots(),
+          if (message.streaming && message.text.isEmpty) const _TypingDots(),
         ],
       ),
     );
@@ -524,7 +619,11 @@ class _MessageImages extends StatelessWidget {
     try {
       bytes = base64Decode(image.data);
     } catch (_) {
-      NeuToast.show(context, message: I18n.t('ui.db2728b716'), icon: IconId.warn);
+      NeuToast.show(
+        context,
+        message: I18n.t('ui.db2728b716'),
+        icon: IconId.warn,
+      );
       return;
     }
     final ext = image.mimeType.contains('jpeg') ? 'jpg' : 'png';
@@ -581,13 +680,19 @@ class _MessageImages extends StatelessWidget {
   }
 
   Widget _broken(NeuTokens t) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n10, vertical: NeuSpace.n8),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(NeuRadii.sm),
-          color: t.well,
-        ),
-        child: Text(I18n.t('ui.e2cf8c9f6c'), style: TextStyle(fontSize: NeuFonts.label, color: t.muted)),
-      );
+    padding: const EdgeInsets.symmetric(
+      horizontal: NeuSpace.n10,
+      vertical: NeuSpace.n8,
+    ),
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(NeuRadii.sm),
+      color: t.well,
+    ),
+    child: Text(
+      I18n.t('ui.e2cf8c9f6c'),
+      style: TextStyle(fontSize: NeuFonts.label, color: t.muted),
+    ),
+  );
 }
 
 /// 流式等待的三点动画
@@ -598,7 +703,8 @@ class _TypingDots extends StatefulWidget {
   State<_TypingDots> createState() => _TypingDotsState();
 }
 
-class _TypingDotsState extends State<_TypingDots> with SingleTickerProviderStateMixin {
+class _TypingDotsState extends State<_TypingDots>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 1200),
@@ -675,7 +781,10 @@ class _ThinkingBlockState extends State<_ThinkingBlock> {
           gradient: NeuDecorations.wellGradient(t),
           boxShadow: NeuShadows.insetSm(t),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n9),
+        padding: const EdgeInsets.symmetric(
+          horizontal: NeuSpace.n12,
+          vertical: NeuSpace.n9,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -685,7 +794,11 @@ class _ThinkingBlockState extends State<_ThinkingBlock> {
                 SizedBox(width: NeuSpace.n6),
                 Text(
                   I18n.t('ui.21d68b2de0'),
-                  style: TextStyle(fontSize: NeuFonts.label, color: t.muted, letterSpacing: 0.5),
+                  style: TextStyle(
+                    fontSize: NeuFonts.label,
+                    color: t.muted,
+                    letterSpacing: 0.5,
+                  ),
                 ),
                 const Spacer(),
                 NeuIcon(
@@ -729,8 +842,12 @@ class _ToolCallChip extends StatelessWidget {
     return _ToolShell(
       icon: isRunning ? IconId.spinner : IconId.terminal,
       title: call.name,
-      subtitle: call.summary.isEmpty ? (run?.output.split('\n').first ?? '') : call.summary,
-      tag: isRunning ? I18n.t('common.running') : (isError ? I18n.t('common.failed') : I18n.t('ui.97d29d8430')),
+      subtitle: call.summary.isEmpty
+          ? (run?.output.split('\n').first ?? '')
+          : call.summary,
+      tag: isRunning
+          ? I18n.t('common.running')
+          : (isError ? I18n.t('common.failed') : I18n.t('ui.97d29d8430')),
       accentInk: isError ? t.danger : t.accentInk,
     );
   }
@@ -764,11 +881,15 @@ class _ToolTileState extends State<_ToolTile> {
     final tag = isRunning
         ? I18n.t('common.running')
         : isError
-            ? I18n.t('common.failed')
-            : I18n.t('common.done');
+        ? I18n.t('common.failed')
+        : I18n.t('common.done');
 
     return Padding(
-      padding: const EdgeInsets.only(left: 38, top: NeuSpace.n4, bottom: NeuSpace.n4),
+      padding: const EdgeInsets.only(
+        left: 38,
+        top: NeuSpace.n4,
+        bottom: NeuSpace.n4,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -781,7 +902,10 @@ class _ToolTileState extends State<_ToolTile> {
               // 要看输出点右边的箭头展开（task-21 合同①）
               compact: true,
               icon: isRunning ? IconId.spinner : IconId.terminal,
-              title: widget.message.toolName ?? run?.name ?? I18n.t('ui.20dce2c6fa'),
+              title:
+                  widget.message.toolName ??
+                  run?.name ??
+                  I18n.t('ui.20dce2c6fa'),
               subtitle: _firstLine(output),
               tag: tag,
               accentInk: isError ? t.danger : t.accentInk,
@@ -823,7 +947,9 @@ class _ToolTileState extends State<_ToolTile> {
 
   static String _firstLine(String text) {
     if (text.isEmpty) return '';
-    final line = text.split('\n').firstWhere((l) => l.trim().isNotEmpty, orElse: () => '');
+    final line = text
+        .split('\n')
+        .firstWhere((l) => l.trim().isNotEmpty, orElse: () => '');
     return line.length > 80 ? '${line.substring(0, 80)}…' : line;
   }
 }
@@ -865,7 +991,12 @@ class _ToolShell extends StatelessWidget {
       // task-21 合同①：工具调用默认是**单行细条**，不是大块卡片。
       // 一屏里工具调用往往比正文还多，每条占三行会让对话主干被冲散；
       // 摘要（subtitle）改为只在用户主动点开时看得到（列在展开区里）。
-      padding: EdgeInsets.fromLTRB(NeuSpace.n7, compact ? NeuSpace.n4 : NeuSpace.n9, NeuSpace.n9, compact ? NeuSpace.n4 : NeuSpace.n9),
+      padding: EdgeInsets.fromLTRB(
+        NeuSpace.n7,
+        compact ? NeuSpace.n4 : NeuSpace.n9,
+        NeuSpace.n9,
+        compact ? NeuSpace.n4 : NeuSpace.n9,
+      ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -909,7 +1040,9 @@ class _ToolShell extends StatelessWidget {
           SizedBox(width: compact ? 6 : 8),
           Container(
             padding: EdgeInsets.symmetric(
-                horizontal: compact ? NeuSpace.n5 : NeuSpace.n7, vertical: compact ? NeuSpace.n2 : NeuSpace.n3),
+              horizontal: compact ? NeuSpace.n5 : NeuSpace.n7,
+              vertical: compact ? NeuSpace.n2 : NeuSpace.n3,
+            ),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(compact ? 5 : 6),
               border: Border.all(color: t.muted.withValues(alpha: 0.3)),
@@ -917,9 +1050,10 @@ class _ToolShell extends StatelessWidget {
             child: Text(
               tag,
               style: TextStyle(
-                  fontSize: compact ? 9.5 : 10,
-                  color: t.muted,
-                  letterSpacing: 0.6),
+                fontSize: compact ? 9.5 : 10,
+                color: t.muted,
+                letterSpacing: 0.6,
+              ),
             ),
           ),
           if (trailing != null) ...[

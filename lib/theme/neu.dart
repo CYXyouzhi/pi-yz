@@ -59,67 +59,63 @@ abstract final class NeuDecorations {
   /// 145° 与 135° 在眼睛看来差别极小，用 topLeft→bottomRight 表达
   /// 「左上迎光、右下背光」这个唯一光源的意图。
   static LinearGradient raisedGradient(NeuTokens t) => LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [t.surfaceHi, t.surface, t.surfaceLo],
-        stops: const [0.0, 0.48, 1.0],
-      );
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [t.surfaceHi, t.surface, t.surfaceLo],
+    stops: const [0.0, 0.48, 1.0],
+  );
 
   /// 凹槽渐变：`linear-gradient(145deg, well-hi, well 55%, well-lo)`。
   /// 注意 `well-hi` 比 `well` **更暗** —— 内凹的亮端反而更深，
   /// 因为背光的右侧要把光反上来。搞反这一条，凹槽会读成隆起。
   static LinearGradient wellGradient(NeuTokens t) => LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [t.wellHi, t.well, t.wellLo],
-        stops: const [0.0, 0.55, 1.0],
-      );
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [t.wellHi, t.well, t.wellLo],
+    stops: const [0.0, 0.55, 1.0],
+  );
 
   /// 实心强调块的渐变：`accent` 两端各混一点白/黑，做出圆柱感。
   static LinearGradient accentGradient(NeuTokens t) => LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          Color.lerp(t.accent, Colors.white, 0.12)!,
-          t.accent,
-          Color.lerp(t.accent, Colors.black, 0.14)!,
-        ],
-        stops: const [0.0, 0.52, 1.0],
-      );
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [
+      Color.lerp(t.accent, Colors.white, 0.12)!,
+      t.accent,
+      Color.lerp(t.accent, Colors.black, 0.14)!,
+    ],
+    stops: const [0.0, 0.52, 1.0],
+  );
 
   /// 实心危险块的渐变（设计稿 `.set-cf-ok`）。
   static LinearGradient dangerGradient(NeuTokens t) => LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          Color.lerp(t.danger, Colors.white, 0.12)!,
-          t.danger,
-        ],
-        stops: const [0.0, 0.6],
-      );
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color.lerp(t.danger, Colors.white, 0.12)!, t.danger],
+    stops: const [0.0, 0.6],
+  );
 
   /// 画布背景：亮端左上、暗端右下，与所有材质面同向。
   static LinearGradient canvasGradient(NeuTokens t) => LinearGradient(
-        begin: const Alignment(-0.4, -1.0),
-        end: const Alignment(0.5, 1.0),
-        colors: [t.bgHi, t.bg, t.bgLo],
-        stops: const [0.0, 0.44, 1.0],
-      );
+    begin: const Alignment(-0.4, -1.0),
+    end: const Alignment(0.5, 1.0),
+    colors: [t.bgHi, t.bg, t.bgLo],
+    stops: const [0.0, 0.44, 1.0],
+  );
 
   static BoxDecoration raised(
     NeuTokens t, {
     double radius = NeuRadii.lg,
     NeuLevel level = NeuLevel.standard,
-  }) =>
-      BoxDecoration(
-        gradient: raisedGradient(t),
-        borderRadius: BorderRadius.circular(radius),
-        boxShadow: switch (level) {
-          NeuLevel.small => NeuShadows.raiseSm(t),
-          NeuLevel.standard => NeuShadows.raise(t),
-          NeuLevel.large => NeuShadows.raiseLg(t),
-        },
-      );
+  }) => BoxDecoration(
+    gradient: raisedGradient(t),
+    borderRadius: BorderRadius.circular(radius),
+    boxShadow: switch (level) {
+      NeuLevel.small => NeuShadows.raiseSm(t),
+      NeuLevel.standard => NeuShadows.raise(t),
+      NeuLevel.large => NeuShadows.raiseLg(t),
+    },
+  );
 }
 
 /// 隆起幅度的三档（对应设计稿 --nm-raise-sm / --nm-raise / --nm-raise-lg）。
@@ -234,14 +230,12 @@ class NeuInset extends StatelessWidget {
       margin: margin,
       child: CustomPaint(
         painter: InsetShadowPainter(
-          shadows: shadows ?? (deep ? NeuShadows.inset(t) : NeuShadows.insetSm(t)),
+          shadows:
+              shadows ?? (deep ? NeuShadows.inset(t) : NeuShadows.insetSm(t)),
           borderRadius: br,
           gradient: gradient ?? NeuDecorations.wellGradient(t),
         ),
-        child: Padding(
-          padding: padding ?? EdgeInsets.zero,
-          child: child,
-        ),
+        child: Padding(padding: padding ?? EdgeInsets.zero, child: child),
       ),
     );
   }
@@ -363,7 +357,8 @@ class _NeuPressableState extends State<NeuPressable> {
       decoration: isFlat
           ? null
           : BoxDecoration(
-              gradient: widget.gradient ??
+              gradient:
+                  widget.gradient ??
                   (inset
                       ? NeuDecorations.wellGradient(t)
                       : NeuDecorations.raisedGradient(t)),
@@ -386,9 +381,11 @@ class _NeuPressableState extends State<NeuPressable> {
         behavior: HitTestBehavior.opaque,
         onTapDown: widget.enabled ? (_) => setState(() => _down = true) : null,
         onTapUp: widget.enabled ? (_) => setState(() => _down = false) : null,
-        onTapCancel: widget.enabled ? () => setState(() => _down = false) : null,
+        onTapCancel: widget.enabled
+            ? () => setState(() => _down = false)
+            : null,
         onTap: widget.enabled ? widget.onTap : null,
-      onLongPress: widget.enabled ? widget.onLongPress : null,
+        onLongPress: widget.enabled ? widget.onLongPress : null,
         child: Semantics(
           button: widget.onTap != null,
           label: widget.semanticLabel,
@@ -412,8 +409,8 @@ class _NeuPressableState extends State<NeuPressable> {
                             ? NeuShadows.inset(t)
                             : NeuShadows.insetSm(t),
                         borderRadius: br,
-                        gradient: widget.gradient ??
-                            NeuDecorations.wellGradient(t),
+                        gradient:
+                            widget.gradient ?? NeuDecorations.wellGradient(t),
                       ),
                       child: Padding(
                         padding: widget.padding ?? EdgeInsets.zero,

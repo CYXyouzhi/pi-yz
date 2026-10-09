@@ -7,6 +7,7 @@
 // 失败一律返回 false / null，由调用方给中文提示 —— 不做静默失败。
 
 import 'package:flutter/services.dart';
+
 import 'i18n.dart';
 
 class NativeBridge {
@@ -20,8 +21,7 @@ class NativeBridge {
     String subject = '', // 默认参数必须是常量，空的进函数再翻
   }) async {
     if (text.trim().isEmpty) return false;
-    final subjectText =
-        subject.isEmpty ? I18n.t('ui.61a53db098') : subject;
+    final subjectText = subject.isEmpty ? I18n.t('ui.61a53db098') : subject;
     try {
       final ok = await _channel.invokeMethod<bool>('share', {
         'text': text,

@@ -50,19 +50,19 @@ class _Panel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        height: height,
-        width: 360,
-        margin: const EdgeInsets.only(bottom: 8),
-        decoration: BoxDecoration(
-          color: const Color(0xFF23303A),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFF4A5B66)),
-        ),
-        child: Center(
-          child: Text(
-            'slash panel height = ${height.toStringAsFixed(0)}dp',
-            style: const TextStyle(color: Colors.white, fontSize: 16),
-          ),
-        ),
-      );
+    height: height,
+    width: 360,
+    margin: const EdgeInsets.only(bottom: 8),
+    decoration: BoxDecoration(
+      color: const Color(0xFF23303A),
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: const Color(0xFF4A5B66)),
+    ),
+    child: Center(
+      child: Text(
+        'slash panel height = ${height.toStringAsFixed(0)}dp',
+        style: const TextStyle(color: Colors.white, fontSize: 16),
+      ),
+    ),
+  );
 }

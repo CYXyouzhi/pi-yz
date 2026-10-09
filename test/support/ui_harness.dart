@@ -23,7 +23,11 @@ import 'package:pi_yz/ui/nav_bar_visibility.dart';
 /// [width] / [height] 是**逻辑像素**（dp）。devicePixelRatio 钉成 1.0，
 /// 于是 physicalSize 就等于逻辑尺寸 —— 这样读起来是「360dp 宽」而不是
 /// 「1080 物理像素 ÷ 3 倍密度」。
-void setPhoneSurface(WidgetTester tester, {double width = 390, double height = 844}) {
+void setPhoneSurface(
+  WidgetTester tester, {
+  double width = 390,
+  double height = 844,
+}) {
   tester.view.physicalSize = Size(width, height);
   tester.view.devicePixelRatio = 1.0;
   addTearDown(tester.view.reset);
@@ -95,8 +99,9 @@ Future<void> flushTimers(WidgetTester tester) async {
 
 /// 给孤立组件套上 App 的皮肤（主题 + 画布），用于不依赖真实入口的用例。
 Widget harness(Widget child, {Brightness brightness = Brightness.light}) {
-  final tokens =
-      brightness == Brightness.dark ? NeuTokens.dark : NeuTokens.light;
+  final tokens = brightness == Brightness.dark
+      ? NeuTokens.dark
+      : NeuTokens.light;
   return MaterialApp(
     debugShowCheckedModeBanner: false,
     theme: buildNeuTheme(tokens, brightness: brightness),

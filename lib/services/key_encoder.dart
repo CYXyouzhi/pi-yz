@@ -30,20 +30,37 @@ class KeyEncoder {
   // 无修饰用短形式（\x1b[A），有修饰用带参形式（\x1b[1;5A）
   static String up({bool shift = false, bool alt = false, bool ctrl = false}) =>
       _cursor('A', shift: shift, alt: alt, ctrl: ctrl);
-  static String down({bool shift = false, bool alt = false, bool ctrl = false}) =>
-      _cursor('B', shift: shift, alt: alt, ctrl: ctrl);
-  static String right({bool shift = false, bool alt = false, bool ctrl = false}) =>
-      _cursor('C', shift: shift, alt: alt, ctrl: ctrl);
-  static String left({bool shift = false, bool alt = false, bool ctrl = false}) =>
-      _cursor('D', shift: shift, alt: alt, ctrl: ctrl);
+  static String down({
+    bool shift = false,
+    bool alt = false,
+    bool ctrl = false,
+  }) => _cursor('B', shift: shift, alt: alt, ctrl: ctrl);
+  static String right({
+    bool shift = false,
+    bool alt = false,
+    bool ctrl = false,
+  }) => _cursor('C', shift: shift, alt: alt, ctrl: ctrl);
+  static String left({
+    bool shift = false,
+    bool alt = false,
+    bool ctrl = false,
+  }) => _cursor('D', shift: shift, alt: alt, ctrl: ctrl);
 
-  static String _cursor(String finalByte,
-      {bool shift = false, bool alt = false, bool ctrl = false}) {
+  static String _cursor(
+    String finalByte, {
+    bool shift = false,
+    bool alt = false,
+    bool ctrl = false,
+  }) {
     final m = _mod(shift: shift, alt: alt, ctrl: ctrl);
     return m == 1 ? '\x1b[$finalByte' : '\x1b[1;$m$finalByte';
   }
 
-  static String home({bool shift = false, bool alt = false, bool ctrl = false}) {
+  static String home({
+    bool shift = false,
+    bool alt = false,
+    bool ctrl = false,
+  }) {
     final m = _mod(shift: shift, alt: alt, ctrl: ctrl);
     return m == 1 ? '\x1b[H' : '\x1b[1;${m}H';
   }
@@ -54,20 +71,35 @@ class KeyEncoder {
   }
 
   /// PageUp / PageDown —— pi 在 fullscreen 模式下用它们翻 transcript 整页。
-  static String pageUp({bool shift = false, bool alt = false, bool ctrl = false}) =>
-      _tilde(5, shift: shift, alt: alt, ctrl: ctrl);
+  static String pageUp({
+    bool shift = false,
+    bool alt = false,
+    bool ctrl = false,
+  }) => _tilde(5, shift: shift, alt: alt, ctrl: ctrl);
 
-  static String pageDown({bool shift = false, bool alt = false, bool ctrl = false}) =>
-      _tilde(6, shift: shift, alt: alt, ctrl: ctrl);
+  static String pageDown({
+    bool shift = false,
+    bool alt = false,
+    bool ctrl = false,
+  }) => _tilde(6, shift: shift, alt: alt, ctrl: ctrl);
 
-  static String _tilde(int code,
-      {bool shift = false, bool alt = false, bool ctrl = false}) {
+  static String _tilde(
+    int code, {
+    bool shift = false,
+    bool alt = false,
+    bool ctrl = false,
+  }) {
     final m = _mod(shift: shift, alt: alt, ctrl: ctrl);
     return m == 1 ? '\x1b[$code~' : '\x1b[$code;$m~';
   }
 
   // ---- 功能键 ----
-  static String f(int n, {bool shift = false, bool alt = false, bool ctrl = false}) {
+  static String f(
+    int n, {
+    bool shift = false,
+    bool alt = false,
+    bool ctrl = false,
+  }) {
     final m = _mod(shift: shift, alt: alt, ctrl: ctrl);
     // F1-F4 用 SS3（\x1bOP），F5 起用 CSI
     if (n >= 1 && n <= 4) {
@@ -95,8 +127,12 @@ class KeyEncoder {
   ///
   /// 用于必须区分修饰键的场景 —— 最典型的是 `Shift+Enter`（插入换行，
   /// 区别于 `Enter` 的提交）。pi 会优先按 Kitty 协议解析这类序列。
-  static String csiU(int codePoint,
-      {bool shift = false, bool alt = false, bool ctrl = false}) {
+  static String csiU(
+    int codePoint, {
+    bool shift = false,
+    bool alt = false,
+    bool ctrl = false,
+  }) {
     final m = _mod(shift: shift, alt: alt, ctrl: ctrl);
     return '\x1b[$codePoint;${m}u';
   }
@@ -110,8 +146,12 @@ class KeyEncoder {
   static String altEnter() => csiU(13, alt: true);
 
   /// 把可打印字符包装成 Ctrl 组合（用于虚拟键栏上直接点的字母）。
-  static String withModifiers(String ch,
-      {bool shift = false, bool alt = false, bool ctrl = false}) {
+  static String withModifiers(
+    String ch, {
+    bool shift = false,
+    bool alt = false,
+    bool ctrl = false,
+  }) {
     if (ctrl && !alt && !shift) {
       final c = ctrlLetter(ch);
       if (c != null) return c;

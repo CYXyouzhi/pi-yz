@@ -69,7 +69,10 @@ class ChoiceRow extends StatelessWidget {
       children: [
         SizedBox(
           width: 62,
-          child: Text(label, style: TextStyle(fontSize: NeuFonts.sub, color: t.muted)),
+          child: Text(
+            label,
+            style: TextStyle(fontSize: NeuFonts.sub, color: t.muted),
+          ),
         ),
         Expanded(
           child: Wrap(
@@ -82,13 +85,17 @@ class ChoiceRow extends StatelessWidget {
                   alwaysInset: current == value,
                   radius: NeuRadii.sm,
                   padding: const EdgeInsets.symmetric(
-                      horizontal: NeuSpace.n12, vertical: NeuSpace.n7),
+                    horizontal: NeuSpace.n12,
+                    vertical: NeuSpace.n7,
+                  ),
                   child: Text(
                     labels[value] ?? value,
                     style: TextStyle(
                       fontSize: NeuFonts.small,
                       color: current == value ? t.accentInk : t.muted,
-                      fontWeight: current == value ? FontWeight.w700 : FontWeight.w400,
+                      fontWeight: current == value
+                          ? FontWeight.w700
+                          : FontWeight.w400,
                     ),
                   ),
                 ),

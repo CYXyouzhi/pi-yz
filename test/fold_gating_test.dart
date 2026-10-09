@@ -81,7 +81,8 @@ List<({String title, String? stateKey})> sectionCalls(String src) {
     // `stateKey:` 常和说明性注释挤在同一个片段里（注释行也是换行分隔的），
     // 所以这里用正则找，而不是看片段开头。
     final tail = args.skip(2).join(',');
-    final keyMatch = RegExp("stateKey:\\s*('[^']*'|\"[^\"]*\")").firstMatch(tail);
+    final keyMatch = RegExp("stateKey:\\s*('[^']*'|\"[^\"]*\")")
+        .firstMatch(tail);
     final stateKey = keyMatch?.group(1);
     calls.add((title: args[1].trim(), stateKey: stateKey));
   }
@@ -103,7 +104,10 @@ List<String> neuSectionTitles(String src) {
     final line = src.substring(lineStart, m.start);
     if (line.contains('class ') || line.contains('const ')) continue;
     final args = argumentsOf(src, m.end - 1);
-    final arg = args.firstWhere((a) => a.trimLeft().startsWith('title:'), orElse: () => '');
+    final arg = args.firstWhere(
+      (a) => a.trimLeft().startsWith('title:'),
+      orElse: () => '',
+    );
     if (arg.isEmpty) continue;
     final title = arg.trim().substring('title:'.length).trim();
     // 只收能静态比对的键（`I18n.t('...')` 或 `'...'`）。
@@ -135,9 +139,11 @@ bool hasGate(String src, String key) {
 }
 
 /// 显式 `stateKey: 'x'` 的取值。
-List<String> stateKeys(String src) => RegExp(
-      "stateKey:\\s*('[^']*'|\"[^\"]*\")",
-    ).allMatches(src).map((m) => m.group(1)!).toList();
+List<String> stateKeys(String src) =>
+    RegExp("stateKey:\\s*('[^']*'|\"[^\"]*\")")
+        .allMatches(src)
+        .map((m) => m.group(1)!)
+        .toList();
 
 /// 每个页面与为它抽出的组件文件 —— 「分组头」现在住在各自的组件文件里。
 ///
@@ -160,7 +166,6 @@ const pages = <String, ({String page, String companion})>{
 };
 
 void main() {
-
   pages.forEach((label, spec) {
     group('$label（${spec.page}）', () {
       late String src;
@@ -193,7 +198,8 @@ void main() {
         expect(
           missing,
           isEmpty,
-          reason: '这些分组的标题会画箭头、却没有配套的折叠判断，'
+          reason:
+              '这些分组的标题会画箭头、却没有配套的折叠判断，'
               '点下去只会翻箭头、内容收不起来：\n  ${missing.join('\n  ')}',
         );
       });
@@ -230,12 +236,18 @@ void main() {
     for (final path in files) {
       if (!File(path).existsSync()) continue;
       final src = File(path).readAsStringSync();
-      for (final m in RegExp(r"(?:const|final)\s+(\w+)\s*=\s*'([^']+)'").allMatches(src)) {
+      for (final m in RegExp(
+        r"(?:const|final)\s+(\w+)\s*=\s*'([^']+)'",
+      ).allMatches(src)) {
         final name = m.group(1)!;
-        final used = RegExp(r'_expanded\.(?:add|remove|contains)\(\s*' + name + r'\s*[,)]');
+        final used = RegExp(
+          r'_expanded\.(?:add|remove|contains)\(\s*' + name + r'\s*[,)]',
+        );
         if (used.hasMatch(src)) {
-          fail('$path 里 `$name` 被赋成字面量 "${m.group(2)}" 之后交给了 _expanded —— '
-              '_expanded 存的是**翻译值**，应该用 I18n.t(...)。');
+          fail(
+            '$path 里 `$name` 被赋成字面量 "${m.group(2)}" 之后交给了 _expanded —— '
+            '_expanded 存的是**翻译值**，应该用 I18n.t(...)。',
+          );
         }
       }
     }
@@ -249,8 +261,11 @@ void main() {
       "I18n.t('conn.groupQuick')",
       "I18n.t('ui.f8dfedcd8a')",
     ]) {
-      expect(hasGate(src, key), isTrue,
-          reason: '$key 的内容没有包在 if (_expanded.contains(...)) 里');
+      expect(
+        hasGate(src, key),
+        isTrue,
+        reason: '$key 的内容没有包在 if (_expanded.contains(...)) 里',
+      );
     }
   });
 }

@@ -57,20 +57,25 @@ class ServerTarget {
   /// 所以「在家优先直连」是默认行为；出门时第一条自然连不上，
   /// 自动落到第二条 —— 用户不需要切任何东西。
   List<ServerEndpoint> get candidates => [
-        ServerEndpoint(host, port, secure, isFallback: false),
-        if ((fallbackHost ?? '').trim().isNotEmpty)
-          ServerEndpoint(
-            fallbackHost!.trim(),
-            fallbackPort ?? port,
-            fallbackSecure,
-            isFallback: true,
-          ),
-      ];
+    ServerEndpoint(host, port, secure, isFallback: false),
+    if ((fallbackHost ?? '').trim().isNotEmpty)
+      ServerEndpoint(
+        fallbackHost!.trim(),
+        fallbackPort ?? port,
+        fallbackSecure,
+        isFallback: true,
+      ),
+  ];
 }
 
 /// 一个可尝试的地址（主地址或备用地址）。
 class ServerEndpoint {
-  const ServerEndpoint(this.host, this.port, this.secure, {required this.isFallback});
+  const ServerEndpoint(
+    this.host,
+    this.port,
+    this.secure, {
+    required this.isFallback,
+  });
 
   final String host;
   final int port;
@@ -94,6 +99,7 @@ class ServerStore extends ChangeNotifier {
   ServerClient? _client;
   StreamSubscription<ServerEvent>? _events;
   Timer? _reconnectTimer;
+
   /// 载入超时兜底：不能因为一个请求没回来就一直显示「正在载入」
   Timer? _snapshotTimeout;
   int _reconnectAttempt = 0;
@@ -139,8 +145,7 @@ class ServerStore extends ChangeNotifier {
 
   bool isArchived(String sessionId) => AppPrefs.instance.isArchived(sessionId);
 
-  List<PoolSession> get runningPool =>
-      pool.where((p) => p.running).toList();
+  List<PoolSession> get runningPool => pool.where((p) => p.running).toList();
 
   /// 归档一条会话：本地标记 + 立刻刷新列表（不然要点别的才看出来）
   Future<void> archiveSession(String sessionId) async {
@@ -262,7 +267,10 @@ class ServerStore extends ChangeNotifier {
       } on ServerException catch (error) {
         await candidate.dispose();
         failures.add('${endpoint.label} — ${error.message}');
-        DebugLog.instance.warn('连接', '探活失败：${endpoint.label} — ${error.message}');
+        DebugLog.instance.warn(
+          '连接',
+          '探活失败：${endpoint.label} — ${error.message}',
+        );
       } catch (error) {
         // 兜底：网络层还能抛出别的异常。特别是 TimeoutException ——
         // `_json` 只把 `openUrl` 阶段的超时翻译成了 ServerException，
@@ -442,19 +450,28 @@ class ServerStore extends ChangeNotifier {
 
     await loadSessions(refresh: true);
     final after = messageCountOf(sessionId);
-    final added = (before != null && after != null && after > before) ? after - before : 0;
+    final added = (before != null && after != null && after > before)
+        ? after - before
+        : 0;
 
     // 重新订阅，把离开期间的消息补回界面；
     // 若本来就没有当前会话（例如进程被杀后重开），就恢复上次那条
-    final target = sessionId ??
-        (AppPrefs.instance.lastSessionId.isEmpty ? null : AppPrefs.instance.lastSessionId);
+    final target =
+        sessionId ??
+        (AppPrefs.instance.lastSessionId.isEmpty
+            ? null
+            : AppPrefs.instance.lastSessionId);
     if (target != null) await openSession(target);
 
     final parts = <String>[];
     if (!wasConnected) parts.add(I18n.t('ui.0569d5987b'));
     if (added > 0) parts.add(I18n.tp('ui.bb45590174', {'n': added}));
     if (away != null && away.inSeconds >= 20) {
-      parts.add(away.inMinutes >= 1 ? I18n.tp('ui.fe3338e328', {'n': away.inMinutes}) : I18n.tp('ui.ec9f506f82', {'n': away.inSeconds}));
+      parts.add(
+        away.inMinutes >= 1
+            ? I18n.tp('ui.fe3338e328', {'n': away.inMinutes})
+            : I18n.tp('ui.ec9f506f82', {'n': away.inSeconds}),
+      );
     }
     if (parts.isEmpty) return null;
 
@@ -513,7 +530,10 @@ class ServerStore extends ChangeNotifier {
     try {
       sessionUsage = await client.readSessionUsage(id);
     } on ServerException catch (error) {
-      onToast?.call(I18n.tp('ui.d2a6633d48', {'e': error.message}), type: 'error');
+      onToast?.call(
+        I18n.tp('ui.d2a6633d48', {'e': error.message}),
+        type: 'error',
+      );
     }
     loadingUsage = false;
     _notify();
@@ -546,7 +566,10 @@ class ServerStore extends ChangeNotifier {
       usageSummary = await client.readUsageSummary();
       _notify();
     } on ServerException catch (error) {
-      onToast?.call(I18n.tp('ui.c3f797f056', {'e': error.message}), type: 'error');
+      onToast?.call(
+        I18n.tp('ui.c3f797f056', {'e': error.message}),
+        type: 'error',
+      );
     }
   }
 
@@ -565,8 +588,10 @@ class ServerStore extends ChangeNotifier {
       defaultModelId = json['modelId'] as String?;
       _notify();
     } on ServerException catch (error) {
-      onToast?.call(I18n.tp('ui.8210d7f767', {'e': error.message}),
-          type: 'error');
+      onToast?.call(
+        I18n.tp('ui.8210d7f767', {'e': error.message}),
+        type: 'error',
+      );
     }
   }
 
@@ -662,12 +687,14 @@ class ServerStore extends ChangeNotifier {
     // 而新的订阅没必要排队等它
     unawaited(_events?.cancel());
     DebugLog.instance.info('会话', '订阅事件流 $sessionId');
-    _events = client.events(sessionId).listen(
-      _onEvent,
-      onError: (Object error) => _onStreamError(error),
-      onDone: _onStreamDone,
-      cancelOnError: false,
-    );
+    _events = client
+        .events(sessionId)
+        .listen(
+          _onEvent,
+          onError: (Object error) => _onStreamError(error),
+          onDone: _onStreamDone,
+          cancelOnError: false,
+        );
   }
 
   /// 新建会话并立即打开。成功返回会话 id，失败返回 null（原因在 lastError）。
@@ -829,7 +856,7 @@ class ServerStore extends ChangeNotifier {
     try {
       await client.closeLiveSession(sessionId);
       pool = pool.where((p) => p.id != sessionId).toList();
-      _bumpSessions();      // 同上：列表页只听这个信号
+      _bumpSessions(); // 同上：列表页只听这个信号
       _notify();
       // 再和服务器对齐一次；这一步失败也不影响上面的即时反馈
       await loadPool();
@@ -860,7 +887,10 @@ class ServerStore extends ChangeNotifier {
       return true;
     } on ServerException catch (error) {
       lastError = error.message;
-      onToast?.call(I18n.tp('ui.e5d81c0a03', {'e': error.message}), type: 'error');
+      onToast?.call(
+        I18n.tp('ui.e5d81c0a03', {'e': error.message}),
+        type: 'error',
+      );
       return false;
     }
   }
@@ -894,19 +924,22 @@ class ServerStore extends ChangeNotifier {
           _snapshotTimeout?.cancel();
           _refreshCommands();
           // 落一份离线缓存（不 await：缓存失败不能拖慢界面）
-          unawaited(SessionCache.save(
-            sessionId: snapshot.sessionId,
-            name: chat.sessionName ?? '',
-            cwd: chat.cwd,
-            messages: chat.messages,
-          ));
+          unawaited(
+            SessionCache.save(
+              sessionId: snapshot.sessionId,
+              name: chat.sessionName ?? '',
+              cwd: chat.cwd,
+              messages: chat.messages,
+            ),
+          );
         }
         break;
 
       case 'status':
         final phase = event.data['phase'] as String?;
         if (phase == 'error') {
-          errorMessage = event.data['message'] as String? ?? I18n.t('ui.74c6f09b91');
+          errorMessage =
+              event.data['message'] as String? ?? I18n.t('ui.74c6f09b91');
         } else if (phase == 'shutdown') {
           chat.notice = I18n.t('ui.0fbd2577cd');
         }
@@ -935,8 +968,8 @@ class ServerStore extends ChangeNotifier {
           type: request.notifyType == 'error'
               ? 'error'
               : request.notifyType == 'warning'
-                  ? 'warning'
-                  : null,
+              ? 'warning'
+              : null,
         );
         break;
       case 'setStatus':
@@ -956,7 +989,10 @@ class ServerStore extends ChangeNotifier {
     }
   }
 
-  Future<void> respondUi(String requestId, Map<String, dynamic> response) async {
+  Future<void> respondUi(
+    String requestId,
+    Map<String, dynamic> response,
+  ) async {
     final client = _client;
     final sessionId = currentSessionId;
     uiRequests.removeWhere((r) => r.id == requestId);
@@ -965,7 +1001,10 @@ class ServerStore extends ChangeNotifier {
     try {
       await client.respondToUi(sessionId, requestId, response);
     } on ServerException catch (error) {
-      onToast?.call(I18n.tp('ui.44a5b4dcf1', {'e': error.message}), type: 'error');
+      onToast?.call(
+        I18n.tp('ui.44a5b4dcf1', {'e': error.message}),
+        type: 'error',
+      );
     }
   }
 
@@ -1010,12 +1049,14 @@ class ServerStore extends ChangeNotifier {
       if (client == null || currentSessionId != sessionId) return;
       // 必须等旧订阅真正取消完再建新连接，否则上一轮的事件可能串到新会话里
       await _events?.cancel();
-      _events = client.events(sessionId).listen(
-        _onEvent,
-        onError: (Object error) => _onStreamError(error),
-        onDone: _onStreamDone,
-        cancelOnError: false,
-      );
+      _events = client
+          .events(sessionId)
+          .listen(
+            _onEvent,
+            onError: (Object error) => _onStreamError(error),
+            onDone: _onStreamDone,
+            cancelOnError: false,
+          );
     });
   }
 
@@ -1148,7 +1189,9 @@ class ServerStore extends ChangeNotifier {
   Future<String?> cloneSession({String? sessionId}) async {
     // runCommand 需要一条“当前会话”作为通道；没有的话先把源会话打开
     if (_client == null) return null;
-    if (currentSessionId == null && sessionId != null) await openSession(sessionId);
+    if (currentSessionId == null && sessionId != null) {
+      await openSession(sessionId);
+    }
     if (currentSessionId == null) {
       lastError = I18n.t('ui.e410196151');
       onToast?.call(lastError!, type: 'error');
@@ -1227,7 +1270,9 @@ class ServerStore extends ChangeNotifier {
     if (response!.data?['cancelled'] == true) return false;
     // 记住被切走的用户消息，界面会把它放回输入框（pi 的 editorText 语义）
     final editorText = response.data?['editorText'];
-    pendingEditorText = editorText is String && editorText.trim().isNotEmpty ? editorText : null;
+    pendingEditorText = editorText is String && editorText.trim().isNotEmpty
+        ? editorText
+        : null;
     final sessionId = currentSessionId;
     if (sessionId != null) await openSession(sessionId);
     return true;
@@ -1242,7 +1287,10 @@ class ServerStore extends ChangeNotifier {
     try {
       return await client.rawFile(path);
     } on ServerException catch (error) {
-      onToast?.call(I18n.tp('ui.c621e5e25b', {'e': error.message}), type: 'error');
+      onToast?.call(
+        I18n.tp('ui.c621e5e25b', {'e': error.message}),
+        type: 'error',
+      );
       return null;
     }
   }
@@ -1269,10 +1317,16 @@ class ServerStore extends ChangeNotifier {
       );
       final size = result['size'];
       lastUploadedPath = result['path'] as String?;
-      onToast?.call(I18n.tp('ui.78b07cb72a', {'n': name, 's': size ?? bytes.length}), type: 'success');
+      onToast?.call(
+        I18n.tp('ui.78b07cb72a', {'n': name, 's': size ?? bytes.length}),
+        type: 'success',
+      );
       return true;
     } on ServerException catch (error) {
-      onToast?.call(I18n.tp('ui.384e5130bb', {'e': error.message}), type: 'error');
+      onToast?.call(
+        I18n.tp('ui.384e5130bb', {'e': error.message}),
+        type: 'error',
+      );
       return false;
     }
   }
@@ -1307,12 +1361,19 @@ class ServerStore extends ChangeNotifier {
       onToast?.call(I18n.t('ui.f8e34f3543'), type: 'success');
       return true;
     } on ServerException catch (error) {
-      onToast?.call(I18n.tp('ui.106406ad4d', {'e': error.message}), type: 'error');
+      onToast?.call(
+        I18n.tp('ui.106406ad4d', {'e': error.message}),
+        type: 'error',
+      );
       return false;
     }
   }
 
-  Future<bool> removeWorktree(String cwd, String dir, {bool force = false}) async {
+  Future<bool> removeWorktree(
+    String cwd,
+    String dir, {
+    bool force = false,
+  }) async {
     final client = _client;
     if (client == null) return false;
     try {
@@ -1320,7 +1381,10 @@ class ServerStore extends ChangeNotifier {
       onToast?.call(I18n.t('ui.3e6c4f97df'), type: 'success');
       return true;
     } on ServerException catch (error) {
-      onToast?.call(I18n.tp('ui.e5d81c0a03', {'e': error.message}), type: 'error');
+      onToast?.call(
+        I18n.tp('ui.e5d81c0a03', {'e': error.message}),
+        type: 'error',
+      );
       return false;
     }
   }
@@ -1328,17 +1392,22 @@ class ServerStore extends ChangeNotifier {
   // ==================== pi 包（插件）====================
 
   /// 已装插件 + 可更新列表
-  Future<(List<PiPackageInfo>, List<PackageUpdateInfo>, String?)> packages() async {
+  Future<(List<PiPackageInfo>, List<PackageUpdateInfo>, String?)>
+  packages() async {
     final client = _client;
-    if (client == null) return (const <PiPackageInfo>[], const <PackageUpdateInfo>[], null);
+    if (client == null) {
+      return (const <PiPackageInfo>[], const <PackageUpdateInfo>[], null);
+    }
     try {
       final json = await client.listPackages(_configCwd);
-      final list = (json['packages'] as List?)
+      final list =
+          (json['packages'] as List?)
               ?.whereType<Map>()
               .map((e) => PiPackageInfo.fromJson(e.cast<String, dynamic>()))
               .toList() ??
           const <PiPackageInfo>[];
-      final updates = (json['updates'] as List?)
+      final updates =
+          (json['updates'] as List?)
               ?.whereType<Map>()
               .map((e) => PackageUpdateInfo.fromJson(e.cast<String, dynamic>()))
               .toList() ??
@@ -1359,18 +1428,23 @@ class ServerStore extends ChangeNotifier {
     final client = _client;
     if (client == null) return false;
     try {
-      await client.packageAction(action: action, source: source, local: local, cwd: _configCwd);
-      onToast?.call(
-        switch (action) {
-          'install' => I18n.tp('ui.53ff7b7c01', {'s': source}),
-          'remove' => I18n.tp('ui.9e1bfdc29d', {'s': source}),
-          _ => I18n.t('ui.56a851859a'),
-        },
-        type: 'success',
+      await client.packageAction(
+        action: action,
+        source: source,
+        local: local,
+        cwd: _configCwd,
       );
+      onToast?.call(switch (action) {
+        'install' => I18n.tp('ui.53ff7b7c01', {'s': source}),
+        'remove' => I18n.tp('ui.9e1bfdc29d', {'s': source}),
+        _ => I18n.t('ui.56a851859a'),
+      }, type: 'success');
       return true;
     } on ServerException catch (error) {
-      onToast?.call(I18n.tp('ui.274b2eafab', {'a': action, 'e': error.message}), type: 'error');
+      onToast?.call(
+        I18n.tp('ui.274b2eafab', {'a': action, 'e': error.message}),
+        type: 'error',
+      );
       return false;
     }
   }
@@ -1393,7 +1467,10 @@ class ServerStore extends ChangeNotifier {
     try {
       return await client.readFile(path);
     } on ServerException catch (error) {
-      onToast?.call(I18n.tp('ui.f55e153cb5', {'e': error.message}), type: 'error');
+      onToast?.call(
+        I18n.tp('ui.f55e153cb5', {'e': error.message}),
+        type: 'error',
+      );
       return null;
     }
   }
@@ -1404,7 +1481,10 @@ class ServerStore extends ChangeNotifier {
     try {
       return await client.gitStatus(cwd);
     } on ServerException catch (error) {
-      onToast?.call(I18n.tp('ui.5e541876ac', {'e': error.message}), type: 'error');
+      onToast?.call(
+        I18n.tp('ui.5e541876ac', {'e': error.message}),
+        type: 'error',
+      );
       return null;
     }
   }
@@ -1415,7 +1495,10 @@ class ServerStore extends ChangeNotifier {
     try {
       return await client.gitDiff(cwd, path: path);
     } on ServerException catch (error) {
-      onToast?.call(I18n.tp('ui.151f0ad89b', {'e': error.message}), type: 'error');
+      onToast?.call(
+        I18n.tp('ui.151f0ad89b', {'e': error.message}),
+        type: 'error',
+      );
       return null;
     }
   }
@@ -1443,7 +1526,12 @@ class ServerStore extends ChangeNotifier {
     final client = _client;
     if (client == null) return false;
     try {
-      await client.upsertMcp(name: name, scope: scope, config: config, cwd: _configCwd);
+      await client.upsertMcp(
+        name: name,
+        scope: scope,
+        config: config,
+        cwd: _configCwd,
+      );
       onToast?.call(I18n.tp('ui.68e0c6d05e', {'n': name}), type: 'success');
       return true;
     } on ServerException catch (error) {
@@ -1460,17 +1548,28 @@ class ServerStore extends ChangeNotifier {
       onToast?.call(I18n.tp('ui.24fa0cd945', {'n': name}), type: 'success');
       return true;
     } on ServerException catch (error) {
-      onToast?.call(I18n.tp('ui.e5d81c0a03', {'e': error.message}), type: 'error');
+      onToast?.call(
+        I18n.tp('ui.e5d81c0a03', {'e': error.message}),
+        type: 'error',
+      );
       return false;
     }
   }
 
-  Future<bool> setMcpServerEnabled(String name,
-      {required String scope, required bool enabled}) async {
+  Future<bool> setMcpServerEnabled(
+    String name, {
+    required String scope,
+    required bool enabled,
+  }) async {
     final client = _client;
     if (client == null) return false;
     try {
-      await client.setMcpEnabled(name, scope: scope, enabled: enabled, cwd: _configCwd);
+      await client.setMcpEnabled(
+        name,
+        scope: scope,
+        enabled: enabled,
+        cwd: _configCwd,
+      );
       return true;
     } on ServerException catch (error) {
       onToast?.call(error.message, type: 'error');
@@ -1498,7 +1597,10 @@ class ServerStore extends ChangeNotifier {
     try {
       return await client.startLogin(provider, type);
     } on ServerException catch (error) {
-      onToast?.call(I18n.tp('ui.6076ca52e7', {'e': error.message}), type: 'error');
+      onToast?.call(
+        I18n.tp('ui.6076ca52e7', {'e': error.message}),
+        type: 'error',
+      );
       return null;
     }
   }
@@ -1542,7 +1644,10 @@ class ServerStore extends ChangeNotifier {
       onToast?.call(I18n.tp('ui.ae61e7d374', {'p': provider}), type: 'success');
       return true;
     } on ServerException catch (error) {
-      onToast?.call(I18n.tp('ui.ffbd30b3e8', {'e': error.message}), type: 'error');
+      onToast?.call(
+        I18n.tp('ui.ffbd30b3e8', {'e': error.message}),
+        type: 'error',
+      );
       return false;
     }
   }
@@ -1593,7 +1698,10 @@ class ServerStore extends ChangeNotifier {
       onToast?.call(I18n.tp('ui.a234cc694b', {'p': provider}), type: 'success');
       return true;
     } on ServerException catch (error) {
-      onToast?.call(I18n.tp('ui.e1ecbe92e3', {'e': error.message}), type: 'error');
+      onToast?.call(
+        I18n.tp('ui.e1ecbe92e3', {'e': error.message}),
+        type: 'error',
+      );
       return false;
     }
   }
@@ -1607,7 +1715,10 @@ class ServerStore extends ChangeNotifier {
       onToast?.call(I18n.tp('ui.8ec238cd15', {'p': provider}), type: 'success');
       return true;
     } on ServerException catch (error) {
-      onToast?.call(I18n.tp('ui.e5d81c0a03', {'e': error.message}), type: 'error');
+      onToast?.call(
+        I18n.tp('ui.e5d81c0a03', {'e': error.message}),
+        type: 'error',
+      );
       return false;
     }
   }
@@ -1644,7 +1755,10 @@ class ServerStore extends ChangeNotifier {
     try {
       return await client.exportToServer(sessionId);
     } on ServerException catch (error) {
-      onToast?.call(I18n.tp('ui.eb0814d40c', {'e': error.message}), type: 'error');
+      onToast?.call(
+        I18n.tp('ui.eb0814d40c', {'e': error.message}),
+        type: 'error',
+      );
       return null;
     }
   }
@@ -1653,14 +1767,18 @@ class ServerStore extends ChangeNotifier {
   void Function(Map<String, dynamic> builtin)? onBuiltinResult;
 
   Future<void> abort() async {
-    await runCommand({'id': 'a${DateTime.now().microsecondsSinceEpoch}', 'type': 'abort'});
+    await runCommand({
+      'id': 'a${DateTime.now().microsecondsSinceEpoch}',
+      'type': 'abort',
+    });
   }
 
   Future<void> compact({String? instructions}) async {
     await runCommand({
       'id': 'c${DateTime.now().microsecondsSinceEpoch}',
       'type': 'compact',
-      if (instructions != null && instructions.isNotEmpty) 'instructions': instructions,
+      if (instructions != null && instructions.isNotEmpty)
+        'instructions': instructions,
     });
   }
 
@@ -1717,7 +1835,8 @@ class ServerStore extends ChangeNotifier {
   }
 
   /// 会话无关的配置用 cwd（没打开会话时用默认工作区）
-  String get _configCwd => chat.cwd.isNotEmpty ? chat.cwd : (target?.defaultCwd ?? '');
+  String get _configCwd =>
+      chat.cwd.isNotEmpty ? chat.cwd : (target?.defaultCwd ?? '');
 
   Future<List<ModelInfo>> availableModels() async {
     final response = await runCommand({
@@ -1747,7 +1866,9 @@ class ServerStore extends ChangeNotifier {
       'type': 'get_available_thinking_levels',
     });
     final list = response?.data?['levels'];
-    if (list is List && list.isNotEmpty) return list.whereType<String>().toList();
+    if (list is List && list.isNotEmpty) {
+      return list.whereType<String>().toList();
+    }
 
     final client = _client;
     if (client == null) return const [];

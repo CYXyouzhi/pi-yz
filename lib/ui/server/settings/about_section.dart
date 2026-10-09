@@ -37,7 +37,9 @@ class AboutSection extends StatelessWidget {
           title: key,
           icon: IconId.info,
           // 收起时能看到 pi 版本，省得为了看版本号把这块展开
-          summary: store.health?.piVersion == null ? null : 'pi ${store.health!.piVersion}',
+          summary: store.health?.piVersion == null
+              ? null
+              : 'pi ${store.health!.piVersion}',
           open: open,
           onToggle: onToggle,
         ),
@@ -49,13 +51,23 @@ class AboutSection extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 InfoRow(label: 'App', value: 'pi-yz · pi-yz'),
-                InfoRow(label: I18n.t('ui.1de0cfbc46'), value: store.health?.piVersion ?? '—'),
-                InfoRow(label: I18n.t('ui.b08caf56ca'), value: '${store.health?.activeSessions ?? 0}'),
-                InfoRow(label: I18n.t('ui.f98077685a'), value: '${store.sessions.length}'),
+                InfoRow(
+                  label: I18n.t('ui.1de0cfbc46'),
+                  value: store.health?.piVersion ?? '—',
+                ),
+                InfoRow(
+                  label: I18n.t('ui.b08caf56ca'),
+                  value: '${store.health?.activeSessions ?? 0}',
+                ),
+                InfoRow(
+                  label: I18n.t('ui.f98077685a'),
+                  value: '${store.sessions.length}',
+                ),
                 SizedBox(height: NeuSpace.n6),
                 CollapsibleText(
                   // ignore: prefer_interpolation_to_compose_strings
-                  text: '${I18n.t('ui.d2bf098e02')}'
+                  text:
+                      '${I18n.t('ui.d2bf098e02')}'
                       '${I18n.t('ui.fccbc56d80')}',
                   style: TextStyle(
                     fontSize: NeuFonts.label,

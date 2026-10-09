@@ -115,7 +115,13 @@ void main() {
     });
 
     test('没配备用地址时，JSON 里不该多出这些键（保持旧面貌）', () {
-      const p = ServerProfile(id: 'p1', name: 'x', host: 'h', port: 1, token: 't');
+      const p = ServerProfile(
+        id: 'p1',
+        name: 'x',
+        host: 'h',
+        port: 1,
+        token: 't',
+      );
       final json = p.toJson();
 
       expect(json.containsKey('fallbackHost'), isFalse);
@@ -158,7 +164,13 @@ void main() {
     });
 
     test('copyWith 能单独改备用地址而不动别的字段', () {
-      const p = ServerProfile(id: 'p1', name: 'n', host: 'h', port: 1, token: 't');
+      const p = ServerProfile(
+        id: 'p1',
+        name: 'n',
+        host: 'h',
+        port: 1,
+        token: 't',
+      );
       final q = p.copyWith(fallbackHost: '100.64.0.1');
 
       expect(q.fallbackHost, '100.64.0.1');

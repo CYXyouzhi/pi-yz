@@ -30,12 +30,13 @@ class ConnSection extends StatelessWidget {
 
   /// 连接状态的短标签，收起态要显示它。
   String _stateLabel() => switch (store.state) {
-        ServerConnectionState.connected =>
-          '${I18n.t('common.connected')} · ${store.activeEndpoint?.label ?? store.target?.label ?? ''}',
-        ServerConnectionState.connecting => I18n.t('common.connecting'),
-        ServerConnectionState.error => store.errorMessage ?? I18n.t('common.connFailed'),
-        ServerConnectionState.disconnected => I18n.t('common.disconnected'),
-      };
+    ServerConnectionState.connected =>
+      '${I18n.t('common.connected')} · ${store.activeEndpoint?.label ?? store.target?.label ?? ''}',
+    ServerConnectionState.connecting => I18n.t('common.connecting'),
+    ServerConnectionState.error =>
+      store.errorMessage ?? I18n.t('common.connFailed'),
+    ServerConnectionState.disconnected => I18n.t('common.disconnected'),
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +63,9 @@ class ConnSection extends StatelessWidget {
                   onTap: onOpenConn,
                   flat: true,
                   padding: const EdgeInsets.symmetric(
-                      horizontal: NeuSpace.n12, vertical: NeuSpace.n12),
+                    horizontal: NeuSpace.n12,
+                    vertical: NeuSpace.n12,
+                  ),
                   child: Row(
                     children: [
                       NeuIcon(IconId.server, size: 17, color: t.accentInk),
@@ -78,29 +81,42 @@ class ConnSection extends StatelessWidget {
                               store.activeEndpoint?.label ??
                                   store.target?.label ??
                                   I18n.t('ui.95af3b54e0'),
-                              style: TextStyle(fontSize: NeuFonts.bodyTight, color: t.fg),
+                              style: TextStyle(
+                                fontSize: NeuFonts.bodyTight,
+                                color: t.fg,
+                              ),
                             ),
                             if (store.activeEndpoint?.isFallback == true) ...[
                               SizedBox(height: NeuSpace.n2),
                               Text(
                                 I18n.t('conn.viaFallback'),
-                                style: TextStyle(fontSize: NeuFonts.badge, color: t.muted),
+                                style: TextStyle(
+                                  fontSize: NeuFonts.badge,
+                                  color: t.muted,
+                                ),
                               ),
                             ],
                             SizedBox(height: NeuSpace.n2),
                             Text(
                               switch (store.state) {
                                 ServerConnectionState.connected => I18n.tp(
-                                    'ui.b083df935e',
-                                    {'v': store.health?.piVersion ?? ''}),
-                                ServerConnectionState.connecting =>
-                                  I18n.t('common.connecting'),
+                                  'ui.b083df935e',
+                                  {'v': store.health?.piVersion ?? ''},
+                                ),
+                                ServerConnectionState.connecting => I18n.t(
+                                  'common.connecting',
+                                ),
                                 ServerConnectionState.error =>
-                                  store.errorMessage ?? I18n.t('common.connFailed'),
-                                ServerConnectionState.disconnected =>
-                                  I18n.t('common.disconnected'),
+                                  store.errorMessage ??
+                                      I18n.t('common.connFailed'),
+                                ServerConnectionState.disconnected => I18n.t(
+                                  'common.disconnected',
+                                ),
                               },
-                              style: TextStyle(fontSize: NeuFonts.label, color: t.muted),
+                              style: TextStyle(
+                                fontSize: NeuFonts.label,
+                                color: t.muted,
+                              ),
                             ),
                           ],
                         ),
@@ -118,7 +134,9 @@ class ConnSection extends StatelessWidget {
                           onTap: () => store.loadSessions(refresh: true),
                           radius: NeuRadii.sm,
                           padding: const EdgeInsets.symmetric(
-                              horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
+                            horizontal: NeuSpace.n13,
+                            vertical: NeuSpace.n13,
+                          ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -127,7 +145,9 @@ class ConnSection extends StatelessWidget {
                               Text(
                                 I18n.t('ui.5e51feb8f3'),
                                 style: TextStyle(
-                                    fontSize: NeuFonts.bodySmall, color: t.muted),
+                                  fontSize: NeuFonts.bodySmall,
+                                  color: t.muted,
+                                ),
                               ),
                             ],
                           ),
@@ -139,7 +159,9 @@ class ConnSection extends StatelessWidget {
                           onTap: () => store.disconnect(),
                           radius: NeuRadii.sm,
                           padding: const EdgeInsets.symmetric(
-                              horizontal: NeuSpace.n13, vertical: NeuSpace.n13),
+                            horizontal: NeuSpace.n13,
+                            vertical: NeuSpace.n13,
+                          ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -148,7 +170,9 @@ class ConnSection extends StatelessWidget {
                               Text(
                                 I18n.t('ui.9b55c5c9f8'),
                                 style: TextStyle(
-                                    fontSize: NeuFonts.bodySmall, color: t.danger),
+                                  fontSize: NeuFonts.bodySmall,
+                                  color: t.danger,
+                                ),
                               ),
                             ],
                           ),

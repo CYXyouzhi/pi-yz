@@ -5,7 +5,9 @@
 // 这里的判定全是纯函数，方便单测钉住（网络现场难复现，判定逻辑必须能被验证）。
 
 import 'dart:async';
+
 import 'i18n.dart';
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -117,7 +119,9 @@ class DiagReport {
   String get headline {
     if (allOk) return I18n.t('ui.669d30fa77');
     final failed = steps.where((step) => !step.ok).toList();
-    return failed.isEmpty ? I18n.t('ui.145eaa2097') : I18n.tp('ui.602e8032ea', {'title': failed.first.title});
+    return failed.isEmpty
+        ? I18n.t('ui.145eaa2097')
+        : I18n.tp('ui.602e8032ea', {'title': failed.first.title});
   }
 
   /// 导出文本：给「复制」和「系统分享」用同一份，避免两处措辞不一致。
@@ -128,11 +132,17 @@ class DiagReport {
       ..writeln(I18n.tp('ui.b5ed9e3f60', {'n': elapsed.inMilliseconds}))
       ..writeln(I18n.tp('ui.6416d2cfda', {'host': host, 'port': port}))
       ..writeln('token：${maskToken(token)}')
-      ..writeln('${I18n.t('ui.9d2957f54f')}${defaultCwd ?? I18n.t('ui.cb8fd1da6d')}')
+      ..writeln(
+        '${I18n.t('ui.9d2957f54f')}${defaultCwd ?? I18n.t('ui.cb8fd1da6d')}',
+      )
       ..writeln('');
     for (final step in steps) {
-      buffer.writeln('${step.ok ? I18n.t('ui.17513e53f2') : I18n.t('ui.7b0b07b98f')} ${step.title}：${step.detail}');
-      if (step.hint != null) buffer.writeln(I18n.tp('ui.62e1c6d089', {'hint': step.hint}));
+      buffer.writeln(
+        '${step.ok ? I18n.t('ui.17513e53f2') : I18n.t('ui.7b0b07b98f')} ${step.title}：${step.detail}',
+      );
+      if (step.hint != null) {
+        buffer.writeln(I18n.tp('ui.62e1c6d089', {'hint': step.hint}));
+      }
     }
     return buffer.toString();
   }
@@ -155,19 +165,23 @@ Future<DiagReport> runDiagnosis({
     final lookup = await InternetAddress.lookup(host).timeout(timeout);
     if (lookup.isEmpty) throw SocketException('no address');
     resolved = lookup.first.address;
-    steps.add(DiagStep(
-      title: I18n.t('ui.7c27423840'),
-      ok: true,
-      detail: resolved == host ? host : '$host → $resolved',
-    ));
+    steps.add(
+      DiagStep(
+        title: I18n.t('ui.7c27423840'),
+        ok: true,
+        detail: resolved == host ? host : '$host → $resolved',
+      ),
+    );
   } catch (error) {
     final explained = explainFailure(error);
-    steps.add(DiagStep(
-      title: I18n.t('ui.7c27423840'),
-      ok: false,
-      detail: explained.reason,
-      hint: explained.hint,
-    ));
+    steps.add(
+      DiagStep(
+        title: I18n.t('ui.7c27423840'),
+        ok: false,
+        detail: explained.reason,
+        hint: explained.hint,
+      ),
+    );
   }
 
   // ② 端口可达性（纯 TCP，不涉及 HTTP 与鉴权）
@@ -178,27 +192,37 @@ Future<DiagReport> runDiagnosis({
       final socket = await Socket.connect(host, port, timeout: timeout);
       tcpMs = DateTime.now().difference(startedTcp);
       socket.destroy();
-      steps.add(DiagStep(
-        title: I18n.t('ui.0cd14773ed'),
-        ok: true,
-        detail: I18n.tp('ui.9fa43bc9a3', {'host': host, 'port': port, 'n': tcpMs.inMilliseconds}),
-      ));
+      steps.add(
+        DiagStep(
+          title: I18n.t('ui.0cd14773ed'),
+          ok: true,
+          detail: I18n.tp('ui.9fa43bc9a3', {
+            'host': host,
+            'port': port,
+            'n': tcpMs.inMilliseconds,
+          }),
+        ),
+      );
     } catch (error) {
       final explained = explainFailure(error);
-      steps.add(DiagStep(
-        title: I18n.t('ui.0cd14773ed'),
-        ok: false,
-        detail: explained.reason,
-        hint: explained.hint,
-      ));
+      steps.add(
+        DiagStep(
+          title: I18n.t('ui.0cd14773ed'),
+          ok: false,
+          detail: explained.reason,
+          hint: explained.hint,
+        ),
+      );
     }
   } else {
-    steps.add(DiagStep(
-      title: I18n.t('ui.0cd14773ed'),
-      ok: false,
-      detail: I18n.t('ui.469c7e631a'),
-      hint: I18n.t('ui.391fd0df8f'),
-    ));
+    steps.add(
+      DiagStep(
+        title: I18n.t('ui.0cd14773ed'),
+        ok: false,
+        detail: I18n.t('ui.469c7e631a'),
+        hint: I18n.t('ui.391fd0df8f'),
+      ),
+    );
   }
 
   // ③ 健康检查 + 延迟（3 次取最快与平均）
@@ -211,8 +235,9 @@ Future<DiagReport> runDiagnosis({
       final client = HttpClient()..connectionTimeout = timeout;
       final startedHealth = DateTime.now();
       try {
-        final request =
-            await client.getUrl(Uri.parse('http://$host:$port/api/health')).timeout(timeout);
+        final request = await client
+            .getUrl(Uri.parse('http://$host:$port/api/health'))
+            .timeout(timeout);
         final response = await request.close().timeout(timeout);
         final text = await utf8.decoder.bind(response).join();
         samples.add(DateTime.now().difference(startedHealth).inMilliseconds);
@@ -228,26 +253,32 @@ Future<DiagReport> runDiagnosis({
       }
     }
     if (samples.isEmpty) {
-      steps.add(DiagStep(
-        title: I18n.t('ui.a0da7db9e8'),
-        ok: false,
-        detail: failure ?? I18n.t('ui.6c95da9a4c'),
-        hint: I18n.t('ui.032d279244'),
-      ));
+      steps.add(
+        DiagStep(
+          title: I18n.t('ui.a0da7db9e8'),
+          ok: false,
+          detail: failure ?? I18n.t('ui.6c95da9a4c'),
+          hint: I18n.t('ui.032d279244'),
+        ),
+      );
     } else {
       samples.sort();
       final fastest = samples.first;
       final average = samples.reduce((a, b) => a + b) ~/ samples.length;
-      steps.add(DiagStep(
-        title: I18n.t('ui.eabef5aeca'),
-        ok: true,
-        detail: I18n.tp('ui.0f83db566b', {'f': fastest, 'a': average}),
-      ));
-      steps.add(DiagStep(
-        title: I18n.t('ui.62f64d669e'),
-        ok: true,
-        detail: I18n.tp('ui.5c1455e056', {'v': piVersion, 'n': active}),
-      ));
+      steps.add(
+        DiagStep(
+          title: I18n.t('ui.eabef5aeca'),
+          ok: true,
+          detail: I18n.tp('ui.0f83db566b', {'f': fastest, 'a': average}),
+        ),
+      );
+      steps.add(
+        DiagStep(
+          title: I18n.t('ui.62f64d669e'),
+          ok: true,
+          detail: I18n.tp('ui.5c1455e056', {'v': piVersion, 'n': active}),
+        ),
+      );
     }
 
     // ④ 鉴权（只有带 token 打一个受保护接口才知道对不对）
@@ -260,34 +291,42 @@ Future<DiagReport> runDiagnosis({
       final response = await request.close().timeout(timeout);
       await response.drain<void>();
       if (response.statusCode == 200) {
-        steps.add(DiagStep(
-          title: I18n.t('ui.1abcfdd7b6'),
-          ok: true,
-          detail: I18n.t('ui.97d3f39246'),
-        ));
+        steps.add(
+          DiagStep(
+            title: I18n.t('ui.1abcfdd7b6'),
+            ok: true,
+            detail: I18n.t('ui.97d3f39246'),
+          ),
+        );
       } else if (response.statusCode == 401) {
-        steps.add(DiagStep(
-          title: I18n.t('ui.1abcfdd7b6'),
-          ok: false,
-          detail: I18n.t('ui.0264d45a05'),
-          hint: I18n.t('ui.eebdd18b00'),
-        ));
+        steps.add(
+          DiagStep(
+            title: I18n.t('ui.1abcfdd7b6'),
+            ok: false,
+            detail: I18n.t('ui.0264d45a05'),
+            hint: I18n.t('ui.eebdd18b00'),
+          ),
+        );
       } else {
-        steps.add(DiagStep(
-          title: I18n.t('ui.1abcfdd7b6'),
-          ok: false,
-          detail: 'HTTP ${response.statusCode}',
-          hint: I18n.t('ui.75c322d9f5'),
-        ));
+        steps.add(
+          DiagStep(
+            title: I18n.t('ui.1abcfdd7b6'),
+            ok: false,
+            detail: 'HTTP ${response.statusCode}',
+            hint: I18n.t('ui.75c322d9f5'),
+          ),
+        );
       }
     } catch (error) {
       final explained = explainFailure(error);
-      steps.add(DiagStep(
-        title: I18n.t('ui.1abcfdd7b6'),
-        ok: false,
-        detail: explained.reason,
-        hint: explained.hint,
-      ));
+      steps.add(
+        DiagStep(
+          title: I18n.t('ui.1abcfdd7b6'),
+          ok: false,
+          detail: explained.reason,
+          hint: explained.hint,
+        ),
+      );
     } finally {
       client.close(force: true);
     }

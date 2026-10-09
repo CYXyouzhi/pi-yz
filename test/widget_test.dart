@@ -19,8 +19,8 @@ import 'package:pi_yz/services/key_encoder.dart';
 import 'package:pi_yz/ui/key_bar.dart';
 import 'package:pi_yz/ui/neu_toast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'support/ui_harness.dart';
 
+import 'support/ui_harness.dart';
 
 void main() {
   // 把测试环境的系统 locale 钉成中文：I18n 默认跟随系统，
@@ -158,10 +158,9 @@ void main() {
     testWidgets('修饰键粘滞：锁定 Ctrl 后点 ↑ 发出 Ctrl+↑，且自动解除', (tester) async {
       setPhoneSurface(tester);
       final sent = <String>[];
-      await tester.pumpWidget(harness(_KeyBarHarness(
-        onKey: sent.add,
-        startExpanded: true,
-      )));
+      await tester.pumpWidget(
+        harness(_KeyBarHarness(onKey: sent.add, startExpanded: true)),
+      );
       await settle(tester);
 
       await tapVisible(tester, find.text('Ctrl'));
@@ -201,20 +200,24 @@ void main() {
   group('Toast', () {
     testWidgets('弹出后可见，带行动按钮；到期自己退场', (tester) async {
       setPhoneSurface(tester);
-      await tester.pumpWidget(harness(Builder(
-        builder: (ctx) => Center(
-          child: TextButton(
-            onPressed: () => NeuToast.show(
-              ctx,
-              message: '已保存',
-              actionLabel: '立即连接',
-              onAction: () {},
-              duration: const Duration(seconds: 2),
+      await tester.pumpWidget(
+        harness(
+          Builder(
+            builder: (ctx) => Center(
+              child: TextButton(
+                onPressed: () => NeuToast.show(
+                  ctx,
+                  message: '已保存',
+                  actionLabel: '立即连接',
+                  onAction: () {},
+                  duration: const Duration(seconds: 2),
+                ),
+                child: const Text('fire'),
+              ),
             ),
-            child: const Text('fire'),
           ),
         ),
-      )));
+      );
       await settle(tester);
 
       await tester.tap(find.text('fire'));
@@ -236,7 +239,9 @@ void main() {
       // （MaterialApp 会用自己的 MediaQuery.fromView 覆盖祖先，包了也不生效）
       tester.platformDispatcher.accessibilityFeaturesTestValue =
           const FakeAccessibilityFeatures(disableAnimations: true);
-      addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
+      addTearDown(
+        tester.platformDispatcher.clearAccessibilityFeaturesTestValue,
+      );
 
       await tester.pumpWidget(const PiYzApp());
       await skipSplash(tester);

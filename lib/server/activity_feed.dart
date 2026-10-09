@@ -136,9 +136,11 @@ String oneLine(String s, int max) {
 ActivitySnapshot buildActivity(
   ChatReducer chat, {
   int? now,
+
   /// 本轮开始时间（毫秒）。界面手里有更准的（agent_start 那一刻），优先用它；
   /// 没传就退回「本轮最后一条用户消息」的时间。
   int? runStartedAt,
+
   /// 正在等用户回话的那些请求（界面拿 store.uiRequests 传进来）。
   /// 合同①要求时间线里能看到「等待确认」—— 它不是一个工具调用，
   /// 但正是用户最需要被叫醒的那一步。
@@ -169,22 +171,26 @@ ActivitySnapshot buildActivity(
       if (at > 0) lastUserAt = at;
       final text = m.text.trim();
       if (text.isNotEmpty) {
-        items.add(ActivityItem(
-          at: at,
-          kind: ActivityKind.user,
-          title: I18n.t('ui.df1fd91011'),
-          detail: oneLine(text, 90),
-        ));
+        items.add(
+          ActivityItem(
+            at: at,
+            kind: ActivityKind.user,
+            title: I18n.t('ui.df1fd91011'),
+            detail: oneLine(text, 90),
+          ),
+        );
       }
     }
 
     if (m.thinking.trim().isNotEmpty) {
-      items.add(ActivityItem(
-        at: at,
-        kind: ActivityKind.thinking,
-        title: I18n.t('ui.21d68b2de0'),
-        detail: oneLine(m.thinking, 90),
-      ));
+      items.add(
+        ActivityItem(
+          at: at,
+          kind: ActivityKind.thinking,
+          title: I18n.t('ui.21d68b2de0'),
+          detail: oneLine(m.thinking, 90),
+        ),
+      );
     }
 
     for (final call in m.toolCalls) {
@@ -194,24 +200,28 @@ ActivitySnapshot buildActivity(
       if (path is String && path.trim().isNotEmpty && inRound(i)) {
         files.add(path);
       }
-      items.add(ActivityItem(
-        at: at,
-        kind: ActivityKind.tool,
-        title: call.name,
-        detail: toolSummary(call.name, call.arguments),
-        running: run != null && run.status == ToolStatus.running,
-        failed: run != null && run.status == ToolStatus.error,
-      ));
+      items.add(
+        ActivityItem(
+          at: at,
+          kind: ActivityKind.tool,
+          title: call.name,
+          detail: toolSummary(call.name, call.arguments),
+          running: run != null && run.status == ToolStatus.running,
+          failed: run != null && run.status == ToolStatus.error,
+        ),
+      );
     }
 
     // 助手正文：只算「有话说」的那条，纯工具轮的空文本不进时间线
     if (m.role == 'assistant' && m.text.trim().isNotEmpty) {
-      items.add(ActivityItem(
-        at: at,
-        kind: ActivityKind.reply,
-        title: I18n.t('ui.1edff073d4'),
-        detail: oneLine(m.text, 90),
-      ));
+      items.add(
+        ActivityItem(
+          at: at,
+          kind: ActivityKind.reply,
+          title: I18n.t('ui.1edff073d4'),
+          detail: oneLine(m.text, 90),
+        ),
+      );
     }
 
     final u = m.usage;

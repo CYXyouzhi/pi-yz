@@ -5,7 +5,6 @@
 
 import '../i18n.dart';
 
-
 // ==================== 多会话总览与磁盘占用（task-15） ====================
 
 /// 池里活着的一条会话：多会话总览要回答「哪个在跑、跑到哪、花了多少」。
@@ -45,7 +44,10 @@ class PoolSession {
   bool get running => isStreaming;
 
   String get workspaceName {
-    final parts = cwd.replaceAll('\\', '/').split('/').where((s) => s.isNotEmpty);
+    final parts = cwd
+        .replaceAll('\\', '/')
+        .split('/')
+        .where((s) => s.isNotEmpty);
     return parts.isEmpty ? cwd : parts.last;
   }
 
@@ -55,21 +57,20 @@ class PoolSession {
   }
 
   factory PoolSession.fromJson(Map<String, dynamic> json) => PoolSession(
-        id: json['id'] as String? ?? '',
-        cwd: json['cwd'] as String? ?? '',
-        title: json['title'] as String? ?? '',
-        isStreaming: json['isStreaming'] == true,
-        messageCount: (json['messageCount'] as num?)?.toInt() ?? 0,
-        outputTokens: (json['outputTokens'] as num?)?.toInt() ?? 0,
-        cost: (json['cost'] as num?)?.toDouble() ?? 0,
-        lastAction: json['lastAction'] as String? ?? '',
-        runningMs: (json['runningMs'] as num?)?.toInt() ?? 0,
-        idleMs: (json['idleMs'] as num?)?.toInt() ?? 0,
-      );
+    id: json['id'] as String? ?? '',
+    cwd: json['cwd'] as String? ?? '',
+    title: json['title'] as String? ?? '',
+    isStreaming: json['isStreaming'] == true,
+    messageCount: (json['messageCount'] as num?)?.toInt() ?? 0,
+    outputTokens: (json['outputTokens'] as num?)?.toInt() ?? 0,
+    cost: (json['cost'] as num?)?.toDouble() ?? 0,
+    lastAction: json['lastAction'] as String? ?? '',
+    runningMs: (json['runningMs'] as num?)?.toInt() ?? 0,
+    idleMs: (json['idleMs'] as num?)?.toInt() ?? 0,
+  );
 }
 
 /// 磁盘上一条会话占了多少
-
 
 /// 磁盘上一条会话占了多少
 class DiskSession {
@@ -91,14 +92,13 @@ class DiskSession {
       modified == null ? null : DateTime.tryParse(modified!)?.toLocal();
 
   factory DiskSession.fromJson(Map<String, dynamic> json) => DiskSession(
-        id: json['id'] as String? ?? '',
-        title: json['title'] as String? ?? '',
-        bytes: (json['bytes'] as num?)?.toInt() ?? 0,
-        messages: (json['messages'] as num?)?.toInt() ?? 0,
-        modified: json['modified'] as String?,
-      );
+    id: json['id'] as String? ?? '',
+    title: json['title'] as String? ?? '',
+    bytes: (json['bytes'] as num?)?.toInt() ?? 0,
+    messages: (json['messages'] as num?)?.toInt() ?? 0,
+    modified: json['modified'] as String?,
+  );
 }
-
 
 class DiskGroup {
   const DiskGroup({
@@ -114,22 +114,25 @@ class DiskGroup {
   final List<DiskSession> sessions;
 
   String get workspaceName {
-    final parts = cwd.replaceAll('\\', '/').split('/').where((s) => s.isNotEmpty);
+    final parts = cwd
+        .replaceAll('\\', '/')
+        .split('/')
+        .where((s) => s.isNotEmpty);
     return parts.isEmpty ? cwd : parts.last;
   }
 
   factory DiskGroup.fromJson(Map<String, dynamic> json) => DiskGroup(
-        cwd: json['cwd'] as String? ?? '',
-        bytes: (json['bytes'] as num?)?.toInt() ?? 0,
-        count: (json['count'] as num?)?.toInt() ?? 0,
-        sessions: (json['sessions'] as List?)
-                ?.whereType<Map>()
-                .map((e) => DiskSession.fromJson(e.cast<String, dynamic>()))
-                .toList() ??
-            const [],
-      );
+    cwd: json['cwd'] as String? ?? '',
+    bytes: (json['bytes'] as num?)?.toInt() ?? 0,
+    count: (json['count'] as num?)?.toInt() ?? 0,
+    sessions:
+        (json['sessions'] as List?)
+            ?.whereType<Map>()
+            .map((e) => DiskSession.fromJson(e.cast<String, dynamic>()))
+            .toList() ??
+        const [],
+  );
 }
-
 
 class DiskUsage {
   const DiskUsage({
@@ -149,15 +152,16 @@ class DiskUsage {
   static const empty = DiskUsage(groups: [], totalBytes: 0, totalSessions: 0);
 
   factory DiskUsage.fromJson(Map<String, dynamic> json) => DiskUsage(
-        groups: (json['groups'] as List?)
-                ?.whereType<Map>()
-                .map((e) => DiskGroup.fromJson(e.cast<String, dynamic>()))
-                .toList() ??
-            const [],
-        totalBytes: (json['totalBytes'] as num?)?.toInt() ?? 0,
-        totalSessions: (json['totalSessions'] as num?)?.toInt() ?? 0,
-        basis: json['basis'] as String? ?? '',
-      );
+    groups:
+        (json['groups'] as List?)
+            ?.whereType<Map>()
+            .map((e) => DiskGroup.fromJson(e.cast<String, dynamic>()))
+            .toList() ??
+        const [],
+    totalBytes: (json['totalBytes'] as num?)?.toInt() ?? 0,
+    totalSessions: (json['totalSessions'] as num?)?.toInt() ?? 0,
+    basis: json['basis'] as String? ?? '',
+  );
 }
 
 /// 字节数说人话：1.2 MB / 486 MB / 1.4 GB
@@ -172,7 +176,6 @@ String humanBytes(int bytes) {
 }
 
 /// 远程访问隧道状态（task-18）
-
 
 /// 远程访问隧道状态（task-18）
 class RemoteState {
@@ -200,22 +203,21 @@ class RemoteState {
   static const empty = RemoteState();
 
   String get providerLabel => switch (provider) {
-        'cloudflare' => I18n.t('ui.0b436778d8'),
-        'localhost.run' => I18n.t('ui.2c028e4a7b'),
-        _ => provider,
-      };
+    'cloudflare' => I18n.t('ui.0b436778d8'),
+    'localhost.run' => I18n.t('ui.2c028e4a7b'),
+    _ => provider,
+  };
 
   factory RemoteState.fromJson(Map<String, dynamic> json) => RemoteState(
-        status: json['status'] as String? ?? 'idle',
-        url: json['url'] as String? ?? '',
-        error: json['error'] as String? ?? '',
-        running: json['running'] == true,
-        provider: json['provider'] as String? ?? '',
-        threatModel: (json['threatModel'] as List?)
-                ?.whereType<String>()
-                .toList() ??
-            const [],
-      );
+    status: json['status'] as String? ?? 'idle',
+    url: json['url'] as String? ?? '',
+    error: json['error'] as String? ?? '',
+    running: json['running'] == true,
+    provider: json['provider'] as String? ?? '',
+    threatModel:
+        (json['threatModel'] as List?)?.whereType<String>().toList() ??
+        const [],
+  );
 }
 
 /// 时间戳解析：pi 落盘的 timestamp 是 **ISO 字符串**（`2026-10-04T05:03:26.123Z`），

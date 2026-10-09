@@ -67,46 +67,45 @@ class ServerProfile {
     String? fallbackHost,
     int? fallbackPort,
     bool? fallbackSecure,
-  }) =>
-      ServerProfile(
-        id: id ?? this.id,
-        name: name ?? this.name,
-        host: host ?? this.host,
-        port: port ?? this.port,
-        token: token ?? this.token,
-        defaultCwd: defaultCwd ?? this.defaultCwd,
-        secure: secure ?? this.secure,
-        fallbackHost: fallbackHost ?? this.fallbackHost,
-        fallbackPort: fallbackPort ?? this.fallbackPort,
-        fallbackSecure: fallbackSecure ?? this.fallbackSecure,
-      );
+  }) => ServerProfile(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    host: host ?? this.host,
+    port: port ?? this.port,
+    token: token ?? this.token,
+    defaultCwd: defaultCwd ?? this.defaultCwd,
+    secure: secure ?? this.secure,
+    fallbackHost: fallbackHost ?? this.fallbackHost,
+    fallbackPort: fallbackPort ?? this.fallbackPort,
+    fallbackSecure: fallbackSecure ?? this.fallbackSecure,
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'host': host,
-        'port': port,
-        'token': token,
-        if (defaultCwd != null) 'defaultCwd': defaultCwd,
-        if (secure) 'secure': true,
-        // 备用地址：只在真配了才写，保持旧 profile 的 JSON 面貌不变
-        if (hasFallback) 'fallbackHost': fallbackHost,
-        if (fallbackPort != null) 'fallbackPort': fallbackPort,
-        if (fallbackSecure) 'fallbackSecure': true,
-      };
+    'id': id,
+    'name': name,
+    'host': host,
+    'port': port,
+    'token': token,
+    if (defaultCwd != null) 'defaultCwd': defaultCwd,
+    if (secure) 'secure': true,
+    // 备用地址：只在真配了才写，保持旧 profile 的 JSON 面貌不变
+    if (hasFallback) 'fallbackHost': fallbackHost,
+    if (fallbackPort != null) 'fallbackPort': fallbackPort,
+    if (fallbackSecure) 'fallbackSecure': true,
+  };
 
   factory ServerProfile.fromJson(Map<String, dynamic> json) => ServerProfile(
-        id: json['id'] as String? ?? '',
-        name: json['name'] as String? ?? '',
-        host: json['host'] as String? ?? '',
-        port: (json['port'] as num?)?.toInt() ?? 30142,
-        token: json['token'] as String? ?? '',
-        defaultCwd: json['defaultCwd'] as String?,
-        secure: json['secure'] == true,
-        fallbackHost: json['fallbackHost'] as String?,
-        fallbackPort: (json['fallbackPort'] as num?)?.toInt(),
-        fallbackSecure: json['fallbackSecure'] == true,
-      );
+    id: json['id'] as String? ?? '',
+    name: json['name'] as String? ?? '',
+    host: json['host'] as String? ?? '',
+    port: (json['port'] as num?)?.toInt() ?? 30142,
+    token: json['token'] as String? ?? '',
+    defaultCwd: json['defaultCwd'] as String?,
+    secure: json['secure'] == true,
+    fallbackHost: json['fallbackHost'] as String?,
+    fallbackPort: (json['fallbackPort'] as num?)?.toInt(),
+    fallbackSecure: json['fallbackSecure'] == true,
+  );
 }
 
 class ServerProfileStore {

@@ -4,8 +4,10 @@
 // 而且 SSE 需要的是"原始字节流"，HttpClient 直接给的就是这个。
 
 import 'dart:async';
+
 import '../services/debug_log.dart';
 import 'i18n.dart';
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -67,12 +69,12 @@ class ServerClient {
   }
 
   Uri _uri(String path, [Map<String, String>? query]) => Uri(
-        scheme: secure ? 'https' : 'http',
-        host: host,
-        port: port,
-        path: path,
-        queryParameters: query,
-      );
+    scheme: secure ? 'https' : 'http',
+    host: host,
+    port: port,
+    path: path,
+    queryParameters: query,
+  );
 
   Future<void> dispose() async {
     _http?.close(force: true);
@@ -85,6 +87,7 @@ class ServerClient {
     String path, {
     Map<String, String>? query,
     Object? body,
+
     /// 单次请求的超时（安装插件这类会联网的操作要放宽，默认用全局 timeout）
     Duration? timeout,
   }) async {
@@ -96,17 +99,26 @@ class ServerClient {
     }
     final HttpClientRequest request;
     try {
-      request = await _client.openUrl(method, _uri(path, query)).timeout(effective);
+      request = await _client
+          .openUrl(method, _uri(path, query))
+          .timeout(effective);
     } on TimeoutException {
-      DebugLog.instance.error('api', '$method $path 超时（${effective.inSeconds}s）');
+      DebugLog.instance.error(
+        'api',
+        '$method $path 超时（${effective.inSeconds}s）',
+      );
       final explained = explainFailure(TimeoutException('$host:$port'));
-      throw ServerException('${explained.reason}（$host:$port）→ ${explained.hint}');
+      throw ServerException(
+        '${explained.reason}（$host:$port）→ ${explained.hint}',
+      );
     } on SocketException catch (error) {
       DebugLog.instance.error('api', '$method $path 连接失败：${error.message}');
       // 具体原因交给诊断层翻译（端口没人监听 / 域名解析不了 / 网络不可达）：
       // 只回一句「无法连接」用户没法下手（合同⑤）
       final explained = explainFailure(error);
-      throw ServerException('${explained.reason}（$host:$port）→ ${explained.hint}');
+      throw ServerException(
+        '${explained.reason}（$host:$port）→ ${explained.hint}',
+      );
     }
 
     request.headers.set(HttpHeaders.authorizationHeader, 'Bearer $token');
@@ -117,16 +129,21 @@ class ServerClient {
       request.add(bytes);
     }
 
-    final HttpClientResponse response = await request.close().timeout(effective);
-    final text = await response.transform(utf8.decoder).join().timeout(effective);
+    final HttpClientResponse response = await request.close().timeout(
+      effective,
+    );
+    final text = await response
+        .transform(utf8.decoder)
+        .join()
+        .timeout(effective);
 
     if (response.statusCode != 200) {
       final explained = _explainStatus(response.statusCode, text);
-      DebugLog.instance.error('api', '$method $path → ${response.statusCode} $explained');
-      throw ServerException(
-        explained,
-        statusCode: response.statusCode,
+      DebugLog.instance.error(
+        'api',
+        '$method $path → ${response.statusCode} $explained',
       );
+      throw ServerException(explained, statusCode: response.statusCode);
     }
     if (text.isEmpty) return const {};
     final decoded = jsonDecode(text);
@@ -143,12 +160,16 @@ class ServerClient {
           .timeout(timeout);
     } on TimeoutException {
       final explained = explainFailure(TimeoutException('$host:$port'));
-      throw ServerException('${explained.reason}（$host:$port）→ ${explained.hint}');
+      throw ServerException(
+        '${explained.reason}（$host:$port）→ ${explained.hint}',
+      );
     } on SocketException catch (error) {
       // 具体原因交给诊断层翻译（端口没人监听 / 域名解析不了 / 网络不可达）：
       // 只回一句「无法连接」用户没法下手（合同⑤）
       final explained = explainFailure(error);
-      throw ServerException('${explained.reason}（$host:$port）→ ${explained.hint}');
+      throw ServerException(
+        '${explained.reason}（$host:$port）→ ${explained.hint}',
+      );
     }
     request.headers.set(HttpHeaders.authorizationHeader, 'Bearer $token');
     final response = await request.close().timeout(timeout);
@@ -158,13 +179,17 @@ class ServerClient {
     }
     if (response.statusCode != 200) {
       throw ServerException(
-        _explainStatus(response.statusCode, utf8.decode(bytes, allowMalformed: true)),
+        _explainStatus(
+          response.statusCode,
+          utf8.decode(bytes, allowMalformed: true),
+        ),
         statusCode: response.statusCode,
       );
     }
     return RawFileData(
       bytes: bytes,
-      contentType: response.headers.contentType?.mimeType ?? 'application/octet-stream',
+      contentType:
+          response.headers.contentType?.mimeType ?? 'application/octet-stream',
       // 服务端把预览类型放在自定义头里（image / pdf / audio / video / text / binary）
       kind: response.headers.value('x-pi-file-kind') ?? 'binary',
     );
@@ -216,7 +241,9 @@ class ServerClient {
   Future<String> createSession(String cwd) async {
     final json = await _json('POST', '/api/sessions', body: {'cwd': cwd});
     final id = json['sessionId'] as String?;
-    if (id == null) throw ServerException(I18n.tp('ui.27c192ed70', {'json': json}));
+    if (id == null) {
+      throw ServerException(I18n.tp('ui.27c192ed70', {'json': json}));
+    }
     return id;
   }
 
@@ -234,8 +261,11 @@ class ServerClient {
   }
 
   Future<void> deleteSession(String sessionId, {bool force = false}) async {
-    await _json('DELETE', '/api/sessions/$sessionId',
-        query: force ? const {'force': '1'} : null);
+    await _json(
+      'DELETE',
+      '/api/sessions/$sessionId',
+      query: force ? const {'force': '1'} : null,
+    );
   }
 
   /// 池里活着的会话（多会话总览）
@@ -261,11 +291,13 @@ class ServerClient {
   /// [prefer] 选走哪条道：`'cloudflare'` / `'ssh'`。
   /// 不传则由服务端自己挑（有 cloudflared 用 Cloudflare，否则退回 SSH）。
   Future<RemoteState> startRemote({String? prefer}) async =>
-      RemoteState.fromJson(await _json(
-        'POST',
-        '/api/remote/start',
-        body: prefer == null ? null : {'prefer': prefer},
-      ));
+      RemoteState.fromJson(
+        await _json(
+          'POST',
+          '/api/remote/start',
+          body: prefer == null ? null : {'prefer': prefer},
+        ),
+      );
 
   /// 一键断开远程入口：关掉隧道后公网再也不通，局域网照常
   Future<RemoteState> stopRemote() async =>
@@ -275,8 +307,11 @@ class ServerClient {
 
   /// 列目录。path 省略时用服务端的默认根（会话工作区）。
   Future<DirListing> listFiles({String? path}) async {
-    final json = await _json('GET', '/api/files',
-        query: path == null || path.isEmpty ? null : {'path': path});
+    final json = await _json(
+      'GET',
+      '/api/files',
+      query: path == null || path.isEmpty ? null : {'path': path},
+    );
     return DirListing.fromJson(json);
   }
 
@@ -294,16 +329,21 @@ class ServerClient {
 
   /// git diff（不给 path 就是全仓）
   Future<GitDiffInfo> gitDiff(String cwd, {String? path}) async {
-    final json = await _json('GET', '/api/git/diff', query: {
-      'cwd': cwd,
-      if (path != null && path.isNotEmpty) 'path': path,
-    });
+    final json = await _json(
+      'GET',
+      '/api/git/diff',
+      query: {'cwd': cwd, if (path != null && path.isNotEmpty) 'path': path},
+    );
     return GitDiffInfo.fromJson(json);
   }
 
   /// @ 引用候选文件
   Future<List<FileRef>> fileIndex(String cwd, String query) async {
-    final json = await _json('GET', '/api/file-index', query: {'cwd': cwd, 'q': query});
+    final json = await _json(
+      'GET',
+      '/api/file-index',
+      query: {'cwd': cwd, 'q': query},
+    );
     return (json['files'] as List?)
             ?.whereType<Map>()
             .map((e) => FileRef.fromJson(e.cast<String, dynamic>()))
@@ -333,8 +373,11 @@ class ServerClient {
   }
 
   Future<void> setApiKey(String provider, String apiKey) async {
-    await _json('POST', '/api/credentials',
-        body: {'provider': provider, 'apiKey': apiKey});
+    await _json(
+      'POST',
+      '/api/credentials',
+      body: {'provider': provider, 'apiKey': apiKey},
+    );
   }
 
   Future<void> removeApiKey(String provider) async {
@@ -350,27 +393,42 @@ class ServerClient {
     required Map<String, dynamic> config,
     String? cwd,
   }) async {
-    await _json('POST', '/api/mcp', body: {
-      'name': name,
-      'scope': scope,
-      if (cwd != null && cwd.isNotEmpty) 'cwd': cwd,
-      'config': config,
-    });
+    await _json(
+      'POST',
+      '/api/mcp',
+      body: {
+        'name': name,
+        'scope': scope,
+        if (cwd != null && cwd.isNotEmpty) 'cwd': cwd,
+        'config': config,
+      },
+    );
   }
 
-  Future<void> removeMcp(String name, {required String scope, String? cwd}) async {
-    await _json('DELETE', '/api/mcp/${Uri.encodeComponent(name)}', query: {
-      'scope': scope,
-      if (cwd != null && cwd.isNotEmpty) 'cwd': cwd,
-    });
+  Future<void> removeMcp(
+    String name, {
+    required String scope,
+    String? cwd,
+  }) async {
+    await _json(
+      'DELETE',
+      '/api/mcp/${Uri.encodeComponent(name)}',
+      query: {'scope': scope, if (cwd != null && cwd.isNotEmpty) 'cwd': cwd},
+    );
   }
 
-  Future<void> setMcpEnabled(String name,
-      {required String scope, required bool enabled, String? cwd}) async {
-    await _json('PATCH', '/api/mcp/${Uri.encodeComponent(name)}', query: {
-      'scope': scope,
-      if (cwd != null && cwd.isNotEmpty) 'cwd': cwd,
-    }, body: {'enabled': enabled});
+  Future<void> setMcpEnabled(
+    String name, {
+    required String scope,
+    required bool enabled,
+    String? cwd,
+  }) async {
+    await _json(
+      'PATCH',
+      '/api/mcp/${Uri.encodeComponent(name)}',
+      query: {'scope': scope, if (cwd != null && cwd.isNotEmpty) 'cwd': cwd},
+      body: {'enabled': enabled},
+    );
   }
 
   // ==================== 文件上传 / worktree ====================
@@ -382,12 +440,16 @@ class ServerClient {
     required String base64,
     bool overwrite = false,
   }) async {
-    return _json('POST', '/api/upload', body: {
-      'dir': dir,
-      'name': name,
-      'base64': base64,
-      'overwrite': overwrite,
-    });
+    return _json(
+      'POST',
+      '/api/upload',
+      body: {
+        'dir': dir,
+        'name': name,
+        'base64': base64,
+        'overwrite': overwrite,
+      },
+    );
   }
 
   Future<Map<String, dynamic>> listWorktrees(String cwd) async {
@@ -400,12 +462,16 @@ class ServerClient {
     String? branch,
     String? base,
   }) async {
-    return _json('POST', '/api/git/worktrees', body: {
-      'cwd': cwd,
-      'dir': dir,
-      if (branch != null && branch.isNotEmpty) 'branch': branch,
-      if (base != null && base.isNotEmpty) 'base': base,
-    });
+    return _json(
+      'POST',
+      '/api/git/worktrees',
+      body: {
+        'cwd': cwd,
+        'dir': dir,
+        if (branch != null && branch.isNotEmpty) 'branch': branch,
+        if (base != null && base.isNotEmpty) 'base': base,
+      },
+    );
   }
 
   Future<Map<String, dynamic>> removeWorktree({
@@ -413,11 +479,11 @@ class ServerClient {
     required String dir,
     bool force = false,
   }) async {
-    return _json('DELETE', '/api/git/worktrees', query: {
-      'cwd': cwd,
-      'path': dir,
-      if (force) 'force': '1',
-    });
+    return _json(
+      'DELETE',
+      '/api/git/worktrees',
+      query: {'cwd': cwd, 'path': dir, if (force) 'force': '1'},
+    );
   }
 
   // ==================== Provider 登录 ====================
@@ -433,7 +499,11 @@ class ServerClient {
 
   /// 起一次登录，返回任务 id
   Future<String?> startLogin(String provider, String type) async {
-    final json = await _json('POST', '/api/login', body: {'provider': provider, 'type': type});
+    final json = await _json(
+      'POST',
+      '/api/login',
+      body: {'provider': provider, 'type': type},
+    );
     return json['id'] as String?;
   }
 
@@ -443,7 +513,11 @@ class ServerClient {
   }
 
   Future<bool> answerLogin(String taskId, String answer) async {
-    final json = await _json('POST', '/api/login/$taskId', body: {'answer': answer});
+    final json = await _json(
+      'POST',
+      '/api/login/$taskId',
+      body: {'answer': answer},
+    );
     return json['accepted'] as bool? ?? false;
   }
 
@@ -468,12 +542,17 @@ class ServerClient {
     bool local = false,
     String? cwd,
   }) async {
-    return _json('POST', '/api/packages', body: {
-      'action': action,
-      if (source != null && source.isNotEmpty) 'source': source,
-      'local': local,
-      if (cwd != null && cwd.isNotEmpty) 'cwd': cwd,
-    }, timeout: const Duration(minutes: 5));
+    return _json(
+      'POST',
+      '/api/packages',
+      body: {
+        'action': action,
+        if (source != null && source.isNotEmpty) 'source': source,
+        'local': local,
+        if (cwd != null && cwd.isNotEmpty) 'cwd': cwd,
+      },
+      timeout: const Duration(minutes: 5),
+    );
   }
 
   // ==================== 会话无关的配置信息 ====================
@@ -494,13 +573,18 @@ class ServerClient {
     String? provider,
     String? modelId,
   ) async {
-    final json = await _json('GET', '/api/config/thinking-levels', query: {
-      'cwd': cwd,
-      if (provider != null && provider.isNotEmpty) 'provider': provider,
-      if (modelId != null && modelId.isNotEmpty) 'model': modelId,
-    });
+    final json = await _json(
+      'GET',
+      '/api/config/thinking-levels',
+      query: {
+        'cwd': cwd,
+        if (provider != null && provider.isNotEmpty) 'provider': provider,
+        if (modelId != null && modelId.isNotEmpty) 'model': modelId,
+      },
+    );
     final levels =
-        (json['levels'] as List?)?.whereType<String>().toList() ?? const <String>[];
+        (json['levels'] as List?)?.whereType<String>().toList() ??
+        const <String>[];
     final current = json['current'] as String?;
     final model = json['model'] as Map?;
     final label = model == null
@@ -510,7 +594,11 @@ class ServerClient {
   }
 
   Future<List<SlashCommand>> configCommands(String cwd) async {
-    final json = await _json('GET', '/api/config/commands', query: {'cwd': cwd});
+    final json = await _json(
+      'GET',
+      '/api/config/commands',
+      query: {'cwd': cwd},
+    );
     return (json['commands'] as List?)
             ?.whereType<Map>()
             .map((e) => SlashCommand.fromJson(e.cast<String, dynamic>()))
@@ -541,7 +629,11 @@ class ServerClient {
 
   /// 跨会话用量（今天 / 本月 / 按 provider）
   Future<UsageSummary> readUsageSummary() async {
-    final json = await _json('GET', '/api/usage', timeout: const Duration(seconds: 30));
+    final json = await _json(
+      'GET',
+      '/api/usage',
+      timeout: const Duration(seconds: 30),
+    );
     return UsageSummary.fromJson(json);
   }
 
@@ -552,14 +644,19 @@ class ServerClient {
   Future<Map<String, dynamic>> writeDefaultModel(
     String provider,
     String modelId,
-  ) async =>
-      await _json('POST', '/api/config/default-model',
-          body: {'provider': provider, 'modelId': modelId});
+  ) async => await _json(
+    'POST',
+    '/api/config/default-model',
+    body: {'provider': provider, 'modelId': modelId},
+  );
 
   /// 会话导出：Markdown 文本（App 内预览 / 复制 / 存到手机）
   Future<ExportMarkdown> exportMarkdown(String sessionId) async {
-    final json = await _json('GET', '/api/sessions/$sessionId/export',
-        query: {'format': 'markdown'});
+    final json = await _json(
+      'GET',
+      '/api/sessions/$sessionId/export',
+      query: {'format': 'markdown'},
+    );
     return ExportMarkdown(
       markdown: json['markdown'] as String? ?? '',
       filename: json['filename'] as String? ?? 'session.md',
@@ -570,7 +667,8 @@ class ServerClient {
   /// 会话导出：写到服务端磁盘（HTML + JSONL），返回路径
   Future<Map<String, String>> exportToServer(String sessionId) async {
     final json = await _json('POST', '/api/sessions/$sessionId/export');
-    final errors = (json['errors'] as List?)?.whereType<String>().toList() ?? const [];
+    final errors =
+        (json['errors'] as List?)?.whereType<String>().toList() ?? const [];
     if (errors.isNotEmpty) throw ServerException(errors.join('；'));
     return {
       'html': json['html'] as String? ?? '',
@@ -580,13 +678,19 @@ class ServerClient {
 
   /// 会话导出：HTML 全文（用于在 App 里另存）
   Future<String> exportHtml(String sessionId) async {
-    final json = await _json('GET', '/api/sessions/$sessionId/export',
-        query: {'format': 'html'});
+    final json = await _json(
+      'GET',
+      '/api/sessions/$sessionId/export',
+      query: {'format': 'html'},
+    );
     return json['html'] as String? ?? '';
   }
 
   /// 发送一条命令
-  Future<CommandResponse> command(String sessionId, Map<String, dynamic> command) async {
+  Future<CommandResponse> command(
+    String sessionId,
+    Map<String, dynamic> command,
+  ) async {
     final json = await _json(
       'POST',
       '/api/sessions/$sessionId/command',
@@ -629,7 +733,9 @@ class ServerClient {
       // 具体原因交给诊断层翻译（端口没人监听 / 域名解析不了 / 网络不可达）：
       // 只回一句「无法连接」用户没法下手（合同⑤）
       final explained = explainFailure(error);
-      throw ServerException('${explained.reason}（$host:$port）→ ${explained.hint}');
+      throw ServerException(
+        '${explained.reason}（$host:$port）→ ${explained.hint}',
+      );
     }
 
     request.headers.set(HttpHeaders.authorizationHeader, 'Bearer $token');

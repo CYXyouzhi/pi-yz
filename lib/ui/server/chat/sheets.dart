@@ -27,7 +27,10 @@ void showUndoSnack(BuildContext context, String message, VoidCallback onUndo) {
   messenger.clearSnackBars();
   messenger.showSnackBar(
     SnackBar(
-      content: Text(message, style: const TextStyle(fontSize: NeuFonts.bodyMid)),
+      content: Text(
+        message,
+        style: const TextStyle(fontSize: NeuFonts.bodyMid),
+      ),
       duration: Duration(seconds: 5),
       behavior: SnackBarBehavior.floating,
       action: SnackBarAction(label: I18n.t('ui.bd9fcf46b4'), onPressed: onUndo),
@@ -40,89 +43,100 @@ void showUndoSnack(BuildContext context, String message, VoidCallback onUndo) {
 /// 依赖为 0：它只用传入的 summary 与自己的局部变量 ——
 /// 「继续 / 重做」两个动作通过 Navigator 的返回值交回调用方。
 void showTurnSummarySheet(BuildContext context, TurnSummary summary) {
-    final t = context.neu;
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) => Container(
-        margin: EdgeInsets.fromLTRB(
-          NeuSpace.n14,
-          0,
-          NeuSpace.n14,
-          NeuSpace.n14 + MediaQuery.paddingOf(sheetContext).bottom,
-        ),
-        padding: const EdgeInsets.fromLTRB(NeuSpace.n16, NeuSpace.n14, NeuSpace.n16, NeuSpace.n10),
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.6,
-        ),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(NeuRadii.lg),
-          gradient: NeuDecorations.raisedGradient(t),
-          boxShadow: NeuShadows.raise(t),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(
-                  I18n.t('ui.94d80e751a'),
-                  style: TextStyle(
-                    fontSize: NeuFonts.bodyLg,
-                    fontWeight: FontWeight.w700,
-                    color: t.fg,
-                  ),
-                ),
-                SizedBox(width: NeuSpace.n8),
-                Text(
-                  I18n.tp('ui.064981f079', {'files': summary.files.length, 'added': summary.added, 'removed': summary.removed}),
-                  style: TextStyle(fontSize: NeuFonts.label, color: t.accentInk),
-                ),
-              ],
-            ),
-            const SizedBox(height: NeuSpace.n8),
-            Flexible(
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: summary.files.length,
-                itemBuilder: (_, index) {
-                  final file = summary.files[index];
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: NeuSpace.n6),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          file.path,
-                          maxLines: 2,
-                          // 文件路径可以很长，截断后没有省略号用户会以为路径就这么短
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: NeuFonts.sub, color: t.fg),
-                        ),
-                        SizedBox(height: NeuSpace.n2),
-                        Text(
-                          '+${file.added}/-${file.removed}'
-                          '${file.writes > 0 ? I18n.tp('ui.eddf38f2db', {'n': file.writes}) : ''}'
-                          '${file.edits > 0 ? I18n.tp('ui.038edd57e7', {'n': file.edits}) : ''}',
-                          style: TextStyle(fontSize: NeuFonts.badge, color: t.muted),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-            SizedBox(height: NeuSpace.n6),
-            Text(
-              summary.basis.isEmpty ? I18n.t('ui.4dc7b743df') : summary.basis,
-              style: TextStyle(fontSize: NeuFonts.micro, color: t.muted),
-            ),
-          ],
-        ),
+  final t = context.neu;
+  showModalBottomSheet<void>(
+    context: context,
+    backgroundColor: Colors.transparent,
+    builder: (sheetContext) => Container(
+      margin: EdgeInsets.fromLTRB(
+        NeuSpace.n14,
+        0,
+        NeuSpace.n14,
+        NeuSpace.n14 + MediaQuery.paddingOf(sheetContext).bottom,
       ),
-    );
-  
+      padding: const EdgeInsets.fromLTRB(
+        NeuSpace.n16,
+        NeuSpace.n14,
+        NeuSpace.n16,
+        NeuSpace.n10,
+      ),
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.6,
+      ),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(NeuRadii.lg),
+        gradient: NeuDecorations.raisedGradient(t),
+        boxShadow: NeuShadows.raise(t),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                I18n.t('ui.94d80e751a'),
+                style: TextStyle(
+                  fontSize: NeuFonts.bodyLg,
+                  fontWeight: FontWeight.w700,
+                  color: t.fg,
+                ),
+              ),
+              SizedBox(width: NeuSpace.n8),
+              Text(
+                I18n.tp('ui.064981f079', {
+                  'files': summary.files.length,
+                  'added': summary.added,
+                  'removed': summary.removed,
+                }),
+                style: TextStyle(fontSize: NeuFonts.label, color: t.accentInk),
+              ),
+            ],
+          ),
+          const SizedBox(height: NeuSpace.n8),
+          Flexible(
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: summary.files.length,
+              itemBuilder: (_, index) {
+                final file = summary.files[index];
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: NeuSpace.n6),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        file.path,
+                        maxLines: 2,
+                        // 文件路径可以很长，截断后没有省略号用户会以为路径就这么短
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: NeuFonts.sub, color: t.fg),
+                      ),
+                      SizedBox(height: NeuSpace.n2),
+                      Text(
+                        '+${file.added}/-${file.removed}'
+                        '${file.writes > 0 ? I18n.tp('ui.eddf38f2db', {'n': file.writes}) : ''}'
+                        '${file.edits > 0 ? I18n.tp('ui.038edd57e7', {'n': file.edits}) : ''}',
+                        style: TextStyle(
+                          fontSize: NeuFonts.badge,
+                          color: t.muted,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+          SizedBox(height: NeuSpace.n6),
+          Text(
+            summary.basis.isEmpty ? I18n.t('ui.4dc7b743df') : summary.basis,
+            style: TextStyle(fontSize: NeuFonts.micro, color: t.muted),
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 void showDataSheet(BuildContext context, String title, dynamic payload) {
@@ -142,7 +156,12 @@ void showDataSheet(BuildContext context, String title, dynamic payload) {
             top: Radius.circular(NeuRadii.lg),
           ),
         ),
-        padding: const EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n18, NeuSpace.n18, NeuSpace.n24),
+        padding: const EdgeInsets.fromLTRB(
+          NeuSpace.n18,
+          NeuSpace.n18,
+          NeuSpace.n18,
+          NeuSpace.n24,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -194,9 +213,9 @@ String formatPayload(dynamic payload) {
 }
 
 Future<void> showPickerSheet(
-BuildContext context,
-ServerStore store,
-Map<String, dynamic> builtin,
+  BuildContext context,
+  ServerStore store,
+  Map<String, dynamic> builtin,
 ) async {
   final picker = builtin['picker'] as String?;
   final title = builtin['title'] as String? ?? I18n.t('common.select');
@@ -258,7 +277,10 @@ Map<String, dynamic> builtin,
                             children: [
                               Text(
                                 label,
-                                style: TextStyle(fontSize: NeuFonts.bodyTight, color: t.fg),
+                                style: TextStyle(
+                                  fontSize: NeuFonts.bodyTight,
+                                  color: t.fg,
+                                ),
                               ),
                               if (group != null)
                                 Text(
@@ -295,8 +317,7 @@ Map<String, dynamic> builtin,
 }
 
 Future<String?> askText(
-BuildContext context,
-{
+  BuildContext context, {
   required String title,
   String? placeholder,
   String? prefill,
@@ -309,7 +330,10 @@ BuildContext context,
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: t.bg,
-        title: Text(title, style: TextStyle(color: t.fg, fontSize: NeuFonts.sectionTitle)),
+        title: Text(
+          title,
+          style: TextStyle(color: t.fg, fontSize: NeuFonts.sectionTitle),
+        ),
         content: NeuInset(
           radius: NeuRadii.sm,
           padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n12),
@@ -323,19 +347,30 @@ BuildContext context,
               isDense: true,
               border: InputBorder.none,
               hintText: placeholder,
-              hintStyle: TextStyle(fontSize: NeuFonts.bodySmall, color: t.muted),
-              contentPadding: const EdgeInsets.symmetric(vertical: NeuSpace.n12),
+              hintStyle: TextStyle(
+                fontSize: NeuFonts.bodySmall,
+                color: t.muted,
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                vertical: NeuSpace.n12,
+              ),
             ),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: Text(I18n.t('common.cancel'), style: TextStyle(color: t.muted)),
+            child: Text(
+              I18n.t('common.cancel'),
+              style: TextStyle(color: t.muted),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(controller.text),
-            child: Text(I18n.t('common.ok'), style: TextStyle(color: t.accentInk)),
+            child: Text(
+              I18n.t('common.ok'),
+              style: TextStyle(color: t.accentInk),
+            ),
           ),
         ],
       ),
@@ -345,10 +380,7 @@ BuildContext context,
   }
 }
 
-Future<bool?> askConfirm(
-BuildContext context,
-UiRequest request,
-) async {
+Future<bool?> askConfirm(BuildContext context, UiRequest request) async {
   final t = context.neu;
   return showDialog<bool>(
     context: context,
@@ -360,26 +392,33 @@ UiRequest request,
       ),
       content: Text(
         request.message ?? '',
-        style: TextStyle(color: t.muted, fontSize: NeuFonts.bodyMid, height: 1.6),
+        style: TextStyle(
+          color: t.muted,
+          fontSize: NeuFonts.bodyMid,
+          height: 1.6,
+        ),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(dialogContext).pop(false),
-          child: Text(I18n.t('common.cancel'), style: TextStyle(color: t.muted)),
+          child: Text(
+            I18n.t('common.cancel'),
+            style: TextStyle(color: t.muted),
+          ),
         ),
         TextButton(
           onPressed: () => Navigator.of(dialogContext).pop(true),
-          child: Text(I18n.t('common.ok'), style: TextStyle(color: t.accentInk)),
+          child: Text(
+            I18n.t('common.ok'),
+            style: TextStyle(color: t.accentInk),
+          ),
         ),
       ],
     ),
   );
 }
 
-Future<String?> askSelect(
-BuildContext context,
-UiRequest request,
-) async {
+Future<String?> askSelect(BuildContext context, UiRequest request) async {
   return showModalBottomSheet<String?>(
     context: context,
     backgroundColor: Colors.transparent,
@@ -396,7 +435,12 @@ UiRequest request,
             top: Radius.circular(NeuRadii.lg),
           ),
         ),
-        padding: const EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n10, NeuSpace.n18, NeuSpace.n24),
+        padding: const EdgeInsets.fromLTRB(
+          NeuSpace.n18,
+          NeuSpace.n10,
+          NeuSpace.n18,
+          NeuSpace.n24,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -444,7 +488,10 @@ UiRequest request,
                     margin: const EdgeInsets.only(bottom: NeuSpace.n6),
                     child: Text(
                       option,
-                      style: TextStyle(fontSize: NeuFonts.bodyTight, color: t.fg),
+                      style: TextStyle(
+                        fontSize: NeuFonts.bodyTight,
+                        color: t.fg,
+                      ),
                     ),
                   );
                 },
@@ -458,9 +505,9 @@ UiRequest request,
 }
 
 Future<void> showUiDialog(
-BuildContext context,
-ServerStore store,
-UiRequest request,
+  BuildContext context,
+  ServerStore store,
+  UiRequest request,
 ) async {
   switch (request.method) {
     case 'select':
@@ -476,7 +523,8 @@ UiRequest request,
         confirmed == null ? {'cancelled': true} : {'confirmed': confirmed},
       );
     case 'input':
-      final text = await askText(context, 
+      final text = await askText(
+        context,
         title: request.title ?? I18n.t('common.input'),
         placeholder: request.placeholder,
         multiline: false,
@@ -486,7 +534,8 @@ UiRequest request,
         text == null ? {'cancelled': true} : {'value': text},
       );
     case 'editor':
-      final text = await askText(context, 
+      final text = await askText(
+        context,
         title: request.title ?? I18n.t('ui.95b351c862'),
         prefill: request.prefill,
         multiline: true,

@@ -22,7 +22,9 @@ void main() {
 
     test('provider 与型号无关时也能剥（靠 id 判定，不靠 provider）', () {
       expect(
-        modelChipLabel(_m('opencode-go', 'deepseek-v4.1-flash', 'DeepSeek V4.1 Flash')),
+        modelChipLabel(
+          _m('opencode-go', 'deepseek-v4.1-flash', 'DeepSeek V4.1 Flash'),
+        ),
         'V4.1 Flash',
       );
     });

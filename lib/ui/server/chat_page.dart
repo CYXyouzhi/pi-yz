@@ -344,11 +344,13 @@ class _ServerChatPageState extends State<ServerChatPage> {
 
   void _scrollToBottom() {
     if (!_scroll.hasClients) return;
-    unawaited(_scroll.animateTo(
-      _scroll.position.maxScrollExtent,
-      duration: NeuMotion.base,
-      curve: Curves.easeOut,
-    ));
+    unawaited(
+      _scroll.animateTo(
+        _scroll.position.maxScrollExtent,
+        duration: NeuMotion.base,
+        curve: Curves.easeOut,
+      ),
+    );
   }
 
   /// 在当前工作区新开一条会话。
@@ -376,7 +378,11 @@ class _ServerChatPageState extends State<ServerChatPage> {
       );
       return;
     }
-    NeuToast.show(context, message: I18n.t('ui.b244d633d4'), icon: IconId.check);
+    NeuToast.show(
+      context,
+      message: I18n.t('ui.b244d633d4'),
+      icon: IconId.check,
+    );
   }
 
   Future<void> _send() async {
@@ -449,11 +455,7 @@ class _ServerChatPageState extends State<ServerChatPage> {
     setState(() => _undoText = null);
     if (_store.chat.isRunning) _store.abort();
     if (text != null && text.isNotEmpty) _setInput(text);
-    NeuToast.show(
-      context,
-      message: I18n.t('ui.59afc7c239'),
-      icon: IconId.warn,
-    );
+    NeuToast.show(context, message: I18n.t('ui.59afc7c239'), icon: IconId.warn);
   }
 
   // ==================== 按键条的动作 ====================
@@ -601,11 +603,7 @@ class _ServerChatPageState extends State<ServerChatPage> {
       0.0,
       _scroll.position.maxScrollExtent,
     );
-    _scroll.animateTo(
-      target,
-      duration: NeuMotion.base,
-      curve: Curves.easeOut,
-    );
+    _scroll.animateTo(target, duration: NeuMotion.base, curve: Curves.easeOut);
   }
 
   /// 内置命令返回的选择器（模型、思考等级）
@@ -656,30 +654,34 @@ class _ServerChatPageState extends State<ServerChatPage> {
           child: Column(
             children: [
               // 滚动时标题栏自动收起（省约 44 逻辑高），回到顶部自动恢复
-              if (!_headerCollapsed) ChatHeader(
-            store: _store,
-            chat: chat,
-            runStartedAt: _runStartedAt,
-            onShare: _shareLastAnswer,
-            onShowInfo: () => showSessionInfoSheet(
-            context,
-            _store,
-            focusMode: _focusMode,
-            onToggleFocusMode: () => setState(() => _focusMode = !_focusMode),
-            onFork: _forkFrom,
-            onNavigate: _navigateTo,
-          ),
-            onNewSession: _newSessionInCurrentWorkspace,
-            onShowModelSwitcher: () => showModelSwitcherSheet(context, _store),
-          ),
+              if (!_headerCollapsed)
+                ChatHeader(
+                  store: _store,
+                  chat: chat,
+                  runStartedAt: _runStartedAt,
+                  onShare: _shareLastAnswer,
+                  onShowInfo: () => showSessionInfoSheet(
+                    context,
+                    _store,
+                    focusMode: _focusMode,
+                    onToggleFocusMode: () =>
+                        setState(() => _focusMode = !_focusMode),
+                    onFork: _forkFrom,
+                    onNavigate: _navigateTo,
+                  ),
+                  onNewSession: _newSessionInCurrentWorkspace,
+                  onShowModelSwitcher: () =>
+                      showModelSwitcherSheet(context, _store),
+                ),
               // 活动条只在「跑着」或「有待确认」时占行：
               // 空闲时它显示「你好 · 空闲 · 本轮 N 次工具调用」，信息量低却照样
               // 吃掉约 37 逻辑高。入口没丢 —— 点标题栏的会话名就能打开活动视图。
-              if (chat.isRunning || _store.uiRequests.any((r) => r.needsResponse))
+              if (chat.isRunning ||
+                  _store.uiRequests.any((r) => r.needsResponse))
                 ChatActivityBar(store: _store, chat: chat),
               // 离线缓存提示：有缓存时界面不空，但必须说清楚「你看到的是旧的」
               if (_store.cacheShownAt != null) OfflineBanner(store: _store),
-                            ChatMessageArea(
+              ChatMessageArea(
                 store: _store,
                 chat: chat,
                 focusMode: _focusMode,
@@ -707,16 +709,21 @@ class _ServerChatPageState extends State<ServerChatPage> {
                   onApply: _applyCommand,
                   store: _store,
                 ),
-              if (_showFileRefs) FileRefs(refs: _fileRefs, onApply: _applyFileRef),
+              if (_showFileRefs)
+                FileRefs(refs: _fileRefs, onApply: _applyFileRef),
               // 按键条放在输入框上方、参与布局（不是浮层）：
               // 既不遮挡输入框，也不遮消息
               if (_pendingImages.isNotEmpty)
                 PendingImages(
                   images: _pendingImages,
-                  onShowUndo: (message, onUndo) => showUndoSnack(context, message, onUndo),
+                  onShowUndo: (message, onUndo) =>
+                      showUndoSnack(context, message, onUndo),
                   onRemove: (img) => setState(() => _pendingImages.remove(img)),
                   onInsert: (i, img) => setState(
-                    () => _pendingImages.insert(i.clamp(0, _pendingImages.length), img),
+                    () => _pendingImages.insert(
+                      i.clamp(0, _pendingImages.length),
+                      img,
+                    ),
                   ),
                 ),
               // 误发保护：发送后的几秒里给一条看得见、点得到的「撤回」
@@ -745,7 +752,8 @@ class _ServerChatPageState extends State<ServerChatPage> {
                   chat: chat,
                   onContinue: _continueRun,
                   onRedo: () => _redoLast(chat),
-                  onSummary: () => showTurnSummarySheet(context, _store.turnSummary!),
+                  onSummary: () =>
+                      showTurnSummarySheet(context, _store.turnSummary!),
                 ),
               ChatComposer(
                 input: _input,
@@ -755,17 +763,18 @@ class _ServerChatPageState extends State<ServerChatPage> {
                 onSend: _send,
                 onAbort: () => _store.abort(),
                 onShowMenu: () => showInputMenuSheet(
-                context,
-                input: _input,
-                templates: _templates,
-                onTemplatesChanged: (items) => setState(() => _templates = items),
-                onInsert: _insertIntoInput,
-                onPickImage: _pickImage,
-                onPickFile: _pickFile,
-                onPaste: _pasteClipboardText,
+                  context,
+                  input: _input,
+                  templates: _templates,
+                  onTemplatesChanged: (items) =>
+                      setState(() => _templates = items),
+                  onInsert: _insertIntoInput,
+                  onPickImage: _pickImage,
+                  onPickFile: _pickFile,
+                  onPaste: _pasteClipboardText,
                 ),
                 onToggleKeyBar: _toggleKeyBar,
-                ),
+              ),
             ],
           ),
         );
@@ -801,12 +810,17 @@ class _ServerChatPageState extends State<ServerChatPage> {
       }
     }
     if (text.isEmpty) {
-      NeuToast.show(context, message: I18n.t('ui.814d5316b2'), icon: IconId.info);
+      NeuToast.show(
+        context,
+        message: I18n.t('ui.814d5316b2'),
+        icon: IconId.info,
+      );
       return;
     }
     final ok = await NativeBridge.shareText(
       text: text,
-      subject: 'pi agent · ${_store.chat.sessionName ?? I18n.t('ui.7914a459b5')}',
+      subject:
+          'pi agent · ${_store.chat.sessionName ?? I18n.t('ui.7914a459b5')}',
     );
     if (!mounted) return;
     NeuToast.show(
@@ -841,7 +855,11 @@ class _ServerChatPageState extends State<ServerChatPage> {
       final bytes = await file.readAsBytes();
       if (bytes.isEmpty) {
         if (mounted) {
-          NeuToast.show(context, message: I18n.t('ui.e849a32234'), icon: IconId.warn);
+          NeuToast.show(
+            context,
+            message: I18n.t('ui.e849a32234'),
+            icon: IconId.warn,
+          );
         }
         return;
       }
@@ -857,10 +875,18 @@ class _ServerChatPageState extends State<ServerChatPage> {
           mime: mime,
         )),
       );
-      NeuToast.show(context, message: I18n.tp('ui.42ccfeb789', {'name': file.name}), icon: IconId.check);
+      NeuToast.show(
+        context,
+        message: I18n.tp('ui.42ccfeb789', {'name': file.name}),
+        icon: IconId.check,
+      );
     } catch (error) {
       if (mounted) {
-        NeuToast.show(context, message: I18n.tp('ui.1afcd77a58', {'error': error}), icon: IconId.warn);
+        NeuToast.show(
+          context,
+          message: I18n.tp('ui.1afcd77a58', {'error': error}),
+          icon: IconId.warn,
+        );
       }
     }
   }
@@ -873,7 +899,11 @@ class _ServerChatPageState extends State<ServerChatPage> {
       final bytes = await file.readAsBytes();
       if (bytes.isEmpty) {
         if (mounted) {
-          NeuToast.show(context, message: I18n.t('ui.b16350e431'), icon: IconId.warn);
+          NeuToast.show(
+            context,
+            message: I18n.t('ui.b16350e431'),
+            icon: IconId.warn,
+          );
         }
         return;
       }
@@ -901,7 +931,11 @@ class _ServerChatPageState extends State<ServerChatPage> {
       }
     } catch (error) {
       if (mounted) {
-        NeuToast.show(context, message: I18n.tp('ui.723126c430', {'error': error}), icon: IconId.warn);
+        NeuToast.show(
+          context,
+          message: I18n.tp('ui.723126c430', {'error': error}),
+          icon: IconId.warn,
+        );
       }
     }
   }
@@ -916,7 +950,11 @@ class _ServerChatPageState extends State<ServerChatPage> {
     final text = data?.text;
     if (text == null || text.trim().isEmpty) {
       if (mounted) {
-        NeuToast.show(context, message: I18n.t('ui.7bf84c8cd4'), icon: IconId.warn);
+        NeuToast.show(
+          context,
+          message: I18n.t('ui.7bf84c8cd4'),
+          icon: IconId.warn,
+        );
       }
       return;
     }
@@ -939,7 +977,11 @@ class _ServerChatPageState extends State<ServerChatPage> {
   /// 与「切换分支」的区别：切换是同一个会话内换路径，
   /// 这里是**另开一条会话**从该点往后走，原会话保持不动。
   Future<void> _forkFrom(String entryId, String preview) async {
-    final confirmed = await confirmForkDialog(context, entryId: entryId, preview: preview);
+    final confirmed = await confirmForkDialog(
+      context,
+      entryId: entryId,
+      preview: preview,
+    );
     if (confirmed != true || !mounted) return;
 
     final newId = await _store.forkFromMessage(entryId);
@@ -947,7 +989,11 @@ class _ServerChatPageState extends State<ServerChatPage> {
     if (newId == null) return;
     _applyPendingEditorText();
     Navigator.of(context).pop(); // 关掉树面板
-    NeuToast.show(context, message: I18n.t('ui.cd7349bbde'), icon: IconId.check);
+    NeuToast.show(
+      context,
+      message: I18n.t('ui.cd7349bbde'),
+      icon: IconId.check,
+    );
   }
 
   /// 切到树里的另一个节点。
@@ -955,14 +1001,22 @@ class _ServerChatPageState extends State<ServerChatPage> {
   /// 会改变模型上下文（后续对话接在另一条分支上），所以先确认。
   /// 可选「生成摘要」：把被舍弃的那条分支压缩成摘要带过去（pi 的 /tree summarize）。
   Future<void> _navigateTo(String targetId, String preview) async {
-    final choice = await confirmNavigateDialog(context, targetId: targetId, preview: preview);
+    final choice = await confirmNavigateDialog(
+      context,
+      targetId: targetId,
+      preview: preview,
+    );
     final summarize = choice?.summarize ?? false;
     final confirmed = choice != null;
     if (confirmed != true || !mounted) return;
 
     // 生成摘要要跑一次模型，耗时明显，先告知再等
     if (summarize) {
-      NeuToast.show(context, message: I18n.t('ui.74596dca8e'), icon: IconId.spinner);
+      NeuToast.show(
+        context,
+        message: I18n.t('ui.74596dca8e'),
+        icon: IconId.spinner,
+      );
     }
     final ok = await _store.navigateTree(targetId, summarize: summarize);
     if (!mounted) return;
@@ -1037,7 +1091,11 @@ class _ServerChatPageState extends State<ServerChatPage> {
   Future<void> _redoLast(ChatReducer chat) async {
     final text = _lastUserText(chat);
     if (text.isEmpty) {
-      NeuToast.show(context, message: I18n.t('ui.9a75eed25e'), icon: IconId.info);
+      NeuToast.show(
+        context,
+        message: I18n.t('ui.9a75eed25e'),
+        icon: IconId.info,
+      );
       return;
     }
     final ok = await _store.sendPrompt(text);
@@ -1091,7 +1149,6 @@ class ServerChatScreen extends StatelessWidget {
     );
   }
 }
-
 
 /// `/` 命令面板的最大高度。
 ///

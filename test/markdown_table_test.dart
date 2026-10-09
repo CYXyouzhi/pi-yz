@@ -17,13 +17,14 @@ import 'support/ui_harness.dart';
 void main() {
   testWidgets('表格列宽按可用宽度分配，长内容换行而不是被裁', (tester) async {
     setPhoneSurface(tester);
-    const md = '| 水果 | 原产地 |\n'
+    const md =
+        '| 水果 | 原产地 |\n'
         '| --- | --- |\n'
         '| 柑橘 | 中国南方（云南、广西一带的柑橘带） |';
 
-    await tester.pumpWidget(harness(
-      const SingleChildScrollView(child: NeuMarkdown(data: md)),
-    ));
+    await tester.pumpWidget(
+      harness(const SingleChildScrollView(child: NeuMarkdown(data: md))),
+    );
     await settle(tester);
 
     final table = tester.widget<Table>(find.byType(Table));

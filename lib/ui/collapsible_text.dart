@@ -33,8 +33,8 @@ class _CollapsibleTextState extends State<CollapsibleText> {
   @override
   Widget build(BuildContext context) {
     final t = context.neu;
-    final style = widget.style ??
-        TextStyle(fontSize: NeuFonts.micro, color: t.muted);
+    final style =
+        widget.style ?? TextStyle(fontSize: NeuFonts.micro, color: t.muted);
     if (widget.text.length <= widget.expandableIfLongerThan) {
       return Text(widget.text, style: style);
     }

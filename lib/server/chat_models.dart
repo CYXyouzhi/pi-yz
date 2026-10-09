@@ -28,7 +28,8 @@ class ToolRun {
     if (chunk.isEmpty) return;
     output += chunk;
     if (output.length > _maxOutputChars) {
-      output = '${I18n.t('ui.trunc1')}\n${output.substring(output.length - _maxOutputChars)}';
+      output =
+          '${I18n.t('ui.trunc1')}\n${output.substring(output.length - _maxOutputChars)}';
     }
   }
 
@@ -54,8 +55,8 @@ class ChatMessage {
     this.usage,
     List<PiToolCall>? toolCalls,
     List<PiContent>? blocks,
-  })  : toolCalls = toolCalls ?? [],
-        blocks = blocks ?? [];
+  }) : toolCalls = toolCalls ?? [],
+       blocks = blocks ?? [];
 
   /// 稳定标识，用于列表 key 与去重
   final String key;
@@ -87,7 +88,8 @@ class ChatMessage {
   bool get isAssistant => role == 'assistant';
   bool get isToolResult => role == 'toolResult';
 
-  bool get isEmpty => text.isEmpty && thinking.isEmpty && toolCalls.isEmpty && blocks.isEmpty;
+  bool get isEmpty =>
+      text.isEmpty && thinking.isEmpty && toolCalls.isEmpty && blocks.isEmpty;
 
   /// 从 pi 的权威消息构造
   factory ChatMessage.fromPiMessage(PiMessage message, {required String key}) {
@@ -144,18 +146,22 @@ class UiRequest {
   final String? notifyType;
 
   bool get needsResponse =>
-      method == 'select' || method == 'confirm' || method == 'input' || method == 'editor';
+      method == 'select' ||
+      method == 'confirm' ||
+      method == 'input' ||
+      method == 'editor';
 
   factory UiRequest.fromJson(Map<String, dynamic> json) => UiRequest(
-        id: json['id'] as String? ?? '',
-        method: json['method'] as String? ?? '',
-        title: json['title'] as String?,
-        message: json['message'] as String?,
-        options: (json['options'] as List?)?.whereType<String>().toList() ?? const [],
-        placeholder: json['placeholder'] as String?,
-        prefill: json['prefill'] as String?,
-        notifyType: json['notifyType'] as String?,
-      );
+    id: json['id'] as String? ?? '',
+    method: json['method'] as String? ?? '',
+    title: json['title'] as String?,
+    message: json['message'] as String?,
+    options:
+        (json['options'] as List?)?.whereType<String>().toList() ?? const [],
+    placeholder: json['placeholder'] as String?,
+    prefill: json['prefill'] as String?,
+    notifyType: json['notifyType'] as String?,
+  );
 }
 
 /// 可调用的命令（slash 补全的数据源）
@@ -184,15 +190,14 @@ class SlashCommand {
   final String? sourcePath;
 
   factory SlashCommand.fromJson(Map<String, dynamic> json) => SlashCommand(
-        name: json['name'] as String? ?? '',
-        source: json['source'] as String? ?? 'extension',
-        description: json['description'] as String?,
-        descriptionZh: json['descriptionZh'] as String?,
-        argHint: json['argHint'] as String?,
-        sourcePath: json['sourcePath'] as String?,
-      );
+    name: json['name'] as String? ?? '',
+    source: json['source'] as String? ?? 'extension',
+    description: json['description'] as String?,
+    descriptionZh: json['descriptionZh'] as String?,
+    argHint: json['argHint'] as String?,
+    sourcePath: json['sourcePath'] as String?,
+  );
 }
-
 
 /// 本轮改动速览里的一个文件
 class TurnFileChange {
@@ -211,12 +216,12 @@ class TurnFileChange {
   final int writes;
 
   factory TurnFileChange.fromJson(Map<String, dynamic> json) => TurnFileChange(
-        path: json['path'] as String? ?? '',
-        added: (json['added'] as num?)?.toInt() ?? 0,
-        removed: (json['removed'] as num?)?.toInt() ?? 0,
-        edits: (json['edits'] as num?)?.toInt() ?? 0,
-        writes: (json['writes'] as num?)?.toInt() ?? 0,
-      );
+    path: json['path'] as String? ?? '',
+    added: (json['added'] as num?)?.toInt() ?? 0,
+    removed: (json['removed'] as num?)?.toInt() ?? 0,
+    edits: (json['edits'] as num?)?.toInt() ?? 0,
+    writes: (json['writes'] as num?)?.toInt() ?? 0,
+  );
 }
 
 /// 本轮改动速览（服务端从落盘 JSONL 里数出来的，不是猜的）
@@ -248,12 +253,16 @@ class TurnSummary {
   bool get isEmpty => files.isEmpty;
 
   factory TurnSummary.fromJson(Map<String, dynamic> json) {
-    final list = (json['files'] as List?)
+    final list =
+        (json['files'] as List?)
             ?.whereType<Map>()
-            .map((item) => TurnFileChange.fromJson(item.cast<String, dynamic>()))
+            .map(
+              (item) => TurnFileChange.fromJson(item.cast<String, dynamic>()),
+            )
             .toList() ??
         const <TurnFileChange>[];
-    final totals = (json['totals'] as Map?)?.cast<String, dynamic>() ?? const {};
+    final totals =
+        (json['totals'] as Map?)?.cast<String, dynamic>() ?? const {};
     return TurnSummary(
       files: list,
       added: (totals['added'] as num?)?.toInt() ?? 0,

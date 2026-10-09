@@ -11,7 +11,9 @@ void main() {
 
     test('键盘弹起后按「键盘之上剩余空间」算，面板相应变矮', () {
       const base = MediaQueryData(size: Size(400, 800));
-      final withKb = base.copyWith(viewInsets: const EdgeInsets.only(bottom: 400));
+      final withKb = base.copyWith(
+        viewInsets: const EdgeInsets.only(bottom: 400),
+      );
       expect(slashPanelMaxHeight(withKb), 180);
       expect(slashPanelMaxHeight(withKb) < slashPanelMaxHeight(base), isTrue);
     });
@@ -25,7 +27,10 @@ void main() {
     });
 
     test('大屏时受上限约束（420px），避免占满整屏', () {
-      expect(slashPanelMaxHeight(const MediaQueryData(size: Size(400, 1920))), 420);
+      expect(
+        slashPanelMaxHeight(const MediaQueryData(size: Size(400, 1920))),
+        420,
+      );
     });
   });
 }

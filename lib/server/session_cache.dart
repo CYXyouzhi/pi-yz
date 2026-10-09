@@ -12,6 +12,7 @@
 // 读写都是一次性小 JSON；用文件反而要自己处理目录、原子写、清理。
 
 import 'dart:convert';
+
 import 'i18n.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -37,22 +38,22 @@ class CachedMessage {
   final bool isError;
 
   Map<String, dynamic> toJson() => {
-        'role': role,
-        'text': text,
-        if (thinking.isNotEmpty) 'thinking': thinking,
-        if (toolName != null) 'tool': toolName,
-        if (timestamp != null) 'ts': timestamp,
-        if (isError) 'err': true,
-      };
+    'role': role,
+    'text': text,
+    if (thinking.isNotEmpty) 'thinking': thinking,
+    if (toolName != null) 'tool': toolName,
+    if (timestamp != null) 'ts': timestamp,
+    if (isError) 'err': true,
+  };
 
   factory CachedMessage.fromJson(Map<String, dynamic> json) => CachedMessage(
-        role: json['role'] as String? ?? 'assistant',
-        text: json['text'] as String? ?? '',
-        thinking: json['thinking'] as String? ?? '',
-        toolName: json['tool'] as String?,
-        timestamp: (json['ts'] as num?)?.toInt(),
-        isError: json['err'] == true,
-      );
+    role: json['role'] as String? ?? 'assistant',
+    text: json['text'] as String? ?? '',
+    thinking: json['thinking'] as String? ?? '',
+    toolName: json['tool'] as String?,
+    timestamp: (json['ts'] as num?)?.toInt(),
+    isError: json['err'] == true,
+  );
 }
 
 /// 一条会话的离线快照
@@ -104,8 +105,8 @@ class CacheEntry {
   String get sizeLabel => bytes < 1024
       ? '$bytes B'
       : bytes < 1024 * 1024
-          ? '${(bytes / 1024).toStringAsFixed(1)} KB'
-          : '${(bytes / 1024 / 1024).toStringAsFixed(2)} MB';
+      ? '${(bytes / 1024).toStringAsFixed(1)} KB'
+      : '${(bytes / 1024 / 1024).toStringAsFixed(2)} MB';
 }
 
 class SessionCache {
@@ -145,20 +146,28 @@ class SessionCache {
         final message = messages[i];
         final text = _clip(message.text, maxCharsPerMessage);
         final thinking = _clip(message.thinking, maxCharsPerMessage ~/ 2);
-        if (text.isEmpty && thinking.isEmpty && message.toolCalls.isEmpty) continue;
+        if (text.isEmpty && thinking.isEmpty && message.toolCalls.isEmpty) {
+          continue;
+        }
         if (chars + text.length + thinking.length > maxCharsPerSession) {
           dropped = i + 1;
           break;
         }
         chars += text.length + thinking.length;
-        picked.add(CachedMessage(
-          role: message.role,
-          text: text,
-          thinking: thinking,
-          toolName: message.toolName ?? (message.toolCalls.isEmpty ? null : message.toolCalls.first.name),
-          timestamp: message.timestamp,
-          isError: message.isError,
-        ));
+        picked.add(
+          CachedMessage(
+            role: message.role,
+            text: text,
+            thinking: thinking,
+            toolName:
+                message.toolName ??
+                (message.toolCalls.isEmpty
+                    ? null
+                    : message.toolCalls.first.name),
+            timestamp: message.timestamp,
+            isError: message.isError,
+          ),
+        );
       }
 
       // 上面是从最新往前收集的，存之前倒回来，保持时间顺序
@@ -206,7 +215,8 @@ class SessionCache {
         name: json['name'] as String? ?? '',
         cwd: json['cwd'] as String? ?? '',
         messages: messages,
-        savedAt: DateTime.tryParse(json['at'] as String? ?? '') ?? DateTime.now(),
+        savedAt:
+            DateTime.tryParse(json['at'] as String? ?? '') ?? DateTime.now(),
         droppedCount: (json['dropped'] as num?)?.toInt() ?? 0,
       );
     } catch (_) {
@@ -233,17 +243,21 @@ class SessionCache {
         final last = lastRaw is Map
             ? CachedMessage.fromJson(lastRaw.cast<String, dynamic>())
             : null;
-        out.add(CacheEntry(
-          sessionId: id,
-          name: json['name'] as String? ?? '',
-          cwd: json['cwd'] as String? ?? '',
-          lastText: last?.text ?? '',
-          savedAt: DateTime.tryParse(json['at'] as String? ?? '') ?? DateTime.now(),
-          messageCount: messages.length,
-          // 用 UTF-8 字节数而不是字符串长度：中文一个字 3 字节，长度会低估
-          bytes: utf8.encode(raw).length,
-          droppedCount: (json['dropped'] as num?)?.toInt() ?? 0,
-        ));
+        out.add(
+          CacheEntry(
+            sessionId: id,
+            name: json['name'] as String? ?? '',
+            cwd: json['cwd'] as String? ?? '',
+            lastText: last?.text ?? '',
+            savedAt:
+                DateTime.tryParse(json['at'] as String? ?? '') ??
+                DateTime.now(),
+            messageCount: messages.length,
+            // 用 UTF-8 字节数而不是字符串长度：中文一个字 3 字节，长度会低估
+            bytes: utf8.encode(raw).length,
+            droppedCount: (json['dropped'] as num?)?.toInt() ?? 0,
+          ),
+        );
       }
       return out;
     } catch (_) {
@@ -273,6 +287,7 @@ class SessionCache {
     await prefs.setStringList(_indexKey, index);
   }
 
-  static String _clip(String text, int max) =>
-      text.length <= max ? text : '${text.substring(0, max)}…${I18n.t('ui.offcut')}';
+  static String _clip(String text, int max) => text.length <= max
+      ? text
+      : '${text.substring(0, max)}…${I18n.t('ui.offcut')}';
 }

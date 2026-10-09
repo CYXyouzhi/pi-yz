@@ -166,14 +166,14 @@ void main() {
 
     test('细项开关生效：关掉「跑完提醒」只影响跑完', () {
       String? r(NotifyKind kind) => NotificationCenter.suppressReason(
-            enabled: true,
-            inDnd: false,
-            watchOnly: false,
-            notifyOnDone: false,
-            notifyOnError: true,
-            notifyOnNeedInput: true,
-            kind: kind,
-          );
+        enabled: true,
+        inDnd: false,
+        watchOnly: false,
+        notifyOnDone: false,
+        notifyOnError: true,
+        notifyOnNeedInput: true,
+        kind: kind,
+      );
       expect(r(NotifyKind.done), contains('跑完提醒'));
       expect(r(NotifyKind.error), isNull);
     });
@@ -183,8 +183,14 @@ void main() {
     test('15 秒 → 说秒', () => expect(NotificationCenter.humanIdle(15), '15 秒'));
     test('59 秒 → 说秒', () => expect(NotificationCenter.humanIdle(59), '59 秒'));
     test('60 秒 → 1 分钟', () => expect(NotificationCenter.humanIdle(60), '1 分钟'));
-    test('90 秒 → 1 分 30 秒', () => expect(NotificationCenter.humanIdle(90), '1 分 30 秒'));
-    test('600 秒 → 10 分钟', () => expect(NotificationCenter.humanIdle(600), '10 分钟'));
+    test(
+      '90 秒 → 1 分 30 秒',
+      () => expect(NotificationCenter.humanIdle(90), '1 分 30 秒'),
+    );
+    test(
+      '600 秒 → 10 分钟',
+      () => expect(NotificationCenter.humanIdle(600), '10 分钟'),
+    );
     test('0 秒也不崩', () => expect(NotificationCenter.humanIdle(0), '0 秒'));
   });
 }

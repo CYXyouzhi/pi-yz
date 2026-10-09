@@ -10,7 +10,9 @@
 //   · 协议就一行 JSON，出错也只影响「发现」这一步，不影响已保存的连接。
 
 import 'dart:async';
+
 import 'i18n.dart';
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -161,7 +163,11 @@ class LanDiscovery {
         if (token.isEmpty) {
           return PairOutcome(ok: false, message: I18n.t('ui.06e2174d32'));
         }
-        return PairOutcome(ok: true, message: I18n.t('ui.942ce60e9f'), token: token);
+        return PairOutcome(
+          ok: true,
+          message: I18n.t('ui.942ce60e9f'),
+          token: token,
+        );
       }
       // 服务端把原因写在 error 里（例如「配对码不对」「配对窗口没开」）
       try {
@@ -182,7 +188,11 @@ class LanDiscovery {
     } on SocketException catch (error) {
       return PairOutcome(
         ok: false,
-        message: I18n.tp('ui.53eb8845bf', {'host': host, 'port': port, 'e': error.osError?.message ?? error.message}),
+        message: I18n.tp('ui.53eb8845bf', {
+          'host': host,
+          'port': port,
+          'e': error.osError?.message ?? error.message,
+        }),
       );
     } finally {
       client.close(force: true);

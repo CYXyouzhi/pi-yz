@@ -43,23 +43,63 @@ class NeuMarkdown extends StatelessWidget {
       selectable: true,
       styleSheet: MarkdownStyleSheet(
         p: TextStyle(fontSize: fontSize, height: 1.7, color: fg),
-        a: TextStyle(fontSize: fontSize, color: t.accentInk, decoration: TextDecoration.underline),
-        em: TextStyle(fontSize: fontSize, fontStyle: FontStyle.italic, color: fg),
-        strong: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w700, color: fg),
-        del: TextStyle(fontSize: fontSize, color: t.muted, decoration: TextDecoration.lineThrough),
+        a: TextStyle(
+          fontSize: fontSize,
+          color: t.accentInk,
+          decoration: TextDecoration.underline,
+        ),
+        em: TextStyle(
+          fontSize: fontSize,
+          fontStyle: FontStyle.italic,
+          color: fg,
+        ),
+        strong: TextStyle(
+          fontSize: fontSize,
+          fontWeight: FontWeight.w700,
+          color: fg,
+        ),
+        del: TextStyle(
+          fontSize: fontSize,
+          color: t.muted,
+          decoration: TextDecoration.lineThrough,
+        ),
 
-        h1: TextStyle(fontSize: fontSize + 5, fontWeight: FontWeight.w700, color: fg, height: 1.4),
-        h2: TextStyle(fontSize: fontSize + 3, fontWeight: FontWeight.w700, color: fg, height: 1.4),
-        h3: TextStyle(fontSize: fontSize + 1.5, fontWeight: FontWeight.w700, color: fg, height: 1.4),
-        h4: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w700, color: t.accentInk),
-        h5: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w600, color: t.muted),
-        h6: TextStyle(fontSize: fontSize - 1, fontWeight: FontWeight.w600, color: t.muted),
-
-        // 行内代码：浅凹槽，不抢正文
-        code: mono.copyWith(
-          backgroundColor: t.well,
+        h1: TextStyle(
+          fontSize: fontSize + 5,
+          fontWeight: FontWeight.w700,
+          color: fg,
+          height: 1.4,
+        ),
+        h2: TextStyle(
+          fontSize: fontSize + 3,
+          fontWeight: FontWeight.w700,
+          color: fg,
+          height: 1.4,
+        ),
+        h3: TextStyle(
+          fontSize: fontSize + 1.5,
+          fontWeight: FontWeight.w700,
+          color: fg,
+          height: 1.4,
+        ),
+        h4: TextStyle(
+          fontSize: fontSize,
+          fontWeight: FontWeight.w700,
           color: t.accentInk,
         ),
+        h5: TextStyle(
+          fontSize: fontSize,
+          fontWeight: FontWeight.w600,
+          color: t.muted,
+        ),
+        h6: TextStyle(
+          fontSize: fontSize - 1,
+          fontWeight: FontWeight.w600,
+          color: t.muted,
+        ),
+
+        // 行内代码：浅凹槽，不抢正文
+        code: mono.copyWith(backgroundColor: t.well, color: t.accentInk),
         // 代码块：整块凹槽 + 内阴影（文本样式沿用上面的 code）
         codeblockDecoration: BoxDecoration(
           gradient: NeuDecorations.wellGradient(t),
@@ -72,15 +112,31 @@ class NeuMarkdown extends StatelessWidget {
         blockquoteDecoration: BoxDecoration(
           border: Border(left: BorderSide(color: t.accent, width: 3)),
         ),
-        blockquotePadding: const EdgeInsets.fromLTRB(NeuSpace.n12, NeuSpace.n4, 0, NeuSpace.n4),
+        blockquotePadding: const EdgeInsets.fromLTRB(
+          NeuSpace.n12,
+          NeuSpace.n4,
+          0,
+          NeuSpace.n4,
+        ),
 
-        listBullet: TextStyle(fontSize: fontSize, color: t.accentInk, height: 1.7),
+        listBullet: TextStyle(
+          fontSize: fontSize,
+          color: t.accentInk,
+          height: 1.7,
+        ),
         listIndent: 20,
 
-        tableHead: TextStyle(fontSize: fontSize - 1.5, fontWeight: FontWeight.w700, color: fg),
+        tableHead: TextStyle(
+          fontSize: fontSize - 1.5,
+          fontWeight: FontWeight.w700,
+          color: fg,
+        ),
         tableBody: TextStyle(fontSize: fontSize - 1.5, height: 1.5, color: fg),
         tableBorder: TableBorder.all(color: t.border, width: 1),
-        tableCellsPadding: const EdgeInsets.symmetric(horizontal: NeuSpace.n8, vertical: NeuSpace.n6),
+        tableCellsPadding: const EdgeInsets.symmetric(
+          horizontal: NeuSpace.n8,
+          vertical: NeuSpace.n6,
+        ),
         // 表格：列宽按比例分配，**不能用 IntrinsicColumnWidth**。
         //
         // 用 IntrinsicColumnWidth 时列宽按内容自然宽算，表格总宽会超出气泡，

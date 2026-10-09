@@ -47,7 +47,8 @@ String _balancedBody(String src, int open) {
 
 /// 取具名方法的函数体（从方法名后的第一个 `{` 起算）。
 String _bodyOf(String src, String name) {
-  final at = RegExp('(?:void|Future<void>|bool|int)\\s+$name\\s*\\(').firstMatch(src);
+  final at = RegExp('(?:void|Future<void>|bool|int)\\s+$name\\s*\\(')
+      .firstMatch(src);
   expect(at, isNotNull, reason: 'main.dart 里找不到方法 $name()');
   final open = src.indexOf('{', at!.end);
   return _balancedBody(src, open);
@@ -81,7 +82,8 @@ void main() {
       expect(
         body.contains('_tab'),
         isFalse,
-        reason: 'store 监听器 $raw() 改了 _tab —— 启动自动恢复会话时会把用户拽去会话页。'
+        reason:
+            'store 监听器 $raw() 改了 _tab —— 启动自动恢复会话时会把用户拽去会话页。'
             '要跳页请走用户动作（点 tab / 点会话行 / 点通知 / 连接页连上）。',
       );
     }

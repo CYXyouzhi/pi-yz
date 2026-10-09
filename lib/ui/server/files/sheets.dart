@@ -13,11 +13,11 @@ import '../../../theme/neu.dart';
 import 'widgets.dart';
 
 Future<void> showFilePreview(
-BuildContext context,
-String filePath, {
+  BuildContext context,
+  String filePath, {
   required ServerStore store,
   required String cwd,
-required GitStatusInfo? git,
+  required GitStatusInfo? git,
 }) async {
   final file = await store.readFile(filePath);
   if (!context.mounted) return;
@@ -36,9 +36,16 @@ required GitStatusInfo? git,
         ),
         decoration: BoxDecoration(
           color: t.bg,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(NeuRadii.lg)),
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(NeuRadii.lg),
+          ),
         ),
-        padding: const EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n10, NeuSpace.n18, NeuSpace.n20),
+        padding: const EdgeInsets.fromLTRB(
+          NeuSpace.n18,
+          NeuSpace.n10,
+          NeuSpace.n18,
+          NeuSpace.n20,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -75,8 +82,17 @@ required GitStatusInfo? git,
                       showDiffSheet(context, filePath, store: store, cwd: cwd);
                     },
                     radius: 12,
-                    padding: const EdgeInsets.symmetric(horizontal: NeuSpace.n12, vertical: NeuSpace.n7),
-                    child: Text(I18n.t('ui.30570a7afa'), style: TextStyle(fontSize: NeuFonts.sub, color: t.accentInk)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: NeuSpace.n12,
+                      vertical: NeuSpace.n7,
+                    ),
+                    child: Text(
+                      I18n.t('ui.30570a7afa'),
+                      style: TextStyle(
+                        fontSize: NeuFonts.sub,
+                        color: t.accentInk,
+                      ),
+                    ),
                   ),
               ],
             ),
@@ -115,10 +131,9 @@ required GitStatusInfo? git,
   );
 }
 
-
 Future<void> showDiffSheet(
-BuildContext context,
-String? filePath, {
+  BuildContext context,
+  String? filePath, {
   required ServerStore store,
   required String cwd,
 }) async {
@@ -138,9 +153,16 @@ String? filePath, {
         ),
         decoration: BoxDecoration(
           color: t.bg,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(NeuRadii.lg)),
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(NeuRadii.lg),
+          ),
         ),
-        padding: const EdgeInsets.fromLTRB(NeuSpace.n18, NeuSpace.n10, NeuSpace.n18, NeuSpace.n20),
+        padding: const EdgeInsets.fromLTRB(
+          NeuSpace.n18,
+          NeuSpace.n10,
+          NeuSpace.n18,
+          NeuSpace.n20,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -171,7 +193,13 @@ String? filePath, {
             SizedBox(height: NeuSpace.n10),
             Flexible(
               child: diff.empty
-                  ? Text(I18n.t('ui.87afad55b5'), style: TextStyle(fontSize: NeuFonts.bodySmall, color: t.muted))
+                  ? Text(
+                      I18n.t('ui.87afad55b5'),
+                      style: TextStyle(
+                        fontSize: NeuFonts.bodySmall,
+                        color: t.muted,
+                      ),
+                    )
                   : Container(
                       width: double.infinity,
                       decoration: BoxDecoration(
@@ -194,10 +222,10 @@ String? filePath, {
                                   color: line.startsWith('+')
                                       ? t.success
                                       : line.startsWith('-')
-                                          ? t.danger
-                                          : line.startsWith('@@')
-                                              ? t.accentInk
-                                              : t.fg,
+                                      ? t.danger
+                                      : line.startsWith('@@')
+                                      ? t.accentInk
+                                      : t.fg,
                                 ),
                               ),
                           ],
@@ -211,4 +239,3 @@ String? filePath, {
     },
   );
 }
-
