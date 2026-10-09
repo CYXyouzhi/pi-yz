@@ -81,7 +81,16 @@ class NeuMarkdown extends StatelessWidget {
         tableBody: TextStyle(fontSize: fontSize - 1.5, height: 1.5, color: fg),
         tableBorder: TableBorder.all(color: t.border, width: 1),
         tableCellsPadding: const EdgeInsets.symmetric(horizontal: NeuSpace.n8, vertical: NeuSpace.n6),
-        tableColumnWidth: const IntrinsicColumnWidth(),
+        // 表格：列宽按比例分配，**不能用 IntrinsicColumnWidth**。
+        //
+        // 用 IntrinsicColumnWidth 时列宽按内容自然宽算，表格总宽会超出气泡，
+        // flutter_markdown_plus 虽然给这种情况套了一层横向 SingleChildScrollView，
+        // 但实测在手机上横向拖拽根本不动（手势被可选中的正文/消息列表吃掉），
+        // 于是长单元格（如「中国南方（云南、广西一带）」）被硬剪掉且无法查看。
+        //
+        // FlexColumnWidth：列在可用宽度内平分，长文本在单元格里换行 ——
+        // 布局没那么紧凑，但一个字的正文都不会丢。
+        tableColumnWidth: const FlexColumnWidth(),
 
         horizontalRuleDecoration: BoxDecoration(
           border: Border(top: BorderSide(color: t.border)),
