@@ -197,7 +197,7 @@ class I18n {
     'ui.5283a21d5b': ('今日已用 {today}，额度已用完', 'Used {today} today, quota exhausted'),
     'ui.5bbb1a9d41': ('  ⇢ {n} 条分支', '  ⇢ {n} branch(es)'),
     'ui.6b1e5ff3a1': ('正文合计', 'text total'),
-    'ui.86b3ddbe40': ('文件会从电脑上删掉，无法恢复。{ws} 会腾出 {size}。', 'The file is deleted from your computer and cannot be recovered. {ws} frees {size}.'),
+    'ui.86b3ddbe40': ('文件会从电脑上删掉，无法恢复。\n删掉后能腾出 {size}（工作区：{ws}）。', 'The file is deleted from your computer and cannot be recovered.\nThis frees {size} (workspace: {ws}).'),
     'ui.96738eb2aa': (' · {n} 条 · {size}', ' · Messages: {n} · {size}'),
     'ui.9aa63cf775': ('{key} 路径', '{key} path'),
     'ui.9d3c5fe8d6': ('pi 插件{count}', 'pi plugins{count}'),
