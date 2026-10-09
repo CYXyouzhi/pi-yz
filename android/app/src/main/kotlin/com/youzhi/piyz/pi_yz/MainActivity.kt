@@ -191,6 +191,27 @@ class MainActivity : FlutterActivity() {
                     result.success(id)
                 }
 
+                // ---- token 的安全存储（Keystore 加密；实现见 SecureTokenStore）----
+                // 一律不抛：读写失败就返回 false / null，Dart 侧据此回落到本地存储
+                // 或请用户重新输入 —— 连不上比崩掉好，而且崩在启动路径上会很糟。
+                "secureAvailable" -> result.success(SecureTokenStore.available())
+
+                "secureGet" -> {
+                    val id = call.argument<String>("id") ?: ""
+                    result.success(SecureTokenStore.get(this, id))
+                }
+
+                "securePut" -> {
+                    val id = call.argument<String>("id") ?: ""
+                    val token = call.argument<String>("token") ?: ""
+                    result.success(SecureTokenStore.put(this, id, token))
+                }
+
+                "secureRemove" -> {
+                    val id = call.argument<String>("id") ?: ""
+                    result.success(SecureTokenStore.remove(this, id))
+                }
+
                 else -> result.notImplemented()
             }
         }

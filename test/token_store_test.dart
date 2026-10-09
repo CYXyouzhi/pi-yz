@@ -8,6 +8,7 @@
 // 而且断言要打在「prefs 里到底还有没有明文」这种**可观察的事实**上。
 import 'dart:convert';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pi_yz/server/server_profile.dart';
 import 'package:pi_yz/server/token_store.dart';
@@ -237,6 +238,98 @@ void main() {
     test('如实报告自己不是安全存储（界面与文档都靠这个措辞）', () async {
       expect(PrefsTokenStore().isSecure, isFalse);
       expect(_FakeTokenStore().isSecure, isTrue);
+    });
+  });
+
+  // Android 实现是一条跨语言的链：Dart → 通道 → Keystore。链上任何一环断了
+  // 都不能把异常冒到启动路径上（那会白屏），而只能是「退化成读不到」
+  // —— 上层会请用户重新输入 token。原生的加密机制见 SecureTokenStore.kt。
+  group('Android 实现：通道通了才叫安全，不通就回落', () {
+    const channel = MethodChannel('pi_yz/native');
+    late List<MethodCall> calls;
+
+    /// 用例可改的剧本
+    String? tokenFromNative;
+    bool putResult = true;
+    Object? throwThis;
+
+    setUp(() {
+      calls = <MethodCall>[];
+      tokenFromNative = null;
+      putResult = true;
+      throwThis = null;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (call) async {
+            calls.add(call);
+            if (throwThis != null) throw throwThis!;
+            return switch (call.method) {
+              'secureGet' => tokenFromNative,
+              'securePut' => putResult,
+              'secureAvailable' => true,
+              _ => null,
+            };
+          });
+    });
+
+    tearDown(() {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, null);
+    });
+
+    test('write：把 id 与 token 交给原生去加密', () async {
+      expect(await KeystoreTokenStore().write('p1', 'secret-1'), isTrue);
+
+      expect(calls.single.method, 'securePut');
+      final args = calls.single.arguments as Map;
+      expect(args['id'], 'p1');
+      expect(args['token'], 'secret-1');
+    });
+
+    test('write：原生说写不进去 → 返回 false（上层据此不抹明文）', () async {
+      putResult = false;
+      expect(await KeystoreTokenStore().write('p1', 'secret-1'), isFalse);
+    });
+
+    test('read：把原生解出来的 token 带回去', () async {
+      tokenFromNative = 'secret-1';
+      expect(await KeystoreTokenStore().read('p1'), 'secret-1');
+      expect(calls.single.method, 'secureGet');
+    });
+
+    test('read：解密失败（换机 / 清数据）当读不到，不抛', () async {
+      throwThis = PlatformException(code: 'decrypt_failed');
+      await expectLater(KeystoreTokenStore().read('p1'), completion(isNull));
+    });
+
+    test('原生的各种异常都不许冒出去 —— 启动路径上崩了就是白屏', () async {
+      throwThis = MissingPluginException('没有这个实现');
+      final store = KeystoreTokenStore();
+
+      await expectLater(store.read('p1'), completion(isNull));
+      await expectLater(store.write('p1', 'x'), completion(isFalse));
+      await expectLater(store.delete('p1'), completes);
+    });
+
+    test('delete：走 secureRemove', () async {
+      await KeystoreTokenStore().delete('p1');
+      expect(calls.single.method, 'secureRemove');
+    });
+
+    test('空 id：一个跨语言调用都不发（别去动不属于自己的东西）', () async {
+      final store = KeystoreTokenStore();
+
+      expect(await store.read(''), isNull);
+      expect(await store.write('', 'x'), isFalse);
+      await store.delete('');
+
+      expect(calls, isEmpty);
+    });
+
+    test('resolveTokenStore：非 Android 环境回落本地存储', () async {
+      // 测试跑在桌面上，Platform.isAndroid 为 false
+      final store = await resolveTokenStore();
+      expect(store, isA<PrefsTokenStore>());
+      expect(store.isSecure, isFalse, reason: '回落实现不得假装安全');
     });
   });
 }

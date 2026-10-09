@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'server/app_prefs.dart';
 import 'server/i18n.dart';
 import 'server/server_profile.dart';
+import 'server/token_store.dart';
 import 'server/notification_center.dart';
 import 'server/server_store.dart';
 import 'services/debug_log.dart';
@@ -30,7 +31,20 @@ import 'ui/server/settings_page.dart';
 ///
 /// 界面按 `pi-remote-app.html` 的新拟态设计稿重做：
 /// 材质与画布同色，形体只由「左上白光 / 右下暗影」一对软阴影建立。
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // token 的实际存放处：Android 上走 Keystore（用不可导出的密钥加密后落盘），
+  // 其余环境回落到本地存储。必须在这里定好 —— 读/写连接配置都要经过它，
+  // 晚一步就会用错实现（那意味着 token 又落回明文）。
+  //
+  // 带超时：启动路径上不允许因为一次原生调用就卡住。原生侧不可用时
+  // resolveTokenStore() 自己会回落，所以这里即使失败也只是「退回本地存储」。
+  ServerProfileStore.tokenStore = await resolveTokenStore().timeout(
+    const Duration(seconds: 3),
+    onTimeout: PrefsTokenStore.new,
+  );
+
   // 框架级异常也收进调试日志：崩溃不必连调试器，打开日志面板就能看。
   FlutterError.onError = (FlutterErrorDetails details) {
     DebugLog.instance.error('flutter', details.exceptionAsString());
