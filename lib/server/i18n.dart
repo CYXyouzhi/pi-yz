@@ -260,8 +260,10 @@ class I18n {
       '⚠ Estimated from on-disk usage on this machine, not the provider\'s official quota.\n',
     ),
     'ui.2cdecccb2e': (
-      '阈值：今天 \$5 变黄、\$10 变红。真正要紧的是「别在半夜卡住」——',
-      'Threshold: \$5 today turns yellow, \$10 red. What matters is not stalling overnight —',
+      '阈值：今天 \$5 变黄、\$10 变红。真正要紧的是「别在半夜卡住」：'
+          '额度用尽时 pi 会停在原地，需要到电脑上换个模型（或给服务商充值）再继续。',
+      'Threshold: \$5 today turns yellow, \$10 red. What matters is not stalling overnight: '
+          'when quota runs out pi stops where it is — switch model on the desktop (or top up) and carry on.',
     ),
     'ui.b7612b71c0': ('空', '(empty)'),
     // 补回误删的人工命名 key（task-23）
@@ -745,10 +747,6 @@ class I18n {
       'Both provider and key are required',
     ),
     'ui.61d5eeff77': ('url 不能空', 'URL cannot be empty'),
-    'ui.48fae69896': (
-      '「已切换到 xxx」如实显示出来（见无人值守那一项）。',
-      'shows “switched to xxx” honestly (see unattended mode).',
-    ),
     'ui.b900e1a8a8': ('上下文压缩摘要', 'Compaction summary'),
     'ui.2e8c13741c': (
       '下次会话启动时不再连接它。',
@@ -1227,10 +1225,6 @@ class I18n {
       '顺手生成摘要（把丢掉的那条分支压缩成一段话，切换后不丢上下文）',
       'Also generate a summary (compresses the dropped branch so context is not lost)',
     ),
-    'ui.0fdf6249a8': (
-      '额度用尽时 pi 会停；这时**电脑端的额度兜底插件**（quota-fallback）',
-      'pi stops when quota runs out; the desktop quota-fallback plugin then',
-    ),
     'ui.9b86661544': ('默认工作区：{picked}', 'Default workspace: {picked}'),
     'ui.2abac8cdd2': (
       '（可理解为「窗口里现在装了多少」）',
@@ -1432,10 +1426,6 @@ class I18n {
     'ui.e505495394': (
       '{n} 条会话 · {t} 轮 · {cwd}',
       'Sessions: {n} · turns: {t} · {cwd}',
-    ),
-    'ui.791693d17c': (
-      '会把会话切到备用 provider 并让 agent 接着干，App 这边只负责把',
-      'switches the session to a fallback provider and lets the agent continue; the app only',
     ),
 
     // 接线补漏：这些中文早就有译文，只是调用点没接上（task-23 第四轮）

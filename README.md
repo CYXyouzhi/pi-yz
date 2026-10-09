@@ -18,32 +18,24 @@
                               └─────────────┘
 ```
 
-## 四步跑起来
+## 快速开始
 
-需要 **Node ≥ 22.19**（这是 pi 的要求，不是我们挑的）与 **pi 本体 + 已登录**
-（服务端只是 pi 的遥控器）。
+需要 **Node ≥ 22.19**（这是 pi 的要求，不是我们挑的）与 **pi 本体 + 已登录**。
+服务端把 pi 的 SDK 当库调用，**不用开着 pi 界面**。
 
 ```bash
-# 0. 电脑：装 pi 并登录
-#    少了这一步，手机能连上、但建会话会失败 —— 而且看不出是哪儿的问题
+# 电脑上（两条命令）
 npm install -g --ignore-scripts @earendil-works/pi-coding-agent
-pi                     # 进去后跑 /login：连订阅，或填一家服务商的 API key
+pi                    # 进去后跑 /login：连订阅，或填一家服务商的 API key
 
-# 1. 电脑：把插件装进 pi（在本项目目录里执行）
-pi install ./pi-plugin
-#    重开 pi 后敲：
-#    /yz start          ← 它会拉起服务端，并打印手机上要填的地址、端口、配对码
-
-# 2. 手机：从 Releases 下 arm64-v8a 那个包装上
-#    （不确定自己手机是什么架构就下 universal）
-
-# 3. App 里点「连接」→「配对」，填电脑上打印的那 6 位码
+cd server && npm install && npm start
+#                     ↑ 它会打印手机上要填的地址、端口、配对码
 ```
 
-不想开 pi 界面也行：`cd server && npm install && npm start`（打印同样的东西）。
-终端里还有个转发入口 `pi-yz`（`start` / `stop` / `status` / `doctor` / `logs`），
-见 [pi-plugin/README.md](pi-plugin/README.md)；端口、防火墙、异地使用、排错见
-[server/README.md](server/README.md)。
+手机上：从 Releases 下 `arm64-v8a` 那个包装上（不确定架构就下 universal），
+再「连接」→「配对」，填电脑上打印的 6 位码。
+
+Windows 上双击 `server/start.cmd` 也行。细节见 [server/README.md](server/README.md)。
 
 ## 现在到哪了
 
@@ -58,7 +50,6 @@ README 不重复写（两处写同一件事，必然有一处先过期）。
 ```
 lib/          Flutter 客户端。ui/ 是界面，server/ 是通信与状态
 server/       Node 服务端。把 pi 的 SDK 包成 HTTP + SSE
-pi-plugin/    两个 pi 扩展：/yz（起服务端）、额度兜底
 docs/         verify/ 是每轮改动的验证证据，audit/ 是质量体检清单
 tool/         开发脚本（模拟器、截图、i18n 审计、门禁）
 test/         Flutter 测试
@@ -66,43 +57,31 @@ test/         Flutter 测试
 
 ## 跑起来
 
-需要电脑上已经装了 pi。
-
-最省事的办法是在 pi 里敲：
-
-```
-/yz
-```
-
-它会拉起服务端，并把手机上要填的三样东西打在屏幕上。
-
-不想开 pi 也可以，有个独立的命令行入口：
+电脑上两条命令：
 
 ```bash
-pi-yz              # 后台起服务，同样打印地址和 token
-pi-yz status       # 看状态
-pi-yz stop         # 停
-pi-yz doctor       # 自检
+npm install -g --ignore-scripts @earendil-works/pi-coding-agent
+pi                     # 跑 /login 登录，然后退出
+
+cd server && npm install && npm start
 ```
 
-`pi-yz` 是个转发脚本，实现在 `pi-plugin/bin/pi-yz.mjs`，跟 `/yz` 共用同一份
-进程控制逻辑（`pi-plugin/lib/ctl.mjs`）——两边各写一套的话，"命令行说在跑、
-pi 里说没跑"这类分歧迟早会出现。
+服务端启动后会打印：
 
-再不行就手动起：
-
-```bash
-cd server && node index.mjs --host 0.0.0.0
+```
+  监听      : http://0.0.0.0:30142
+  局域网地址: 192.168.x.x（手机要连这个）
+  配对码    : 491871（5 分钟内有效）
+  token     : 0201…f6（脱敏；完整值在 server/.token）
 ```
 
-服务端会打印一个脱敏的 token，完整值在 `server/.token`（自动生成，重启复用，
-已在 `.gitignore` 里）。手机 App 里填地址、端口、token 就能连。
+`server/.token` 首次启动自动生成、之后重启复用，**不进版本库**。
 
-装 App：
+手机上从 Releases 下 `arm64-v8a` 那个包（不确定架构就下 universal），装好后
+「连接」→「配对」填那 6 位码；也可以用 token 手动配。
 
-```bash
-flutter build apk --release
-```
+**不用开着 pi 界面** —— 服务端自己起会话。端口、防火墙、异地使用、排错见
+[server/README.md](server/README.md)。
 
 ## 关于安全
 
@@ -130,8 +109,7 @@ flutter analyze                            # 期望 0 issue
 flutter test                               # 全量（含 golden 基线）
 flutter test --exclude-tags golden         # 跳过 golden —— 基线是 Windows 上生成的，
                                            # 其他平台的字体栈不同，像素必然有差异
-cd server && node --test test/*.test.mjs   # 20 个
-node --test pi-plugin/test/ctl-status.test.mjs  # 7 个
+cd server && node --test                  # 服务端
 ```
 
 推送到 `main` 或发 PR 时，GitHub Actions 会自动跑上面这几条（见

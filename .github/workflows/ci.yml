@@ -60,7 +60,7 @@ jobs:
           path: coverage/lcov.info
 
   node:
-    name: Node（服务端 + pi 插件）
+    name: Node（服务端）
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -77,6 +77,3 @@ jobs:
       # 所以 install 那一步既不需要，跑起来反而会因缺少 pi 而失败。
       - name: 服务端测试
         run: cd server && node --test test/*.test.mjs
-
-      - name: pi 插件测试
-        run: node --test pi-plugin/test/ctl-status.test.mjs

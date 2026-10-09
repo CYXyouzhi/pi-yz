@@ -406,14 +406,11 @@ class _UsagePageState extends State<UsagePage> {
                         ],
                       ),
                       SizedBox(height: NeuSpace.n6),
-                      // 5 段拼接的口径说明：默认收一行、点开看全文
+                      // 两段拼接的口径说明：默认收一行、点开看全文
                       CollapsibleText(
                         text:
                             '${I18n.t('ui.dbfff2a1f7')}'
-                            '${I18n.t('ui.2cdecccb2e')}'
-                            '${I18n.t('ui.0fdf6249a8')}'
-                            '${I18n.t('ui.791693d17c')}'
-                            '${I18n.t('ui.48fae69896')}',
+                            '${I18n.t('ui.2cdecccb2e')}',
                         style: TextStyle(
                           fontSize: NeuFonts.badge,
                           height: 1.5,

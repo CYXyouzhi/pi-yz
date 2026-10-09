@@ -155,7 +155,7 @@ class ChatReducer {
   /// 应用一条增量事件。返回 true 表示界面需要刷新。
   bool applyEvent(ServerEvent event) {
     switch (event.type) {
-      // 模型被换掉（无人值守的额度兜底插件就是这么切到备用 provider 的）。
+      // 模型被换掉（有人在 pi 里手动切，或有扩展自动切）。
       // 不在界面上说一句的话，用户第二天醒来只会看到「模型显示不对」——
       // 而这条切换正是他最需要知道的事（task-20 合同④）。
       case 'model_change':
