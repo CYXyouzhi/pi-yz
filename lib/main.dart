@@ -141,7 +141,6 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
   void initState() {
     WidgetsBinding.instance.addObserver(this);
     super.initState();
-    _serverStore.addListener(_maybeJumpToChat);
     // 通知中心：跑完/卡住/需要确认的提醒，以及通知栏快速回复（task-11）
     // 从通知/快速回复进来时把界面切到会话页 —— 一次性标志不够用：
     // App 已在前台停在别的 tab 时，标志早就用掉了，点了通知会「哪也没去」。
@@ -155,25 +154,22 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _serverStore.removeListener(_maybeJumpToChat);
     // 通知中心解绑：不取消它那只 5 秒定时器的话，App 壳重建一次就多挂一个
     NotificationCenter.instance.detach();
     _serverStore.dispose();
     super.dispose();
   }
 
-  /// 只在「启动后自动恢复了上次会话」这一种情况下自动切到会话页。
+  /// 启动时**不**自动切到会话页（2026-10 用户反馈后去掉）。
   ///
-  /// 为什么值得做：退到后台被系统杀了进程、重开时用户是想接着聊，
-  /// 停在连接卡上还得自己点一下「会话」才能看到刚才的进度。
-  /// 只跳一次（_jumped），免得用户自己切走以后又被拽回来。
-  bool _jumped = false;
-  void _maybeJumpToChat() {
-    if (_jumped) return;
-    if (_serverStore.currentSessionId == null) return;
-    _jumped = true;
-    if (mounted) setState(() => _tab = 1);
-  }
+  /// 这里原来挂着 `_maybeJumpToChat`：启动自动恢复上次会话后把 tab 切到「会话」，
+  /// 理由是「进程被系统杀了、重开时用户想接着聊」。但它的判据是
+  /// `currentSessionId != null` —— 只要用过 App 就恒为真，于是真实行为变成
+  /// **每次冷启动都落在会话页**，用户的原话是「打开就应该是开始页」。
+  ///
+  /// 现在：上次会话照样在后台恢复（`ServerStore.connect` 里的 `openSession(last)` 不动），
+  /// 只是不替用户切 tab；想接着聊点一下「会话」就看到了。
+  /// 通知进入（`onOpenSessionRequested`）、点会话行、连接页连上后跳转都不受影响。
 
   /// 启动时自动连接上次使用的服务端
   Future<void> _restoreConnection() async {
