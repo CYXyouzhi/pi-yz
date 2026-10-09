@@ -16,6 +16,7 @@
 //   POST /api/sessions/:id/command      命令入口 {id,type,...}
 //   GET  /api/pool                      当前活跃会话（调试）
 
+import { readFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { resolveToken, describeSource } from './lib/token-store.mjs';
 import { parseArgs } from './lib/args.mjs';
@@ -29,6 +30,12 @@ import {
 } from './lib/pairing.mjs';
 import { listSessions, deleteSession, diskUsage } from './lib/sessions.mjs';
 import { maskSecret } from './lib/secrets.mjs';
+
+// 版本从 package.json 读，不硬编码：写两处必然有天对不上，而 /api/health 的
+// version 正是排查问题时用来确认「对面到底是哪个版本的服务端」的那个字段。
+const SERVER_VERSION = JSON.parse(
+  readFileSync(new URL('./package.json', import.meta.url), 'utf8'),
+).version;
 import { startTunnel, stopTunnel, tunnelState } from './lib/tunnel.mjs';
 import { sessionUsage, usageSummary } from './lib/usage.mjs';
 import { turnSummaryForSession } from './lib/turn-summary.mjs';
@@ -150,7 +157,7 @@ const server = createServer(async (req, res) => {
     return json(res, 200, {
       ok: true,
       server: 'pi-yz-server',
-      version: '0.1.0',
+      version: SERVER_VERSION,
       piVersion: VERSION,
       activeSessions: pool.list().length,
     });

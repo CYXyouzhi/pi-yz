@@ -4,5 +4,25 @@
   "version": "0.2.0",
   "type": "module",
   "description": "pi-yz 的远端服务端：把 pi 的 SDK 包成 HTTP + SSE",
-  "//deps": "依赖通过 node_modules junction 指向 E:/pi-agent/node_modules 复用本机已装的 pi，不重复下载 427MB"
+  "main": "index.mjs",
+  "engines": {
+    "node": ">=20.6.0"
+  },
+  "scripts": {
+    "start": "node index.mjs --host 0.0.0.0",
+    "start:local": "node index.mjs",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@earendil-works/pi-coding-agent": "^1.1.0"
+  },
+  "//deps": "代码本身只依赖 Node 内置模块 + 这一个包。开发机上为了让 server/node_modules 指向已经装好的 pi（省 400MB+ 重复下载），用的是 junction；换机器或分发时正常 npm install 即可，代码里没有对具体路径的假设。",
+  "//files": "白名单分发：只带源码与启动脚本。node_modules、.token（token 持久化文件）、日志、以及 53MB 的 cloudflared 二进制都不进包 —— 用 `npm pack` 产出，解包后 npm install && npm start 就能跑。",
+  "files": [
+    "index.mjs",
+    "lib/",
+    "start.cmd",
+    "start.sh",
+    "README.md"
+  ]
 }
