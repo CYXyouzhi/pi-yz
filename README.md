@@ -117,8 +117,9 @@ flutter build apk --release
 
 ```bash
 flutter analyze                            # 期望 0 issue
-flutter test                               # 169 个用例（含 3 个 golden 基线）
-flutter test --exclude-tags golden         # 166 个，跳过 golden
+flutter test                               # 全量（含 golden 基线）
+flutter test --exclude-tags golden         # 跳过 golden —— 基线是 Windows 上生成的，
+                                           # 其他平台的字体栈不同，像素必然有差异
 cd server && node --test test/*.test.mjs   # 20 个
 node --test pi-plugin/test/ctl-status.test.mjs  # 7 个
 ```

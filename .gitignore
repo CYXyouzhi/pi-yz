@@ -99,3 +99,4 @@ server/.token
 android/key.properties
 android/app/*.jks
 android/app/*.keystore
+test/failures/

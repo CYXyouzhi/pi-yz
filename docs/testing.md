@@ -119,15 +119,18 @@ flutter test --coverage             # 看覆盖率；CI 里会把摘要打进日
 - 每个改动都跑一遍，**别攒到最后**；
 - `dart format lib test tool` —— CI 会检查格式；
 - 新增测试**单独提交**，方便回溯；
-- 覆盖率**暂时不设阈值**：基线不稳时设阈值只会逼人写凑数测试。
-  等关键路径补齐（见下）再考虑。
+- CI 里覆盖率**只打印、不设硬阈值**：基线不稳时设门禁只会逼人写凑数测试。
+  但「某一轮要推到多少」是明确的 —— 2026-10 那轮定的目标是逻辑层 ≥75%，实际做到 81.0%。
 
 ## 七、还没测到的（接手可从这里继续）
 
 | 目标 | 未覆盖行数 | 备注 |
 |---|---|---|
-| `server_store.dart` | 507 | 命令 / 凭据 / 远程访问等细分路径 |
-| `server_client.dart` | 190 | 40+ 个薄包装方法，共用已测的 `_json` 路径 |
-| `notification_center.dart` | 173 | 已有 18 个用例，补强 |
-| `diagnose.dart` | 96 | 已有 11 个用例 |
+| `server_store.dart` | 184 | 剩下的多是异常分支与少数细分路径 |
+| `notification_center.dart` | 62 | 通知发送细节 |
+| `server_client.dart` | 26 | 形状容错为主 |
+| `chat_reducer.dart` | 2 | 基本干净 |
 | `lib/ui/` | — | 交给 golden，别追行数 |
+
+（数字是 2026-10-09 那轮收尾时的快照。要看当前值：`flutter test --coverage`
+后用 `awk` 从 `coverage/lcov.info` 里算，别照抄这里。）

@@ -116,33 +116,51 @@ Keystore 写不进去时（设备异常、密钥被系统重置），程序退�
 （他多半不记得那串随机 token）。两害相权，选轻的那个。界面上「token 存放方式」
 那一行会如实反映当前状态，不谎报。
 
-## 五、真机验证记录
+## 五、真机验证：怎么复现，而不是「结论是这么写的」
 
-**环境**：MuMu 模拟器 · Android 15（API 35）· debug 构建 · 2026-10-09
+**环境**：MuMu 模拟器 · Android 15（API 35）· debug 构建
 
-| # | 验的是什么 | 怎么验的 | 结果 |
-|---|---|---|---|
-| ① | 旧明文能被迁移走 | 往 `FlutterSharedPreferences.xml` 注入旧格式（含明文 token）→ 启动 App | 明文从连接配置里**消失**；`pi_yz_secure_tokens.xml` 出现 base64 密文 |
-| ② | 密文能被正确解密 | 把 host 改成一台记录式假服务端（**prefs 里不含 token**）→ 启动 App | 服务端收到 `Authorization: Bearer MIGRATION-TEST-TOKEN-1234567890` |
-| ③ | 换机/恢复备份不崩 | 备份密文 → 卸载重装（Keystore 密钥随之重置）→ 回填旧密文 → 启动 | 进程存活、**0 条 FATAL**、请求里 token 为空（被正确当成读不到） |
-
-②是这三条里最有说服力的一条：它同时证明了「token 不在配置文件里」和
-「token 能从密文里正确取出来用」两件事。
-
-复现 ①②③ 的命令（在装有 MuMu 的机器上）：
+一条命令，全程自动，结果由脚本自己判定：
 
 ```bash
-MM=/d/ruanjian/MuMuPlayer/nx_main/MuMuManager.exe   # MuMuManager 路径按实际改
-D=/data/data/com.youzhi.piyz.pi_yz
-
-# 看连接配置里有没有明文 token（新版应该没有）
-"$MM" sh -v 0 --cmd "run-as com.youzhi.piyz.pi_yz cat $D/shared_prefs/FlutterSharedPreferences.xml"
-
-# 看密文文件（内容是 base64，看不到 token 本身）
-"$MM" sh -v 0 --cmd "run-as com.youzhi.piyz.pi_yz cat $D/shared_prefs/pi_yz_secure_tokens.xml"
+bash tool/verify-keystore-migration.sh
 ```
 
-（`run-as` 只对 debug 构建有效。）
+**最近一次运行的原始输出**（含每一条设备命令的回显与文件内容）：
+[verify/keystore-migration-2026-10-09.txt](verify/keystore-migration-2026-10-09.txt)
+—— 通过 8 项、失败 0 项。
+
+它验的四件事，每件都有对应断言，失败会明确报出来：
+
+| # | 验的是什么 | 判据 |
+|---|---|---|
+| ① | 注入的明文确实进了设备 | 连接配置里 grep 得到那串**随机** token（每次运行都不同，避免残留造成假绿） |
+| ② | 明文被迁移走 | App 启动后同一文件里**再也 grep 不到**它，同时出现 `pi_yz_secure_tokens.xml` |
+| ③ | 密文**能被正确解密** | 把 host 指向一台记录式假服务端（**配置里不含 token**），它收到的 `Authorization` 必须正是那串 token |
+| ④ | 换机/恢复备份不崩 | 备份密文 → 卸载重装（Keystore 密钥随之重置）→ 回填：进程活着、logcat 无 FATAL、`Authorization` 为空 |
+
+③ 最有说服力：它同时证明了「token 不在配置文件里」和「token 能从密文里正确取出来用」。
+
+### 脚本里踩过的三个坑（都写进注释了，别人重写一遍不必重踩）
+
+1. **给设备传命令时内层别用单引号。** MuMuManager 的 `--cmd` 在 Windows 上传参时
+   会把内层单引号吃掉，命令**静默不生效** —— 不报错，什么都不发生。管道与重定向
+   要交给设备 shell，内层用双引号。
+2. **`/tmp/...` 不能直接喂给 Windows 版 python。** MSYS 的自动路径转换只对部分
+   程序生效（node 认，python 不认），要先用 `pwd -W` 换成 Windows 风格路径。
+3. **假服务端的端口别写死。** 被上一轮遗留的实例占着时，新实例 bind 失败、而探测
+   会命中旧那个：「已就绪」是假象、请求被旧实例吃掉、日志写到别处 —— 断言只会说
+   「没收到请求」，能查很久。所以脚本改成随机取空闲端口，并且用**自己的启动日志**
+   （`listening on <port>`）判定就绪，而不是 curl 探端口。
+
+### 为什么是脚本，而不是文档里的一张表
+
+第一次做完这个验证时，结论被写进了文档表格里。但这件事的本质是「设备上那几个
+文件里到底有什么」—— 事后写的表格无法自证，**只能重跑一遍**。所以现在文档只写
+「怎么跑」，结论由脚本的输出（含原始文件内容）承担。
+
+前置条件：模拟器在跑。脚本会自己构建并安装 debug 包（`run-as` 只对 debuggable
+的包有效）。注意它对设备有副作用（装卸 App、改 prefs），只在测试机上跑。
 
 ## 六、已知弱点与可做的加固
 
