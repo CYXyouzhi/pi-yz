@@ -103,3 +103,7 @@ test/failures/
 
 # npm pack 的产物：用来分发的，不入库
 server/*.tgz
+
+# 签名材料的备份包 —— 里面是 keystore 口令与密钥本体，绝不能进仓库。
+# 真实备份放仓库外（E:/pi-yz-archive/backups/ 与桌面各一份）。
+*签名备份*.zip
