@@ -100,3 +100,6 @@ android/key.properties
 android/app/*.jks
 android/app/*.keystore
 test/failures/
+
+# npm pack 的产物：用来分发的，不入库
+server/*.tgz
