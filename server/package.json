@@ -6,7 +6,7 @@
   "description": "pi-yz 的远端服务端：把 pi 的 SDK 包成 HTTP + SSE",
   "main": "index.mjs",
   "engines": {
-    "node": ">=20.6.0"
+    "node": ">=22.19.0"
   },
   "scripts": {
     "start": "node index.mjs --host 0.0.0.0",
@@ -16,6 +16,7 @@
   "dependencies": {
     "@earendil-works/pi-coding-agent": "^1.1.0"
   },
+  "//engines": "22.19 不是我们挑的，是 pi 的 SDK 要求的（它自己的 engines 写着 >=22.19.0）。之前这里写 >=20.6 是按「服务端用到 import.meta.resolve」算的 —— 漏了依赖这一层，用 Node 21 的机器会在 npm install 时失败。",
   "//deps": "代码本身只依赖 Node 内置模块 + 这一个包。开发机上为了让 server/node_modules 指向已经装好的 pi（省 400MB+ 重复下载），用的是 junction；换机器或分发时正常 npm install 即可，代码里没有对具体路径的假设。",
   "//files": "白名单分发：只带源码与启动脚本。node_modules、.token（token 持久化文件）、日志、以及 53MB 的 cloudflared 二进制都不进包 —— 用 `npm pack` 产出，解包后 npm install && npm start 就能跑。",
   "files": [

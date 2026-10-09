@@ -18,13 +18,21 @@
                               └─────────────┘
 ```
 
-## 三步跑起来
+## 四步跑起来
 
-需要 **Node ≥ 20.6**（电脑上），手机装 APK。
+需要 **Node ≥ 22.19**（这是 pi 的要求，不是我们挑的）与 **pi 本体 + 已登录**
+（服务端只是 pi 的遥控器）。
 
 ```bash
-# 1. 电脑：起服务端（会打印 token 和 6 位配对码）
-cd server && npm install && npm start
+# 0. 电脑：装 pi 并登录
+#    少了这一步，手机能连上、但建会话会失败 —— 而且看不出是哪儿的问题
+npm install -g --ignore-scripts @earendil-works/pi-coding-agent
+pi                     # 进去后跑 /login：连订阅，或填一家服务商的 API key
+
+# 1. 电脑：把插件装进 pi（在本项目目录里执行）
+pi install ./pi-plugin
+#    重开 pi 后敲：
+#    /yz start          ← 它会拉起服务端，并打印手机上要填的地址、端口、配对码
 
 # 2. 手机：从 Releases 下 arm64-v8a 那个包装上
 #    （不确定自己手机是什么架构就下 universal）
@@ -32,8 +40,10 @@ cd server && npm install && npm start
 # 3. App 里点「连接」→「配对」，填电脑上打印的那 6 位码
 ```
 
-Windows 上直接双击 `server/start.cmd` 也行。细节（端口、防火墙、异地使用、
-排错）见 [server/README.md](server/README.md)。
+不想开 pi 界面也行：`cd server && npm install && npm start`（打印同样的东西）。
+终端里还有个转发入口 `pi-yz`（`start` / `stop` / `status` / `doctor` / `logs`），
+见 [pi-plugin/README.md](pi-plugin/README.md)；端口、防火墙、异地使用、排错见
+[server/README.md](server/README.md)。
 
 ## 现在到哪了
 

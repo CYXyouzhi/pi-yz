@@ -7,7 +7,7 @@
 | | 要求 |
 |---|---|
 | Flutter | 3.47.x（stable） |
-| Node | ≥ 20.6（服务端用到 `import.meta.resolve`） |
+| Node | ≥ 22.19（pi 的 SDK 要求） |
 | 平台 | 主力开发在 Windows + MuMu 模拟器；CI 跑 Ubuntu |
 
 ## 跑起来

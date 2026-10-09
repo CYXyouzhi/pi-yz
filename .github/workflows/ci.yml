@@ -67,7 +67,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       # 刻意不跑 npm install：
       #   · server/node_modules 在开发机上是**指向 pi 安装目录的软链接**

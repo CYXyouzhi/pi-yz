@@ -6,8 +6,32 @@
 
 ## 前置
 
-- **Node ≥ 20.6**（用到了 `import.meta.resolve`）
+- **Node ≥ 22.19**：这是 pi 的 SDK 要求的（服务端自己只用到 `import.meta.resolve`，门槛是依赖带来的）
 - pi 的 SDK：`npm install` 会自动装 `@earendil-works/pi-coding-agent`
+- **pi 本体 + 已登录**：见下面的「先装 pi」—— 少了它，服务端能起来、手机能连上，
+  但建会话会失败
+
+## 先装 pi
+
+服务端只是 pi 的**遥控器** —— 真正干活的 pi 得先装好、并且有可用模型：
+
+```bash
+# 装（两条任选；一键脚本会自动处理 Node 版本）
+npm install -g --ignore-scripts @earendil-works/pi-coding-agent
+# 或者：curl -fsSL https://pi.dev/install.sh | sh
+# Windows：powershell -c "irm https://pi.dev/install.ps1 | iex"
+
+pi        # 进 pi 后跑 /login：连订阅，或填一家服务商的 API key
+```
+
+验证配好了没：
+
+```bash
+pi auth   # 打印凭据 / 检查服务商是否就绪
+```
+
+**这一步不做会怎样**：服务端照样启动、打印 token 和配对码，手机也能连上 ——
+但发消息时报错，而且看不出根因。这类问题最难查，所以放在最前面说。
 
 ## 安装
 
