@@ -36,7 +36,12 @@ class PiToolCall extends PiContent {
   factory PiToolCall.fromMap(Map<String, dynamic> json) => PiToolCall(
     id: json['id'] as String? ?? '',
     name: json['name'] as String? ?? '',
-    arguments: (json['arguments'] as Map?)?.cast<String, dynamic>() ?? const {},
+    // 防御式：契约上 arguments 是对象，但不能用 `as Map` 硬转 ——
+    // 类型不符时强转会抛，而这里一抛整条消息就解析不出来（会话页直接白屏）。
+    // 同文件里 tokens / contextUsage 就是这么防的，这里保持一致。
+    arguments: json['arguments'] is Map
+        ? (json['arguments'] as Map).cast<String, dynamic>()
+        : const {},
   );
 
   /// 工具参数的简短摘要，用于工具卡片副标题
@@ -95,7 +100,14 @@ class PiUsage {
       cacheWrite: (json['cacheWrite'] as num?)?.toInt() ?? 0,
       reasoning: (json['reasoning'] as num?)?.toInt() ?? 0,
       totalTokens: (json['totalTokens'] as num?)?.toInt() ?? 0,
-      costTotal: cost is Map ? ((cost['total'] as num?)?.toDouble() ?? 0) : 0,
+      // 消息级 usage.cost 在 pi 里是对象（{total: ...}）；这里**同时兼容数字**。
+      // 只认一种形状的代价是：形状一变就静默显示 $0.00 —— 用户会以为没花钱，
+      // 这种「安静的错误」比抛异常更难发现。stats 那边（types/usage.dart）早就兼容两种了。
+      costTotal: cost is num
+          ? cost.toDouble()
+          : (cost is Map && cost['total'] is num
+                ? (cost['total'] as num).toDouble()
+                : 0),
     );
   }
 }
