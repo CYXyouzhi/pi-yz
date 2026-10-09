@@ -28,8 +28,6 @@ import '../neu_toast.dart';
 // export 回去保持兼容（纯函数搬家，不改行为）。
 export 'chat/widgets.dart' show slashPanelMaxHeight, modelChipLabel;
 
-import 'chat/bars.dart';
-import 'chat/sheets.dart';
 import 'chat/widgets.dart';
 
 /// 模型胶囊上显示的**短名**。
