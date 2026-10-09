@@ -80,8 +80,6 @@ class SessionStats {
 }
 
 /// 服务端健康状态
-
-/// 服务端健康状态
 class HealthInfo {
   const HealthInfo({
     required this.ok,
