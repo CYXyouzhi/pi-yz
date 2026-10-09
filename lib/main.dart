@@ -18,6 +18,7 @@ import 'theme/design_tokens.dart';
 import 'theme/neu.dart';
 import 'theme/neu_theme.dart';
 import 'ui/neu_icons.dart';
+import 'ui/adaptive_body.dart';
 import 'ui/server/chat_page.dart';
 import 'ui/server/conn_page.dart';
 import 'ui/server/sessions_page.dart';
@@ -262,7 +263,15 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
                 // 草稿跟着没了（用户报过「切个 tab 回来字没了」）。
                 // 代价：Tab 之间没有转场动画 —— 手机端 Tab 切换本来也不需要，
                 // 动效统一放到 UI 阶段再定。
-                child: IndexedStack(index: _tab, children: _pages()),
+                // 宽屏（平板 / 横屏）下把内容收窄居中。
+                //
+                // 布局是按手机 360~450dp 设计的；到 1280dp 的平板横屏上，卡片会被
+                // 拉到三倍宽 —— 不溢出、也点得到，但读一行要横扫整屏。
+                // 窄屏（手机）原样返回，一行不改，既有基线不受影响。
+                // 详见 lib/ui/adaptive_body.dart。
+                child: AdaptiveBody(
+                  child: IndexedStack(index: _tab, children: _pages()),
+                ),
               ),
             ),
             // 底部停靠区。会话页 = 常驻细把手 + 可收展的导航栏；

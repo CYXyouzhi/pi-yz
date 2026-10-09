@@ -87,8 +87,23 @@ Future<void> tapTab(WidgetTester tester, String label) async {
 /// 设置页现在**默认全部收起**（用户明确要求「默认收起来、点击再展开」），
 /// 所以凡是要断言分组内容的用例，都得先把它点开 —— 否则断言的是
 /// 「渲染失败」和「默认收起」这两种完全不同的事。
+///
+/// 横屏与小平板下还要多一步：那些形态高度只剩 360~768dp，而设置页是长表单，
+/// `ListView` 只构建**可见**的那几项 —— 下面的分组压根还没进 widget 树，
+/// 直接 `find.text` 会拿不到（报 `Bad state: No element`）。
+/// 这是懒加载的正常行为，不是布局问题，所以先滚到它出现再点。
+/// 若滚完还是找不到，那才是真的有问题（会被后面的断言报出来）。
 Future<void> openSection(WidgetTester tester, String title) async {
-  await tapVisible(tester, find.text(title));
+  final finder = find.text(title);
+  if (finder.evaluate().isEmpty) {
+    await tester.scrollUntilVisible(
+      finder,
+      120,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await settle(tester);
+  }
+  await tapVisible(tester, finder);
   await settle(tester);
 }
 

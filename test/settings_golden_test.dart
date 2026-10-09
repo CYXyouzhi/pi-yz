@@ -37,8 +37,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support/ui_harness.dart';
 
-/// 与 resolution_test.dart 一致的三档目标宽度。
+/// 与 resolution_test.dart 一致的三档目标宽度（手机）。
 const List<double> kGoldenWidths = [360, 400, 450];
+
+/// 平板与横屏档。
+///
+/// 为什么单独列出来：手机竖屏宽度只有 360~450dp，而平板/横屏会把布局拉到
+/// 800~1280dp 宽 —— 那里的问题（元素摊得太开、卡片被拉伸得不成比例、两栏挤在
+/// 一起）在窄屏上看不出来。高度也要一起给，因为横屏只剩 800dp 高。
+const kTabletSurfaces = <(String, double, double)>[
+  ('平板竖屏', 800, 1280),
+  ('平板横屏', 1280, 800),
+];
 
 void main() {
   setUp(() {
@@ -54,6 +64,19 @@ void main() {
       await expectLater(
         find.byType(Scaffold).first,
         matchesGoldenFile('goldens/settings_${width.toInt()}dp.png'),
+      );
+    });
+  }
+
+  for (final (name, w, h) in kTabletSurfaces) {
+    testWidgets('$name ${w.toInt()}×${h.toInt()}：设置页渲染基线', (tester) async {
+      setPhoneSurface(tester, width: w, height: h);
+      await tester.pumpWidget(const PiYzApp());
+      await skipSplash(tester);
+      await tapTab(tester, '设置');
+      await expectLater(
+        find.byType(Scaffold).first,
+        matchesGoldenFile('goldens/settings_${w.toInt()}x${h.toInt()}.png'),
       );
     });
   }
