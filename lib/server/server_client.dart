@@ -4,6 +4,7 @@
 // 而且 SSE 需要的是"原始字节流"，HttpClient 直接给的就是这个。
 
 import 'dart:async';
+import '../services/debug_log.dart';
 import 'i18n.dart';
 import 'dart:convert';
 import 'dart:io';
@@ -88,13 +89,20 @@ class ServerClient {
     Duration? timeout,
   }) async {
     final effective = timeout ?? this.timeout;
+    // 只记写操作（POST/DELETE/PUT）：GET 里有池/会话轮询，记下来会把 500 条
+    // 环形缓冲冲干净，真正要看的连接故障反而被挤出去。
+    if (method != 'GET') {
+      DebugLog.instance.debug('api', '$method $path');
+    }
     final HttpClientRequest request;
     try {
       request = await _client.openUrl(method, _uri(path, query)).timeout(effective);
     } on TimeoutException {
+      DebugLog.instance.error('api', '$method $path 超时（${effective.inSeconds}s）');
       final explained = explainFailure(TimeoutException('$host:$port'));
       throw ServerException('${explained.reason}（$host:$port）→ ${explained.hint}');
     } on SocketException catch (error) {
+      DebugLog.instance.error('api', '$method $path 连接失败：${error.message}');
       // 具体原因交给诊断层翻译（端口没人监听 / 域名解析不了 / 网络不可达）：
       // 只回一句「无法连接」用户没法下手（合同⑤）
       final explained = explainFailure(error);
@@ -113,8 +121,10 @@ class ServerClient {
     final text = await response.transform(utf8.decoder).join().timeout(effective);
 
     if (response.statusCode != 200) {
+      final explained = _explainStatus(response.statusCode, text);
+      DebugLog.instance.error('api', '$method $path → ${response.statusCode} $explained');
       throw ServerException(
-        _explainStatus(response.statusCode, text),
+        explained,
         statusCode: response.statusCode,
       );
     }

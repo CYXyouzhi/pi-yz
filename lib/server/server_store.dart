@@ -8,6 +8,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import '../services/debug_log.dart';
 import 'chat_models.dart';
 import 'i18n.dart';
 import 'app_prefs.dart';
@@ -228,6 +229,10 @@ class ServerStore extends ChangeNotifier {
     state = ServerConnectionState.connecting;
     errorMessage = null;
     activeEndpoint = null;
+    DebugLog.instance.info(
+      '连接',
+      '开始连接 ${newTarget.label}（${newTarget.candidates.length} 个候选地址）',
+    );
     _notify();
 
     // 逐个试候选地址：主地址连不上就**静默**试备用地址。
@@ -252,10 +257,12 @@ class ServerStore extends ChangeNotifier {
         healthResult = await candidate.health(timeout: _probeTimeout);
         client = candidate;
         connectedVia = endpoint;
+        DebugLog.instance.info('连接', '探活成功：${endpoint.label}');
         break;
       } on ServerException catch (error) {
         await candidate.dispose();
         failures.add('${endpoint.label} — ${error.message}');
+        DebugLog.instance.warn('连接', '探活失败：${endpoint.label} — ${error.message}');
       } catch (error) {
         // 兜底：网络层还能抛出别的异常。特别是 TimeoutException ——
         // `_json` 只把 `openUrl` 阶段的超时翻译成了 ServerException，
@@ -264,6 +271,7 @@ class ServerStore extends ChangeNotifier {
         // 状态永远停在「连接中」—— 这是实测踩到的现象。
         await candidate.dispose();
         failures.add('${endpoint.label} — $error');
+        DebugLog.instance.warn('连接', '探活异常：${endpoint.label} — $error');
       }
     }
 
@@ -274,6 +282,7 @@ class ServerStore extends ChangeNotifier {
       errorMessage = failures.length > 1
           ? failures.map((f) => '· $f').join('\n')
           : (failures.isEmpty ? '没有可用的地址' : failures.first);
+      DebugLog.instance.error('连接', '全部候选地址都没连上：$errorMessage');
       _notify();
       return;
     }
@@ -283,6 +292,10 @@ class ServerStore extends ChangeNotifier {
     _client = client;
     state = ServerConnectionState.connected;
     _reconnectAttempt = 0;
+    DebugLog.instance.info(
+      '连接',
+      '已连接 ${connectedVia.label} · pi ${healthResult.piVersion} · 活跃会话 ${healthResult.activeSessions}',
+    );
     _notify();
     _bumpSessions();
 
@@ -325,6 +338,7 @@ class ServerStore extends ChangeNotifier {
     extensionStatus.clear();
     commands = const [];
     sessions = const [];
+    DebugLog.instance.info('连接', silent ? '断开（重连前的清理）' : '已断开连接');
     if (!silent) {
       state = ServerConnectionState.disconnected;
       errorMessage = null;
@@ -647,6 +661,7 @@ class ServerStore extends ChangeNotifier {
     // 不 await cancel：旧连接的取消可能要等网络层，
     // 而新的订阅没必要排队等它
     unawaited(_events?.cancel());
+    DebugLog.instance.info('会话', '订阅事件流 $sessionId');
     _events = client.events(sessionId).listen(
       _onEvent,
       onError: (Object error) => _onStreamError(error),
@@ -957,6 +972,7 @@ class ServerStore extends ChangeNotifier {
   void _onStreamError(Object error) {
     if (_disposed) return;
     errorMessage = error is ServerException ? error.message : '$error';
+    DebugLog.instance.error('事件流', '出错：$errorMessage');
     // 关键：出错时必须退出载入态，否则界面会一直卡在「正在载入会话」
     loadingSession = false;
     _snapshotTimeout?.cancel();
@@ -966,6 +982,7 @@ class ServerStore extends ChangeNotifier {
 
   void _onStreamDone() {
     if (_disposed) return;
+    DebugLog.instance.warn('事件流', '服务端关闭了流，准备重连');
     // 流正常结束（服务端关闭）也要退出载入态
     loadingSession = false;
     _snapshotTimeout?.cancel();
@@ -986,6 +1003,7 @@ class ServerStore extends ChangeNotifier {
     }
 
     final delay = Duration(milliseconds: 800 * _reconnectAttempt.clamp(1, 6));
+    DebugLog.instance.info('事件流', '${delay.inMilliseconds} ms 后重连');
     _reconnectTimer = Timer(delay, () async {
       if (_disposed) return;
       final client = _client;
