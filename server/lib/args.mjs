@@ -43,9 +43,13 @@ export function parseArgs(argv) {
       out.tunnel = true;
     } else if (name === 'help') {
       console.log(
-        '用法: node index.mjs [--port 30142] [--host 127.0.0.1] [--token <值>] '
-          + '[--default-cwd <路径>] [--no-pair]',
+        '用法: pi-yz [--port 30142] [--host 0.0.0.0] [--token <值>] '
+          + '[--default-cwd <路径>] [--no-pair] [--tunnel]',
       );
+      console.log('');
+      console.log('  --host 0.0.0.0   监听局域网（手机才连得进来）；默认只听 127.0.0.1');
+      console.log('  --tunnel         顺带开一条 SSH 反向隧道（异地也能连）');
+      console.log('  --no-pair        不开配对窗口');
       process.exit(0);
     }
   }

@@ -35,7 +35,9 @@ cd server && npm install && npm start
 手机上：从 Releases 下 `arm64-v8a` 那个包装上（不确定架构就下 universal），
 再「连接」→「配对」，填电脑上打印的 6 位码。
 
-Windows 上双击 `server/start.cmd` 也行。细节见 [server/README.md](server/README.md)。
+Windows 上双击 `server/start.cmd` 也行。想在**任何目录**下一条命令启动，
+先 `cd server && npm link`，之后 `pi-yz` 就是它（细节见
+[server/README.md](server/README.md)）。
 
 ## 现在到哪了
 
