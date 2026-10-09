@@ -499,8 +499,8 @@ class ConnectionActions extends StatelessWidget {
 
 /// 服务端启动向导：两条命令 + 一键复制。
 ///
-/// 两条命令**并排给**：`/mobile start` 是已经在 pi 里时最快的，
-/// `node server/index.mjs` 是从零起服务端用的。不替用户选，各给一条。
+/// 两条命令**并排给**：注册过 `pi-yz` 的话一条就够，没注册就用 `npm start`。
+/// 不替用户选，各给一条。
 class ServerStartupGuide extends StatelessWidget {
   const ServerStartupGuide({super.key, required this.onCopy});
 
@@ -508,8 +508,8 @@ class ServerStartupGuide extends StatelessWidget {
   /// 收 (命令文本, 显示名) 两个参数，与 CmdRow 一致。
   final void Function(String text, String label) onCopy;
 
-  static const String _cmdViaPi = '/mobile start';
-  static const String _cmdViaNode = 'node server/index.mjs --host 0.0.0.0';
+  static const String _cmdViaPi = 'pi-yz --host 0.0.0.0';
+  static const String _cmdViaNode = 'cd server && npm start';
 
   @override
   Widget build(BuildContext context) {

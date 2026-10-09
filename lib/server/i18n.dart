@@ -518,8 +518,8 @@ class I18n {
       'For 5 minutes after startup there is a pairing code — use that instead',
     ),
     'connEdit.tokenHelp3': (
-      '在 pi 里敲 /mobile 也能看到当前地址与 token',
-      'Run /mobile inside pi to see the current address and token',
+      '服务端启动时会打印地址与 token',
+      'The server prints the address and token when it starts',
     ),
     'conn.manualWorkspace': ('手动输入路径…', 'Enter a path…'),
     'conn.manualWorkspaceHint': (
@@ -971,8 +971,8 @@ class I18n {
       'New branch name (empty = detached HEAD)',
     ),
     'ui.da96bf7843': (
-      '方式一（推荐）：在电脑的 pi 里输入下面这行 —— 服务在后台跑，',
-      'Option 1 (recommended): type this in pi on your computer — the server runs in background,',
+      '方式一：注册过 pi-yz 命令的话 —— 一条命令就够，服务会打印手机要填的信息，',
+      'Option 1: if you have registered the pi-yz command — one line is enough; it prints,',
     ),
     'ui.282652e49f': (
       '方式二：在 pi-yz 目录里直接跑（前台运行，Ctrl+C 停止）',
@@ -1161,8 +1161,8 @@ class I18n {
     ),
     'ui.dad890d59d': ('这个文件是空的', 'This file is empty'),
     'ui.4fa10ed005': (
-      '这台电脑没开配对窗口：重启服务端会自动开 5 分钟，或用 /mobile start 重新拉起',
-      'No pairing window open: restarting the server opens one for 5 minutes, or run /mobile start',
+      '这台电脑没开配对窗口：重启服务端会自动开 5 分钟',
+      'No pairing window open: restarting the server opens one for 5 minutes',
     ),
     'ui.2d951376b5': (
       '这条会话正在运行，先停下再删',
