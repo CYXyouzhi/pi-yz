@@ -43,6 +43,16 @@ class AppPrefs extends ChangeNotifier {
 
   bool _loaded = false;
 
+  /// 只给测试用：把「已经读过」的标志打回原样，下次 [load] 会重新读存储。
+  ///
+  /// 为什么需要它：AppPrefs 是**内存单例**，而 `load()` 是幂等的（读一次就置
+  /// `_loaded`）。`SharedPreferences.setMockInitialValues` 只重置存储、动不了这个
+  /// 单例 —— 于是用例之间会串状态。实测到的那次：上个用例存下的 `lastSessionId`
+  /// 会被 `ServerStore.connect()` 拿去做「恢复上次会话」，导致下个用例里
+  /// 「还没有会话」这种前提根本造不出来（断言看到的是上一条用例的会话）。
+  @visibleForTesting
+  void debugForgetLoaded() => _loaded = false;
+
   double get fontScale => _fontScale;
   double get lineHeight => _lineHeight;
   bool get sendWithEnter => _sendWithEnter;
