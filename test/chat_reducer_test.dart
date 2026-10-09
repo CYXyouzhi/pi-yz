@@ -351,4 +351,287 @@ void main() {
       expect(r.queuedSteering, 0);
     });
   });
+
+  // 流式增量：一条助手消息在生成时会拆成几十个 message_update 事件，
+  // 这里管「把碎片拼回去」。之前这一整块（_onMessageUpdate / _onMessageEnd）
+  // 覆盖率接近 0 —— 而它是聊天页正文的唯一来源。
+  group('流式增量：把碎片拼回一条消息', () {
+    ChatReducer withAssistant() {
+      final r = ChatReducer();
+      r.applyEvent(ev('message_start', {'message': assistantJson()}));
+      return r;
+    }
+
+    ServerEvent delta(String type, [Map<String, dynamic> extra = const {}]) =>
+        ev('message_update', {
+          'assistantMessageEvent': {'type': type, ...extra},
+        });
+
+    test('text_delta：按到达顺序累加到正文，并返回 true 让界面重绘', () {
+      final r = withAssistant();
+      expect(r.applyEvent(delta('text_delta', {'delta': '你好'})), isTrue);
+      expect(r.applyEvent(delta('text_delta', {'delta': '，世界'})), isTrue);
+      expect(r.messages.single.text, '你好，世界');
+    });
+
+    test('thinking_delta：累进「思考」，不跟正文混在一起', () {
+      final r = withAssistant();
+      r.applyEvent(delta('thinking_delta', {'delta': '先想一下'}));
+      expect(r.messages.single.thinking, '先想一下');
+      expect(r.messages.single.text, isEmpty, reason: '思考不该混进正文');
+    });
+
+    test('start / end / toolcall_delta 类不触发重绘（没有新内容）', () {
+      final r = withAssistant();
+      for (final type in [
+        'text_start',
+        'text_end',
+        'thinking_start',
+        'thinking_end',
+        'toolcall_delta',
+      ]) {
+        expect(r.applyEvent(delta(type)), isFalse, reason: '$type 不该让界面重绘');
+      }
+    });
+
+    test('toolcall_start：补出工具名与 id（参数要等 message_end）', () {
+      final r = withAssistant();
+      expect(
+        r.applyEvent(delta('toolcall_start', {'id': 'c1', 'toolName': 'bash'})),
+        isTrue,
+      );
+      final call = r.messages.single.toolCalls.single;
+      expect(call.id, 'c1');
+      expect(call.name, 'bash');
+      expect(call.arguments, isEmpty, reason: '流式期间的参数还不完整，先不解析');
+    });
+
+    test('toolcall_end：用完整参数替换掉最后一个（参数真正到手的地方）', () {
+      final r = withAssistant();
+      r.applyEvent(delta('toolcall_start', {'id': 'c1', 'toolName': 'bash'}));
+      expect(
+        r.applyEvent(
+          delta('toolcall_end', {
+            'toolCall': {
+              'id': 'c1',
+              'name': 'bash',
+              'arguments': {'command': 'ls'},
+            },
+          }),
+        ),
+        isTrue,
+      );
+      expect(r.messages.single.toolCalls.single.arguments['command'], 'ls');
+    });
+
+    test('还没有助手消息时：返回 false，绝不凭空造一条消息出来', () {
+      final r = ChatReducer();
+      expect(r.applyEvent(delta('text_delta', {'delta': 'x'})), isFalse);
+      expect(r.messages, isEmpty);
+    });
+
+    test('assistantMessageEvent 不是对象 / 缺 type：返回 false 且不抛', () {
+      final r = withAssistant();
+      expect(
+        r.applyEvent(ev('message_update', {'assistantMessageEvent': 'oops'})),
+        isFalse,
+      );
+      expect(
+        r.applyEvent(
+          ev('message_update', {
+            'assistantMessageEvent': {'x': 1},
+          }),
+        ),
+        isFalse,
+      );
+      expect(r.messages.single.text, isEmpty);
+    });
+  });
+
+  group('message_end：一条消息的收口', () {
+    test('同 role：吸收进上一条，而不是新开一条（否则流式消息会被拆成两条）', () {
+      final r = ChatReducer();
+      r.applyEvent(ev('message_start', {'message': assistantJson()}));
+      r.applyEvent(
+        ev('message_update', {
+          'assistantMessageEvent': {'type': 'text_delta', 'delta': '前半'},
+        }),
+      );
+
+      r.applyEvent(
+        ev('message_end', {
+          'message': assistantJson(
+            content: [
+              {'type': 'text', 'text': '前半后半'},
+            ],
+          ),
+        }),
+      );
+
+      expect(r.messages, hasLength(1), reason: '不该变成两条');
+      expect(r.messages.single.text, contains('前半后半'));
+      expect(r.isStreaming, isFalse, reason: '消息收口后要退出流式态');
+    });
+
+    test('role=system：完全忽略（系统通知不该出现在聊天列表里）', () {
+      final r = ChatReducer();
+      expect(
+        r.applyEvent(
+          ev('message_end', {
+            'message': {'role': 'system', 'content': '内部提示'},
+          }),
+        ),
+        isFalse,
+      );
+      expect(r.messages, isEmpty);
+    });
+
+    test('没有对应的 start（事件丢了）：补一条，内容不许丢', () {
+      final r = ChatReducer();
+      expect(
+        r.applyEvent(
+          ev('message_end', {
+            'message': assistantJson(
+              content: [
+                {'type': 'text', 'text': '只有结尾'},
+              ],
+            ),
+          }),
+        ),
+        isTrue,
+      );
+      expect(r.messages, hasLength(1));
+      expect(r.messages.single.text, contains('只有结尾'));
+    });
+
+    test('message 不是对象：返回 false', () {
+      final r = ChatReducer();
+      expect(r.applyEvent(ev('message_end', {'message': 'oops'})), isFalse);
+    });
+  });
+
+  group('工具执行中的实时输出', () {
+    ChatReducer withTool() {
+      final r = ChatReducer();
+      r.applyEvent(
+        ev('tool_execution_start', {'toolCallId': 't1', 'toolName': 'bash'}),
+      );
+      return r;
+    }
+
+    test('partialResult 是字符串：直接当输出', () {
+      final r = withTool();
+      expect(
+        r.applyEvent(
+          ev('tool_execution_update', {
+            'toolCallId': 't1',
+            'partialResult': '第一行',
+          }),
+        ),
+        isTrue,
+      );
+      expect(r.toolRunOf('t1')!.output, contains('第一行'));
+    });
+
+    test('partialResult 是 content 数组：只拼 text 片段，忽略图片等', () {
+      final r = withTool();
+      r.applyEvent(
+        ev('tool_execution_update', {
+          'toolCallId': 't1',
+          'partialResult': {
+            'content': [
+              {'type': 'text', 'text': 'A'},
+              {'type': 'image', 'data': 'xxx'},
+              {'type': 'text', 'text': 'B'},
+            ],
+          },
+        }),
+      );
+      expect(r.toolRunOf('t1')!.output, contains('AB'));
+    });
+
+    test('partialResult 是 {text: ...}：照样能取出来', () {
+      final r = withTool();
+      r.applyEvent(
+        ev('tool_execution_update', {
+          'toolCallId': 't1',
+          'partialResult': {'text': '来自 text 字段'},
+        }),
+      );
+      expect(r.toolRunOf('t1')!.output, contains('来自 text 字段'));
+    });
+
+    test('取不出文本：返回 false，不改工具卡片', () {
+      final r = withTool();
+      expect(
+        r.applyEvent(
+          ev('tool_execution_update', {
+            'toolCallId': 't1',
+            'partialResult': 42,
+          }),
+        ),
+        isFalse,
+      );
+    });
+
+    test('未知 id：返回 false 且不抛', () {
+      final r = withTool();
+      expect(
+        r.applyEvent(
+          ev('tool_execution_update', {
+            'toolCallId': 'nope',
+            'partialResult': 'x',
+          }),
+        ),
+        isFalse,
+      );
+    });
+  });
+
+  group('自动压缩与自动重试：都要让用户看得见', () {
+    test('compaction_start：给一句提示', () {
+      final r = ChatReducer();
+      expect(r.applyEvent(ev('compaction_start')), isTrue);
+      expect(r.notice, isNotNull);
+    });
+
+    test('compaction_end：带 errorMessage 时提示里含原因，否则清掉提示', () {
+      final r = ChatReducer();
+      r.applyEvent(ev('compaction_start'));
+      r.applyEvent(ev('compaction_end', {'errorMessage': '上下文太长了'}));
+      expect(r.notice, contains('上下文太长了'));
+
+      r.applyEvent(ev('compaction_end', {}));
+      expect(r.notice, isNull, reason: '压缩完了就该把提示收掉');
+    });
+
+    test('auto_retry_start：提示里带上第几次 / 共几次', () {
+      final r = ChatReducer();
+      r.applyEvent(ev('auto_retry_start', {'attempt': 2, 'maxAttempts': 3}));
+      expect(r.notice, contains('2'));
+      expect(r.notice, contains('3'));
+    });
+
+    test('auto_retry_end：成功则清提示，失败则留一句', () {
+      final r = ChatReducer();
+      r.applyEvent(ev('auto_retry_start', {'attempt': 1, 'maxAttempts': 3}));
+      r.applyEvent(ev('auto_retry_end', {'success': true}));
+      expect(r.notice, isNull);
+
+      r.applyEvent(ev('auto_retry_start', {'attempt': 1, 'maxAttempts': 3}));
+      r.applyEvent(ev('auto_retry_end', {'success': false}));
+      expect(r.notice, isNotNull);
+    });
+
+    test('session_shutdown：运行与流式都停，并留下提示', () {
+      final r = ChatReducer();
+      r.applyEvent(ev('agent_start'));
+      expect(r.isRunning, isTrue);
+
+      expect(r.applyEvent(ev('session_shutdown')), isTrue);
+      expect(r.isRunning, isFalse, reason: '会话关了就不该再显示「运行中」');
+      expect(r.isStreaming, isFalse);
+      expect(r.notice, isNotNull);
+    });
+  });
 }
